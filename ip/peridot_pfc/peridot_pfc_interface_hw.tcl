@@ -46,6 +46,8 @@ set_fileset_property QUARTUS_SYNTH TOP_LEVEL peridot_pfc_interface
 set_fileset_property QUARTUS_SYNTH ENABLE_RELATIVE_INCLUDE_PATHS false
 set_fileset_property QUARTUS_SYNTH ENABLE_FILE_OVERWRITE_MODE false
 add_fileset_file peridot_pfc_interface.v VERILOG PATH hdl/peridot_pfc_interface.v TOP_LEVEL_FILE
+add_fileset_file peridot_pfc.v VERILOG PATH hdl/peridot_pfc.v
+add_fileset_file peridot_pfc_ioe.v VERILOG PATH hdl/peridot_pfc_ioe.v
 
 
 # 
@@ -138,8 +140,6 @@ set_interface_property export SVD_ADDRESS_GROUP ""
 
 add_interface_port export coe_pfc_clk pfc_clk Output 1
 add_interface_port export coe_pfc_reset pfc_reset Output 1
-add_interface_port export coe_pfc_address addrss Output 4
-add_interface_port export coe_pfc_readdata readdata Input 32
-add_interface_port export coe_pfc_write write Output 1
-add_interface_port export coe_pfc_writedata writedata Output 32
+add_interface_port export coe_pfc_cmd cmd Output 37
+add_interface_port export coe_pfc_resp resp Input 32
 

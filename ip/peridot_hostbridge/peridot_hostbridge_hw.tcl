@@ -500,9 +500,6 @@ proc elaboration_callback {} {
 		set_interface_property hostft ENABLED true
 	}
 
-#	"FT600" {
-#	}
-
 	default {
 		send_message error "${host_interface_type} is not defined interface type."
 	}}

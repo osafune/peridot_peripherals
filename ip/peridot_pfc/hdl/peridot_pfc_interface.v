@@ -56,10 +56,8 @@ module peridot_pfc_interface(
 	// External Interface
 	output			coe_pfc_clk,
 	output			coe_pfc_reset,
-	output [3:0]	coe_pfc_address,
-	input  [31:0]	coe_pfc_readdata,
-	output			coe_pfc_write,
-	output [31:0]	coe_pfc_writedata
+	output [36:0]	coe_pfc_cmd,
+	input  [31:0]	coe_pfc_resp
 );
 
 
@@ -89,14 +87,15 @@ module peridot_pfc_interface(
 	assign avs_readdata = readdata_reg;
 
 	always @(posedge csi_clk) begin
-		readdata_reg <= coe_pfc_readdata;
+		readdata_reg <= coe_pfc_resp;
 	end
 
 	assign coe_pfc_clk = csi_clk;
 	assign coe_pfc_reset = rsi_reset;
-	assign coe_pfc_address = avs_address;
-	assign coe_pfc_write = avs_write;
-	assign coe_pfc_writedata = avs_writedata;
+
+	assign coe_pfc_cmd[36] = avs_write;
+	assign coe_pfc_cmd[35:32] = avs_address;
+	assign coe_pfc_cmd[31:0] = avs_writedata;
 
 
 
