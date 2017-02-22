@@ -3,7 +3,7 @@
 //
 //   DEGISN : S.OSAFUNE (J-7SYSTEM WORKS LIMITED)
 //   DATE   : 2015/04/30 -> 2015/05/23
-//   UPDATE : 2017/02/05
+//   UPDATE : 2017/02/22
 //
 // ===================================================================
 // *******************************************************************
@@ -173,6 +173,7 @@ endgenerate
 		if (reset_sig) begin
 			rreq_reg <= CPURESET_INIT[0];
 			led_reg <= 4'b0000;
+			message_reg <= 32'd0;
 			irq_reg <= 1'b0;
 		end
 		else begin
