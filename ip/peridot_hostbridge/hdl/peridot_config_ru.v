@@ -1,8 +1,9 @@
 // ===================================================================
-// TITLE : PERIDOT-NG / Remote Update
+// TITLE : PERIDOT-NGS / Remote Update
 //
 //   DEGISN : S.OSAFUNE (J-7SYSTEM WORKS LIMITED)
 //   DATE   : 2017/01/21 -> 2017/01/30
+//   UPDATE : 2017/03/01
 //
 // ===================================================================
 // *******************************************************************
@@ -25,21 +26,15 @@ module peridot_config_ru #(
 	parameter CONFIG_CYCLE			= 28,
 	parameter RESET_TIMER_CYCLE		= 40
 ) (
-	output [2:0]	test_dc_address,
-	output 			test_dc_write,
-	output [31:0]	test_dc_writedata,
-	output			test_dc_read,
-	input  [31:0]	test_dc_readdata,
-
 	// Interface: clk
-	input			clk,			// up to 80MHz
-	input			reset,
+	input wire			clk,			// up to 80MHz
+	input wire			reset,
 
 	// Interface: config - async signal
-	output			ru_ready,
-	output			ru_bootsel,
-	input			ru_nconfig,
-	output			ru_nstatus
+	output wire			ru_ready,
+	output wire			ru_bootsel,
+	input wire			ru_nconfig,
+	output wire			ru_nstatus
 );
 
 
@@ -94,10 +89,6 @@ module peridot_config_ru #(
 
 /* ===== テスト記述 ============== */
 
-	assign test_dc_address = dc_address_sig;
-	assign test_dc_write = dc_write_sig;
-	assign test_dc_writedata = dc_writedata_sig;
-	assign test_dc_read = dc_read_sig;
 
 
 /* ===== モジュール構造記述 ============== */
@@ -249,8 +240,6 @@ generate
 	end
 	else begin
 		assign dc_readdata_sig = 32'h00000000;
-//		assign dc_readdata_sig = test_dc_readdata;	// test
-
 	end
 endgenerate
 

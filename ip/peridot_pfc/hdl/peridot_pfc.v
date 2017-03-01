@@ -1,9 +1,9 @@
 // ===================================================================
-// TITLE : PERIDOT / Pin function controller
+// TITLE : PERIDOT-NGS / Pin function controller
 //
-//   DEGISN : S.OSAFUNE (J-7SYSTEM Works)
+//   DEGISN : S.OSAFUNE (J-7SYSTEM WORKS LIMITED)
 //   DATE   : 2015/04/19 -> 2015/05/17
-//   UPDATE : 2017/02/20
+//   UPDATE : 2017/03/01
 //
 // ===================================================================
 // *******************************************************************
@@ -28,29 +28,29 @@ module peridot_pfc #(
 	parameter DEFAULT_FUNCREGS = 32'h00000000		// init funcreg value
 ) (
 	// Interface: clk
-	input			csi_clk,
-	input			rsi_reset,
+	input wire			csi_clk,
+	input wire			rsi_reset,
 
 	// Interface: Avalon-MM slave
-	input  [1:0]	avs_address,
-	input			avs_read,
-	output [31:0]	avs_readdata,
-	input			avs_write,
-	input  [31:0]	avs_writedata,
+	input wire  [1:0]	avs_address,
+	input wire			avs_read,
+	output wire [31:0]	avs_readdata,
+	input wire			avs_write,
+	input wire  [31:0]	avs_writedata,
 
 	// External Interface
-	output [7:0]	coe_function_din,
-	input  [7:0]	coe_function_dout,
-	input  [7:0]	coe_function_oe,
-	input  [7:0]	coe_function_aux0,
-	input  [7:0]	coe_function_aux1,
-	input  [7:0]	coe_function_aux2,
-	input  [7:0]	coe_function_aux3,
+	output wire [7:0]	coe_function_din,
+	input wire  [7:0]	coe_function_dout,
+	input wire  [7:0]	coe_function_oe,
+	input wire  [7:0]	coe_function_aux0,
+	input wire  [7:0]	coe_function_aux1,
+	input wire  [7:0]	coe_function_aux2,
+	input wire  [7:0]	coe_function_aux3,
 
-	output [7:0]	coe_pin_through,
-	input  [5:0]	coe_pin_aux_in,
+	output wire [7:0]	coe_pin_through,
+	input wire  [5:0]	coe_pin_aux_in,
 
-	inout  [PIN_WIDTH-1:0]	coe_pin
+	inout wire  [PIN_WIDTH-1:0]	coe_pin
 );
 
 

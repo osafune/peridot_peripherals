@@ -1,9 +1,9 @@
 // ===================================================================
-// TITLE : PERIDOT-NG / Host bridge including SPI master
+// TITLE : PERIDOT-NGS / Host bridge including SPI master
 //
 //   DEGISN : S.OSAFUNE (J-7SYSTEM Works)
 //   DATE   : 2015/05/17 -> 2015/05/18
-//   UPDATE : 2017/01/29
+//   UPDATE : 2017/03/01
 //
 // ===================================================================
 // *******************************************************************
@@ -26,24 +26,24 @@ module peridot_csr_spi #(
 	parameter DEFAULT_REG_CLKDIV = 255			// init clkdiv value 0-255 (BitRate[bps] = <csi_clk>[Hz] / ((clkdiv + 1)*2) )
 ) (
 	// Interface: clk
-	input			csi_clk,
-	input			rsi_reset,
+	input wire			csi_clk,
+	input wire			rsi_reset,
 
 	// Interface: Avalon-MM slave
-	input  [0:0]	avs_address,
-	input			avs_read,			// read  0-setup,1-wait,0-hold
-	output [31:0]	avs_readdata,
-	input			avs_write,			// write 0-setup,0-wait,0-hold
-	input  [31:0]	avs_writedata,
+	input wire  [0:0]	avs_address,
+	input wire			avs_read,			// read  0-setup,1-wait,0-hold
+	output wire [31:0]	avs_readdata,
+	input wire			avs_write,			// write 0-setup,0-wait,0-hold
+	input wire  [31:0]	avs_writedata,
 
 	// Interface: Avalon-MM Interrupt sender
-	output			ins_irq,
+	output wire			ins_irq,
 
 	// External Interface
-	output			spi_ss_n,
-	output			spi_sclk,
-	output			spi_mosi,
-	input			spi_miso
+	output wire			spi_ss_n,
+	output wire			spi_sclk,
+	output wire			spi_mosi,
+	input wire			spi_miso
 );
 
 

@@ -1,8 +1,8 @@
 # ===================================================================
-# TITLE : PERIDOT-NG / "PERIDOT Host Bridge"
+# TITLE : PERIDOT-NGS / "PERIDOT Host Bridge"
 #
 #   DEGISN : S.OSAFUNE (J-7SYSTEM WORKS LIMITED)
-#   DATE   : 2017/01/24 -> 2017/02/18
+#   DATE   : 2017/01/24 -> 2017/03/01
 #
 # ===================================================================
 # *******************************************************************
@@ -26,7 +26,7 @@ package require -exact qsys 16.1
 # module peridot_hostbridge
 # 
 set_module_property NAME peridot_hostbridge
-set_module_property DISPLAY_NAME "PERIDOT Host Bridge (alpha test version)"
+set_module_property DISPLAY_NAME "PERIDOT Host Bridge (beta test version)"
 set_module_property DESCRIPTION "PERIDOT Host to Avalon-MM bridge"
 set_module_property AUTHOR "J-7SYSTEM WORKS LIMITED"
 set_module_property VERSION 16.1

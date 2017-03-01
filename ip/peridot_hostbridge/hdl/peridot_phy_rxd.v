@@ -1,9 +1,9 @@
 // ===================================================================
-// TITLE : PERIDOT-NG / UART reciever phy
+// TITLE : PERIDOT-NGS / UART reciever phy
 //
 //   DEGISN : S.OSAFUNE (J-7SYSTEM WORKS LIMITED)
 //   DATE   : 2015/12/27 -> 2015/12/27
-//   UPDATE : 2017/01/23
+//   UPDATE : 2017/03/01
 //
 // ===================================================================
 // *******************************************************************
@@ -24,15 +24,15 @@ module peridot_phy_rxd #(
 	parameter UART_BAUDRATE		= 115200
 ) (
 	// Interface: clk
-	input			clk,
-	input			reset,
+	input wire			clk,
+	input wire			reset,
 
 	// Interface: ST out
-	output			out_valid,
-	output [7:0]	out_data,
+	output wire			out_valid,
+	output wire [7:0]	out_data,
 
 	// interface UART
-	input			rxd
+	input wire			rxd
 );
 
 

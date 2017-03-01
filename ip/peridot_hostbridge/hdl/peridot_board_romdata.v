@@ -1,8 +1,9 @@
 // ===================================================================
-// TITLE : PERIDOT-NG / board serial-rom contents
+// TITLE : PERIDOT-NGS / board serial-rom contents
 //
 //   DEGISN : S.OSAFUNE (J-7SYSTEM WORKS LIMITED)
 //   DATE   : 2017/01/20 -> 2017/01/25
+//   UPDATE : 2017/03/01
 //
 // ===================================================================
 // *******************************************************************
@@ -28,18 +29,18 @@ module peridot_board_romdata #(
 	parameter UID_VALUE			= 64'hffffffffffffffff
 ) (
 	// Interface: clk & reset
-	input			clk,
-	input			reset,
-	output			ready,
+	input wire			clk,
+	input wire			reset,
+	output wire			ready,
 
 	// Interface: seral-rom byteread
-	input  [4:0]	byteaddr,
-	output [7:0]	bytedata,
+	input wire  [4:0]	byteaddr,
+	output wire [7:0]	bytedata,
 
 	// Interface: Condit (UID)
-	output			uid_enable,			// uid functon valid = '1' / invalid = '0'
-	output [63:0]	uid,				// uid data
-	output			uid_valid			// uid datavalid = '1' / invalid = '0'
+	output wire			uid_enable,			// uid functon valid = '1' / invalid = '0'
+	output wire [63:0]	uid,				// uid data
+	output wire			uid_valid			// uid datavalid = '1' / invalid = '0'
 );
 
 

@@ -1,9 +1,9 @@
 // ===================================================================
-// TITLE : PERIDOT-NG / I2C Serial Interface
+// TITLE : PERIDOT-NGS / I2C Serial Interface
 //
 //   DEGISN : S.OSAFUNE (J-7SYSTEM Works)
 //   DATE   : 2016/01/04 -> 2016/01/05
-//   UPDATE : 2017/01/20
+//   UPDATE : 2017/03/01
 //
 // ===================================================================
 // *******************************************************************
@@ -22,26 +22,26 @@
 
 module peridot_board_i2c (
 	// Interface: clk
-	input			clk,
-	input			reset,
+	input wire			clk,
+	input wire			reset,
 
 	// Interface: Condit (I2C)
-	input			i2c_scl_i,
-	output			i2c_scl_o,
-	input			i2c_sda_i,
-	output			i2c_sda_o,
+	input wire			i2c_scl_i,
+	output wire			i2c_scl_o,
+	input wire			i2c_sda_i,
+	output wire			i2c_sda_o,
 
 	// Interface: state
-	output			condi_start,		// Pulse : Start condition detect
-	output			condi_stop,			// Pulse : Stop condition detect
-	output			done_byte,			// Pulse : Byte transaction done (recieve data valid)
-	input			ackwaitrequest,		// Level : '1' is acknowledge transaction wait request
-	output			done_ack,			// Pulse : Acknowledge transaction done pulse
-	input  [7:0]	send_bytedata,
-	input			send_bytedatavalid,
-	output [7:0]	recieve_bytedata,
-	input			send_ackdata,
-	output			recieve_ackdata
+	output wire			condi_start,		// Pulse : Start condition detect
+	output wire			condi_stop,			// Pulse : Stop condition detect
+	output wire			done_byte,			// Pulse : Byte transaction done (recieve data valid)
+	input wire			ackwaitrequest,		// Level : '1' is acknowledge transaction wait request
+	output wire			done_ack,			// Pulse : Acknowledge transaction done pulse
+	input wire  [7:0]	send_bytedata,
+	input wire			send_bytedatavalid,
+	output wire [7:0]	recieve_bytedata,
+	input wire			send_ackdata,
+	output wire			recieve_ackdata
 );
 
 

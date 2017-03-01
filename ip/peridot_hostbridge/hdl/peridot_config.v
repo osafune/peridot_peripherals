@@ -1,8 +1,9 @@
 // ===================================================================
-// TITLE : PERIDOT-NG / Configuration Layer
+// TITLE : PERIDOT-NGS / Configuration Layer
 //
 //   DEGISN : S.OSAFUNE (J-7SYSTEM WORKS LIMITED)
 //   DATE   : 2017/01/22 -> 2017/01/30
+//   UPDATE : 2017/03/01
 //
 // ===================================================================
 // *******************************************************************
@@ -30,37 +31,37 @@ module peridot_config #(
 	parameter RESET_TIMER_CYCLE		= 40
 ) (
 	// module async reset
-	input			reset,			// config layer async reset (external input)
+	input wire			reset,			// config layer async reset (external input)
 
 	// Interface: clk
-	input			clk,			// Host bridge and Avalon-MM master clock (up to 100MHz)
-	output			reset_request,	// to Qsys system reset request
+	input wire			clk,			// Host bridge and Avalon-MM master clock (up to 100MHz)
+	output wire			reset_request,	// to Qsys system reset request
 
 	// Interface: ST in (Up-stream side)
-	output			rx_ready,		// from rxd or usbin
-	input			rx_valid,
-	input [7:0]		rx_data,
+	output wire			rx_ready,		// from rxd or usbin
+	input wire			rx_valid,
+	input wire  [7:0]	rx_data,
 
-	input			b2p_ready,		// to infifo or byte2packet
-	output			b2p_valid,
-	output [7:0]	b2p_data,
+	input wire			b2p_ready,		// to infifo or byte2packet
+	output wire			b2p_valid,
+	output wire [7:0]	b2p_data,
 
 	// Interface: ST in (Down-stream side)
-	output			p2b_ready,		// from packet2byte
-	input			p2b_valid,
-	input [7:0]		p2b_data,
+	output wire			p2b_ready,		// from packet2byte
+	input wire			p2b_valid,
+	input wire  [7:0]	p2b_data,
 
-	input			tx_ready,		// to txd or usbout
-	output			tx_valid,
-	output [7:0]	tx_data,
+	input wire			tx_ready,		// to txd or usbout
+	output wire			tx_valid,
+	output wire [7:0]	tx_data,
 
 	// Interface: Condit - async signal
-	input			peri_clk,		// Peripheals clock (1-80MHz)
-	output			ft_si,			// FTDI Send Immediate
-	output			ru_bootsel,
-	output			uid_enable,
-	output [63:0]	uid,
-	output			uid_valid
+	input wire			peri_clk,		// Peripheals clock (1-80MHz)
+	output wire			ft_si,			// FTDI Send Immediate
+	output wire			ru_bootsel,
+	output wire			uid_enable,
+	output wire [63:0]	uid,
+	output wire			uid_valid
 );
 
 

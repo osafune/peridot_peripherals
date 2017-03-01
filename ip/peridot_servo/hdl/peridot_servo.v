@@ -1,9 +1,9 @@
 // ===================================================================
-// TITLE : PERIDOT / RC Servo controller (for SG-90/MG-90S/SG-92R)
+// TITLE : PERIDOT-NGS / RC Servo controller (for SG-90/MG-90S/SG-92R)
 //
-//   DEGISN : S.OSAFUNE (J-7SYSTEM Works)
+//   DEGISN : S.OSAFUNE (J-7SYSTEM WORKS LIMITED)
 //   DATE   : 2015/05/17 -> 2015/05/17
-//   UPDATE : 2017/02/20
+//   UPDATE : 2017/03/01
 //
 // ===================================================================
 // *******************************************************************
@@ -22,19 +22,19 @@ module peridot_servo #(
 	parameter CLOCKFREQ		= 25000000	// peripheral drive clock freq(Hz)
 ) (
 	// Interface: clk
-	input			csi_clk,
-	input			rsi_reset,
+	input wire			csi_clk,
+	input wire			rsi_reset,
 
 	// Interface: Avalon-MM slave
-	input  [4:0]	avs_address,
-	input			avs_read,			// read  0-setup,1-wait,0-hold
-	output [31:0]	avs_readdata,
-	input			avs_write,			// write 0-setup,0-wait,0-hold
-	input  [31:0]	avs_writedata,
+	input wire  [4:0]	avs_address,
+	input wire			avs_read,			// read  0-setup,1-wait,0-hold
+	output wire [31:0]	avs_readdata,
+	input wire			avs_write,			// write 0-setup,0-wait,0-hold
+	input wire  [31:0]	avs_writedata,
 
 	// External Interface
-	output [PWM_CHANNEL-1:0]	pwm_out,
-	output [PWM_CHANNEL-1:0]	dsm_out
+	output wire [PWM_CHANNEL-1:0]	pwm_out,
+	output wire [PWM_CHANNEL-1:0]	dsm_out
 );
 
 

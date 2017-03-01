@@ -1,8 +1,9 @@
 // ===================================================================
-// TITLE : PERIDOT-NG / Host bridge (SWI including)
+// TITLE : PERIDOT-NGS / Host bridge (SWI including)
 //
 //   DEGISN : S.OSAFUNE (J-7SYSTEM WORKS LIMITED)
 //   DATE   : 2017/01/23 -> 2017/02/15
+//   UPDATE : 2017/03/01
 //
 // ===================================================================
 // *******************************************************************
@@ -41,51 +42,51 @@ module peridot_hostbridge #(
 	parameter SWI_CPURESET_INIT		= 0					// swi:Initialize coe_cpureset condition
 ) (
 	// Interface: Avalon-MM Master
-	input			csi_avmclock_clk,
-	input			csi_avmclock_reset,
+	input wire			csi_avmclock_clk,
+	input wire			csi_avmclock_reset,
 
-	output [31:0]	avm_m1_address,
-	input  [31:0]	avm_m1_readdata,
-	output			avm_m1_read,
-	output			avm_m1_write,
-	output [3:0]	avm_m1_byteenable,
-	output [31:0]	avm_m1_writedata,
-	input			avm_m1_waitrequest,
-	input			avm_m1_readdatavalid,
+	output wire [31:0]	avm_m1_address,
+	input wire  [31:0]	avm_m1_readdata,
+	output wire			avm_m1_read,
+	output wire			avm_m1_write,
+	output wire [3:0]	avm_m1_byteenable,
+	output wire [31:0]	avm_m1_writedata,
+	input wire			avm_m1_waitrequest,
+	input wire			avm_m1_readdatavalid,
 
 	// Interface: Avalon-MM reset source
-	output			rso_busreset_reset,
+	output wire			rso_busreset_reset,
 
 	// Interface: Avalon-MM Slave
-	input			csi_avsclock_clk,
-	input			csi_avsclock_reset,
+	input wire			csi_avsclock_clk,
+	input wire			csi_avsclock_reset,
 
-	input  [2:0]	avs_s1_address,
-	input			avs_s1_read,
-	output [31:0]	avs_s1_readdata,
-	input			avs_s1_write,
-	input  [31:0]	avs_s1_writedata,
+	input wire  [2:0]	avs_s1_address,
+	input wire			avs_s1_read,
+	output wire [31:0]	avs_s1_readdata,
+	input wire			avs_s1_write,
+	input wire  [31:0]	avs_s1_writedata,
 
 	// Interface: Avalon-MM Interrupt sender
-	output			ins_avsirq_irq,
+	output wire			ins_avsirq_irq,
 
 	// Interface: Condit
-	input			coe_mreset_n,
-	input			coe_rxd,
-	output			coe_txd,
-	inout  [7:0]	coe_ft_d,
-	output			coe_ft_rd_n,
-	output			coe_ft_wr,
-	input			coe_ft_rxf_n,
-	input			coe_ft_txe_n,
-	output			coe_ft_siwu_n,
+	input wire			coe_mreset_n,
+	input wire			coe_rxd,
+	output wire			coe_txd,
+	inout wire  [7:0]	coe_ft_d,
+	output wire			coe_ft_rd_n,
+	output wire			coe_ft_wr,
+	input wire			coe_ft_rxf_n,
+	input wire			coe_ft_txe_n,
+	output wire			coe_ft_siwu_n,
 
-	output [3:0]	coe_led,
-	output			coe_cpureset,
-	output			coe_cso_n,
-	output			coe_dclk,
-	output			coe_asdo,
-	input			coe_data0
+	output wire [3:0]	coe_led,
+	output wire			coe_cpureset,
+	output wire			coe_cso_n,
+	output wire			coe_dclk,
+	output wire			coe_asdo,
+	input wire			coe_data0
 );
 
 

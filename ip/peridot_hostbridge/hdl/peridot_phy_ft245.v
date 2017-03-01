@@ -1,8 +1,9 @@
 // ===================================================================
-// TITLE : PERIDOT-NG / FT245 Asynchronous FIFO phy
+// TITLE : PERIDOT-NGS / FT245 Asynchronous FIFO phy
 //
 //   DEGISN : S.OSAFUNE (J-7SYSTEM WORKS LIMITED)
 //   DATE   : 2017/01/31 -> 2017/02/15
+//   UPDATE : 2017/03/01
 //
 // ===================================================================
 // *******************************************************************
@@ -30,25 +31,25 @@ module peridot_phy_ft245 #(
 	parameter WR_PRECHARGE_TIME		= 50		// wrの最短ネゲート時間(ns)
 ) (
 	// Interface: clk
-	input			clk,
-	input			reset,
+	input wire			clk,
+	input wire			reset,
 
 	// Interface: ST source (RX)
-	input			out_ready,
-	output			out_valid,
-	output [7:0]	out_data,
+	input wire			out_ready,
+	output wire			out_valid,
+	output wire [7:0]	out_data,
 
 	// Interface: ST sink (TX)
-	output			in_ready,
-	input			in_valid,
-	input  [7:0]	in_data,
+	output wire			in_ready,
+	input wire			in_valid,
+	input wire  [7:0]	in_data,
 
 	// Interface: Condit FT245 Async FIFO
-	inout  [7:0]	ft_d,
-	output			ft_rd_n,
-	output			ft_wr,
-	input			ft_rxf_n,
-	input			ft_txe_n
+	inout wire  [7:0]	ft_d,
+	output wire			ft_rd_n,
+	output wire			ft_wr,
+	input wire			ft_rxf_n,
+	input wire			ft_txe_n
 );
 
 

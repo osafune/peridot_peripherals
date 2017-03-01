@@ -1,9 +1,9 @@
 // ===================================================================
-// TITLE : PERIDOT / I2C master
+// TITLE : PERIDOT-NGS / I2C master
 //
-//   DEGISN : S.OSAFUNE (J-7SYSTEM Works)
+//   DEGISN : S.OSAFUNE (J-7SYSTEM WORKS LIMITED)
 //   DATE   : 2015/05/21 -> 2015/05/22
-//   UPDATE : 2017/02/20
+//   UPDATE : 2017/03/01
 //
 // ===================================================================
 // *******************************************************************
@@ -22,24 +22,24 @@
 
 module peridot_i2c (
 	// Interface: clk
-	input			csi_clk,
-	input			rsi_reset,
+	input wire			csi_clk,
+	input wire			rsi_reset,
 
 	// Interface: Avalon-MM slave
-	input  [0:0]	avs_address,
-	input			avs_read,			// read  0-setup,1-wait,0-hold
-	output [31:0]	avs_readdata,
-	input			avs_write,			// write 0-setup,0-wait,0-hold
-	input  [31:0]	avs_writedata,
+	input wire  [0:0]	avs_address,
+	input wire			avs_read,			// read  0-setup,1-wait,0-hold
+	output wire [31:0]	avs_readdata,
+	input wire			avs_write,			// write 0-setup,0-wait,0-hold
+	input wire  [31:0]	avs_writedata,
 
 	// Interface: Avalon-MM Interrupt sender
-	output			ins_irq,
+	output wire			ins_irq,
 
 	// External Interface
-	output			i2c_scl_oe,
-	output			i2c_sda_oe,
-	input			i2c_scl,
-	input			i2c_sda
+	output wire			i2c_scl_oe,
+	output wire			i2c_sda_oe,
+	input wire			i2c_scl,
+	input wire			i2c_sda
 );
 
 

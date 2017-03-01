@@ -1,10 +1,10 @@
 // ===================================================================
-// TITLE : PERIDOT / RC Servo PWM Generator
+// TITLE : PERIDOT-NGS / RC Servo PWM Generator
 //
-//   DEGISN : S.OSAFUNE (J-7SYSTEM Works)
+//   DEGISN : S.OSAFUNE (J-7SYSTEM WORKS LIMITED)
 //   DATE   : 2015/05/17 -> 2015/05/17
 //   UPDATE : 2015/05/19 1bit⊿Σ変調出力追加 
-//            2017/02/20
+//            2017/03/01
 //
 // ===================================================================
 // *******************************************************************
@@ -22,18 +22,18 @@ module peridot_servo_pwmgen #(
 	parameter STARTSTEP		= 0,		// PWM開始ステップ数(0～2240)
 	parameter MINWIDTHSTEP	= 64		// PWM最低幅(width_num=128の時に1.5ms幅となる値を指定する)
 ) (
-	input			reset,
-	input			clk,
+	input wire			reset,
+	input wire			clk,
 
-	input			reg_write,
-	input  [7:0]	reg_writedata,		// PWM幅レジスタ(0:最小～255:最大)
-	output [7:0]	reg_readdata,
+	input wire			reg_write,
+	input wire  [7:0]	reg_writedata,		// PWM幅レジスタ(0:最小～255:最大)
+	output wire [7:0]	reg_readdata,
 
-	input			pwm_enable,
-	input			pwm_timing,
-	input [12:0]	step_num,			// 0→2559のカウントアップ 
-	output			pwm_out,			// サーボ波形の出力 
-	output			dsm_out				// アナログ出力(1bit⊿Σ変調) 
+	input wire			pwm_enable,
+	input wire			pwm_timing,
+	input wire [12:0]	step_num,			// 0→2559のカウントアップ 
+	output wire			pwm_out,			// サーボ波形の出力 
+	output wire			dsm_out				// アナログ出力(1bit⊿Σ変調) 
 );
 
 

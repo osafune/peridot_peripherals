@@ -1,9 +1,9 @@
 // ===================================================================
-// TITLE : PERIDOT-NG / Host bridge including SWI
+// TITLE : PERIDOT-NGS / Host bridge including SWI
 //
 //   DEGISN : S.OSAFUNE (J-7SYSTEM WORKS LIMITED)
 //   DATE   : 2015/04/30 -> 2015/05/23
-//   UPDATE : 2017/02/22
+//   UPDATE : 2017/03/01
 //
 // ===================================================================
 // *******************************************************************
@@ -40,32 +40,32 @@ module peridot_csr_swi #(
 	parameter CPURESET_INIT		= 0					// Initialize coe_cpureset condition
 ) (
 	// Interface: clk & reset
-	input			csi_clk,
-	input			rsi_reset,
+	input wire			csi_clk,
+	input wire			rsi_reset,
 
 	// Interface: Avalon-MM slave
-	input  [2:0]	avs_address,
-	input			avs_read,
-	output [31:0]	avs_readdata,
-	input			avs_write,
-	input  [31:0]	avs_writedata,
+	input wire  [2:0]	avs_address,
+	input wire			avs_read,
+	output wire [31:0]	avs_readdata,
+	input wire			avs_write,
+	input wire  [31:0]	avs_writedata,
 
 	// Interface: Avalon-MM Interrupt sender
-	output			ins_irq,
+	output wire			ins_irq,
 
 	// External:
-	output			coe_cpureset,
-	output [3:0]	coe_led,
-	output			coe_cso_n,
-	output			coe_dclk,
-	output			coe_asdo,
-	input			coe_data0,
+	output wire			coe_cpureset,
+	output wire [3:0]	coe_led,
+	output wire			coe_cso_n,
+	output wire			coe_dclk,
+	output wire			coe_asdo,
+	input wire			coe_data0,
 
 	// Internal signal
-	input			ru_bootsel,
-	input			uid_enable,
-	input [63:0]	uid,
-	input			uid_valid
+	input wire			ru_bootsel,
+	input wire			uid_enable,
+	input wire [63:0]	uid,
+	input wire			uid_valid
 );
 
 

@@ -1,8 +1,9 @@
 // ===================================================================
-// TITLE : PERIDOT-NG / board serial-rom emu
+// TITLE : PERIDOT-NGS / board serial-rom emu
 //
 //   DEGISN : S.OSAFUNE (J-7SYSTEM WORKS LIMITED)
 //   DATE   : 2017/01/20 -> 2017/01/25
+//   UPDATE : 2017/03/01
 //
 // ===================================================================
 // *******************************************************************
@@ -26,19 +27,19 @@ module peridot_board_eeprom #(
 	parameter UID_VALUE			= 64'hffffffffffffffff	// fixed uid value
 ) (
 	// Interface: clk
-	input			clk,
-	input			reset,
+	input wire			clk,
+	input wire			reset,
 
 	// Interface: Condit (I2C)
-	input			i2c_scl_i,
-	output			i2c_scl_o,
-	input			i2c_sda_i,
-	output			i2c_sda_o,
+	input wire			i2c_scl_i,
+	output wire			i2c_scl_o,
+	input wire			i2c_sda_i,
+	output wire			i2c_sda_o,
 
 	// Interface: Condit (UID)
-	output			uid_enable,			// uid functon valid = '1' / invalid = '0'
-	output [63:0]	uid,				// uid data
-	output			uid_valid			// uid datavalid = '1' / invalid = '0'
+	output wire			uid_enable,			// uid functon valid = '1' / invalid = '0'
+	output wire [63:0]	uid,				// uid data
+	output wire			uid_valid			// uid datavalid = '1' / invalid = '0'
 );
 
 

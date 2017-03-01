@@ -1,9 +1,9 @@
 // ===================================================================
-// TITLE : PERIDOT-NG / Byte to Avalon-MM Bridge
+// TITLE : PERIDOT-NGS / Byte to Avalon-MM Bridge
 //
 //   DEGISN : S.OSAFUNE (J-7SYSTEM WORKS LIMITED)
 //   DATE   : 2014/03/10 -> 2014/03/27
-//   UPDATE : 2017/01/23
+//   UPDATE : 2017/03/01
 //
 // ===================================================================
 // *******************************************************************
@@ -21,28 +21,28 @@
 
 module peridot_mm_master (
 	// Interface: clk
-	input			clk,
-	input			reset,
+	input wire			clk,
+	input wire			reset,
 
 	// Interface: ST in
-	output			in_ready,
-	input  [7:0]	in_data,
-	input			in_valid,
+	output wire			in_ready,
+	input wire  [7:0]	in_data,
+	input wire			in_valid,
 
 	// Interface: ST out
-	input			out_ready,
-	output [7:0]	out_data,
-	output			out_valid,
+	input wire			out_ready,
+	output wire [7:0]	out_data,
+	output wire			out_valid,
 
 	// Interface: MM master
-	output [31:0]	avm_address,
-	input  [31:0]	avm_readdata,
-	output			avm_read,
-	output			avm_write,
-	output [ 3:0]	avm_byteenable,
-	output [31:0]	avm_writedata,
-	input			avm_waitrequest,
-	input			avm_readdatavalid
+	output wire [31:0]	avm_address,
+	input wire  [31:0]	avm_readdata,
+	output wire			avm_read,
+	output wire			avm_write,
+	output wire [ 3:0]	avm_byteenable,
+	output wire [31:0]	avm_writedata,
+	input wire			avm_waitrequest,
+	input wire			avm_readdatavalid
 );
 
 

@@ -1,9 +1,9 @@
 // ===================================================================
-// TITLE : PERIDOT / Pin function controller Qsys interface
+// TITLE : PERIDOT-NGS / Pin function controller Qsys interface
 //
-//   DEGISN : S.OSAFUNE (J-7SYSTEM Works)
+//   DEGISN : S.OSAFUNE (J-7SYSTEM WORKS LIMITED)
 //   DATE   : 2015/04/19 -> 2015/05/17
-//   UPDATE : 2017/02/20
+//   UPDATE : 2017/03/01
 //
 // ===================================================================
 // *******************************************************************
@@ -43,21 +43,21 @@
 
 module peridot_pfc_interface(
 	// Interface: clk and reset
-	input			csi_clk,
-	input			rsi_reset,
+	input wire			csi_clk,
+	input wire			rsi_reset,
 
 	// Interface: Avalon-MM slave
-	input  [3:0]	avs_address,
-	input			avs_read,		// read  : 0-setup,1-wait,0-hold
-	output [31:0]	avs_readdata,
-	input			avs_write,		// write : 0-setup,0-wait,0-hold
-	input  [31:0]	avs_writedata,
+	input wire  [3:0]	avs_address,
+	input wire			avs_read,		// read  : 0-setup,1-wait,0-hold
+	output wire [31:0]	avs_readdata,
+	input wire			avs_write,		// write : 0-setup,0-wait,0-hold
+	input wire  [31:0]	avs_writedata,
 
 	// External Interface
-	output			coe_pfc_clk,
-	output			coe_pfc_reset,
-	output [36:0]	coe_pfc_cmd,
-	input  [31:0]	coe_pfc_resp
+	output wire			coe_pfc_clk,
+	output wire			coe_pfc_reset,
+	output wire [36:0]	coe_pfc_cmd,
+	input wire  [31:0]	coe_pfc_resp
 );
 
 

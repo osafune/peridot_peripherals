@@ -1,8 +1,9 @@
 // ===================================================================
-// TITLE : PERIDOT-NG / Configuration Layer Protocol
+// TITLE : PERIDOT-NGS / Configuration Layer Protocol
 //
 //   DEGISN : S.OSAFUNE (J-7SYSTEM WORKS LIMITED)
 //   DATE   : 2017/01/20 -> 2017/01/30
+//   UPDATE : 2017/03/01
 //
 // ===================================================================
 // *******************************************************************
@@ -21,39 +22,39 @@
 
 module peridot_config_proc (
 	// Interface: clk
-	input			clk,
-	input			reset,
+	input wire			clk,
+	input wire			reset,
 
 	// Interface: ST in (Up-stream side)
-	output			in_ready,		// from rxd or usbin
-	input			in_valid,
-	input [7:0]		in_data,
+	output wire			in_ready,		// from rxd or usbin
+	input wire			in_valid,
+	input wire  [7:0]	in_data,
 
-	input			out_ready,		// to infifo or byte2packet
-	output			out_valid,
-	output [7:0]	out_data,
+	input wire			out_ready,		// to infifo or byte2packet
+	output wire			out_valid,
+	output wire [7:0]	out_data,
 
 	// Interface: ST in (Down-stream side)
-	output			pk_ready,		// from packet2byte
-	input			pk_valid,
-	input [7:0]		pk_data,
+	output wire			pk_ready,		// from packet2byte
+	input wire			pk_valid,
+	input wire  [7:0]	pk_data,
 
-	input			resp_ready,		// to txd or usbout
-	output			resp_valid,
-	output [7:0]	resp_data,
+	input wire			resp_ready,		// to txd or usbout
+	output wire			resp_valid,
+	output wire [7:0]	resp_data,
 
 	// Interface: Condit (i2c, config) - async signal
-	output			reset_request,	// Qsys reset request signal
+	output wire			reset_request,	// Qsys reset request signal
 
-	output			ft_si,			// FTDI Send Immediate
-	output			i2c_scl_o,
-	input			i2c_scl_i,
-	output			i2c_sda_o,
-	input			i2c_sda_i,
+	output wire			ft_si,			// FTDI Send Immediate
+	output wire			i2c_scl_o,
+	input wire			i2c_scl_i,
+	output wire			i2c_sda_o,
+	input wire			i2c_sda_i,
 
-	input			ru_bootsel,
-	output			ru_nconfig,
-	input			ru_nstatus
+	input wire			ru_bootsel,
+	output wire			ru_nconfig,
+	input wire			ru_nstatus
 );
 
 
