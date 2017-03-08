@@ -2,7 +2,7 @@
 # TITLE : PERIDOT-NGS / "PERIDOT Host Bridge"
 #
 #   DEGISN : S.OSAFUNE (J-7SYSTEM WORKS LIMITED)
-#   DATE   : 2017/01/24 -> 2017/03/01
+#   DATE   : 2017/01/24 -> 2017/03/09
 #
 # ===================================================================
 # *******************************************************************
@@ -329,6 +329,7 @@ set_interface_assignment s1 embeddedsw.configuration.isPrintableDevice 0
 # connection point avsirq
 # 
 add_interface avsirq interrupt end
+set_interface_property avsirq associatedAddressablePoint s1
 set_interface_property avsirq associatedClock avmclock
 set_interface_property avsirq associatedReset busreset
 

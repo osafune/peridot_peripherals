@@ -17,9 +17,6 @@
 //   notice.
 // *******************************************************************
 
-
-`timescale 1ns / 100ps
-
 module peridot_config #(
 	parameter RECONFIG_FEATURE		= "ENABLE",
 	parameter CHIPUID_FEATURE		= "ENABLE",

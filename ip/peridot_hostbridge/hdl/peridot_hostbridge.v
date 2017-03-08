@@ -17,8 +17,6 @@
 //   notice.
 // *******************************************************************
 
-`timescale 1ns / 100ps
-
 module peridot_hostbridge #(
 	parameter DEVICE_FAMILY			= "MAX 10",
 	parameter AVM_CLOCKFREQ			= 100000000,		// master drive clock freq(Hz)

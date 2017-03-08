@@ -1,6 +1,6 @@
 PERDOT Hostbridge モジュール
 βテスト版
-2017/03/01 s.osafune@j7system.jp
+2017/03/09 s.osafune@j7system.jp
 
 
 ■ ポート

@@ -27,9 +27,11 @@ PERIDOT Host Bridge
 -------------------
 
 ホストからQsys内部へアクセスするブリッジを提供します。  
-[Canarium](https://github.com/kimushu/canarium)パッケージを利用することで、クライアント側のJavaScriptからQsys内部のAvalon-MMスレーブペリフェラル、およびNiosIIのHALと相互にアクセスすることができます。  
-また、NiosIIとクライアントとの排他制御、通知、ブートシーケンス制御の機能を提供します。  
+[Canarium](https://github.com/kimushu/canarium)パッケージを利用することで、クライアント側のJavaScriptからQsys内部のAvalon-MMスレーブペリフェラルへアクセスすることができます。  
 MAX10ではデュアルコンフィグレーションスキームを利用したリコンフィグレーション機能を提供します。  
+
+また、NiosIIを併用する場合はクライアント側との排他制御、通知、ブートシーケンス制御の機能を提供します。[PERIDOTソフトウェアパッケージ](https://github.com/kimushu/peridot_sw_packages)を利用することで、RPCサーバー側の機能を提供します。  
+
 
 PERIDOT PFC
 -----------

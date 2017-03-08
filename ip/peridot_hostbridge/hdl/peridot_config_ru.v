@@ -17,9 +17,6 @@
 //   notice.
 // *******************************************************************
 
-
-`timescale 1ns / 100ps
-
 module peridot_config_ru #(
 	parameter DEVICE_FAMILY			= "",
 	parameter RECONF_DELAY_CYCLE	= 10,		// less than 80000000 

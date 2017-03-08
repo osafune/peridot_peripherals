@@ -17,8 +17,6 @@
 //   notice.
 // *******************************************************************
 
-`timescale 1ns / 100ps
-
 module peridot_mm_master (
 	// Interface: clk
 	input wire			clk,

@@ -17,9 +17,6 @@
 //   notice.
 // *******************************************************************
 
-
-`timescale 1ns / 100ps
-
 module peridot_config_proc (
 	// Interface: clk
 	input wire			clk,

@@ -17,9 +17,6 @@
 //   notice.
 // *******************************************************************
 
-
-`timescale 1ns / 100ps
-
 module peridot_board_i2c (
 	// Interface: clk
 	input wire			clk,

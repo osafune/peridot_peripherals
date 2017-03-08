@@ -17,8 +17,6 @@
 //   notice.
 // *******************************************************************
 
-`timescale 1ns / 100ps
-
 module peridot_board_eeprom #(
 	parameter CHIPUID_FEATURE	= "ENABLE",
 	parameter I2C_DEV_ADDRESS	= 7'b1010000,

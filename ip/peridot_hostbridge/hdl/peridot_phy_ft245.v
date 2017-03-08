@@ -21,8 +21,6 @@
 //   受信データ優先、FIFOに送信されてきたデータがあれば全てなくなるまでTX側は待たされる。 
 //   PERIDOTではホスト側が通信権を持つため、常にRX側を優先する。 
 
-`timescale 1ns / 100ps
-
 module peridot_phy_ft245 #(
 	parameter CLOCK_FREQUENCY		= 50000000,
 	parameter RD_ACTIVE_PULSE_WIDTH	= 60,		// rd_nの最短アサート時間(ns)

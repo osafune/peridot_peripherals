@@ -20,8 +20,6 @@
 // sdcに追加 
 // set_false_path -from [get_registers \{*\|altchip_id:*\|regout_wire\}] -to [get_registers \{*\|altchip_id:*\|lpm_shiftreg:shift_reg\|dffs\[63\]\}]
 
-`timescale 1ns / 100ps
-
 module peridot_board_romdata #(
 	parameter CHIPUID_FEATURE	= "ENABLE",
 	parameter DEVICE_FAMILY		= "",

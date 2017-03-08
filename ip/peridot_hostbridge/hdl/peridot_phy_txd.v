@@ -17,8 +17,6 @@
 //   notice.
 // *******************************************************************
 
-`timescale 1ns / 100ps
-
 module peridot_phy_txd #(
 	parameter CLOCK_FREQUENCY	= 50000000,
 	parameter UART_BAUDRATE		= 115200
