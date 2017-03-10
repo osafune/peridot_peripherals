@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ip>
+ <presets version="16.1">
+  <preset
+     name="single Alliance AS4C4M16SA-7(CL=2)"
+     kind="altera_avalon_new_sdram_controller"
+     version="All"
+     description="Alliance Memory 64Mbit(4Mx16) 143MHz">
+   <parameter name="numberOfChipSelects" value="1" />
+   <parameter name="numberOfBanks" value="4" />
+   <parameter name="rowWidth" value="12" />
+   <parameter name="columnWidth" value="8" />
+   <parameter name="dataWidth" value="16" />
+   <parameter name="casLatency" value="2" />
+   <parameter name="powerUpDelay" value="200.0" />
+   <parameter name="initRefreshCommands" value="2" />
+   <parameter name="refreshPeriod" value="15.625" />
+   <parameter name="TRFC" value="63.0" />
+   <parameter name="TRCD" value="21.0" />
+   <parameter name="TRP" value="21.0" />
+   <parameter name="TWR" value="14.0" />
+   <parameter name="TAC" value="6.0" />
+   <parameter name="generateSimulationModel" value="false" />
+  </preset>
+  <preset
+     name="single Alliance AS4C4M16SA-7(CL=3)"
+     kind="altera_avalon_new_sdram_controller"
+     version="All"
+     description="Alliance Memory 64Mbit(4Mx16) 143MHz">
+   <parameter name="numberOfChipSelects" value="1" />
+   <parameter name="numberOfBanks" value="4" />
+   <parameter name="rowWidth" value="12" />
+   <parameter name="columnWidth" value="8" />
+   <parameter name="dataWidth" value="16" />
+   <parameter name="casLatency" value="3" />
+   <parameter name="powerUpDelay" value="200.0" />
+   <parameter name="initRefreshCommands" value="2" />
+   <parameter name="refreshPeriod" value="15.625" />
+   <parameter name="TRFC" value="63.0" />
+   <parameter name="TRCD" value="21.0" />
+   <parameter name="TRP" value="21.0" />
+   <parameter name="TWR" value="14.0" />
+   <parameter name="TAC" value="5.4" />
+   <parameter name="generateSimulationModel" value="false" />
+  </preset>
+ </presets>
+</ip>

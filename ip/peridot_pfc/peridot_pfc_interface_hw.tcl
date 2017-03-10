@@ -28,6 +28,7 @@ package require -exact qsys 16.1
 set_module_property NAME peridot_pfc_interface
 set_module_property DISPLAY_NAME "PERIDOT PFC interface"
 set_module_property DESCRIPTION "PERIDOT PFC interface"
+set_module_property GROUP "PERIDOT Peripherals"
 set_module_property AUTHOR "J-7SYSTEM WORKS LIMITED"
 set_module_property VERSION 16.1
 set_module_property INTERNAL false

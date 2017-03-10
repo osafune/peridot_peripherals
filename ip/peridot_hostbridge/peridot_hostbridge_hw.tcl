@@ -28,6 +28,7 @@ package require -exact qsys 16.1
 set_module_property NAME peridot_hostbridge
 set_module_property DISPLAY_NAME "PERIDOT Host Bridge (beta test version)"
 set_module_property DESCRIPTION "PERIDOT Host to Avalon-MM bridge"
+set_module_property GROUP "PERIDOT Peripherals"
 set_module_property AUTHOR "J-7SYSTEM WORKS LIMITED"
 set_module_property VERSION 16.1
 set_module_property INTERNAL false
