@@ -1,5 +1,5 @@
 # ===================================================================
-# TITLE : PERIDOT-NGS / "PERIDOT SERVO controller "
+# TITLE : PERIDOT-NGS / "PERIDOT RC-Servo controller "
 #
 #   DEGISN : S.OSAFUNE (J-7SYSTEM WORKS LIMITED)
 #   DATE   : 2017/02/20 -> 2017/03/01
@@ -26,8 +26,8 @@ package require -exact qsys 16.1
 # module peridot_i2c_master
 # 
 set_module_property NAME peridot_servo
-set_module_property DISPLAY_NAME "PERIDOT SERVO contoller"
-set_module_property DESCRIPTION "PERIDOT SERVO contoller"
+set_module_property DISPLAY_NAME "PERIDOT RC-Servo controller"
+set_module_property DESCRIPTION "PERIDOT RC-Servo controller"
 set_module_property GROUP "PERIDOT Peripherals"
 set_module_property AUTHOR "J-7SYSTEM WORKS LIMITED"
 set_module_property VERSION 16.1
