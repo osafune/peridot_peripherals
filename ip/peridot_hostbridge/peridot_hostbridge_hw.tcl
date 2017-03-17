@@ -78,7 +78,6 @@ set_parameter_property AVS_CLOCKFREQ VISIBLE $debugview
 
 add_parameter RECONFIG_FEATURE string
 set_parameter_property RECONFIG_FEATURE HDL_PARAMETER true
-set_parameter_property RECONFIG_FEATURE ENABLED false
 set_parameter_property RECONFIG_FEATURE DERIVED true
 set_parameter_property RECONFIG_FEATURE VISIBLE $debugview
 add_parameter USE_RECONFIG boolean true
@@ -87,7 +86,6 @@ set_parameter_property USE_RECONFIG DISPLAY_HINT boolean
 
 add_parameter INSTANCE_ALTDUALBOOT string
 set_parameter_property INSTANCE_ALTDUALBOOT HDL_PARAMETER true
-set_parameter_property INSTANCE_ALTDUALBOOT ENABLED false
 set_parameter_property INSTANCE_ALTDUALBOOT DERIVED true
 set_parameter_property INSTANCE_ALTDUALBOOT VISIBLE $debugview
 add_parameter USE_ALTDUALBOOT boolean true
@@ -97,7 +95,6 @@ set_parameter_property USE_ALTDUALBOOT DISPLAY_HINT boolean
 
 add_parameter CHIPUID_FEATURE string
 set_parameter_property CHIPUID_FEATURE HDL_PARAMETER true
-set_parameter_property CHIPUID_FEATURE ENABLED false
 set_parameter_property CHIPUID_FEATURE DERIVED true
 set_parameter_property CHIPUID_FEATURE VISIBLE $debugview
 add_parameter USE_CHIPUID boolean true
@@ -128,7 +125,6 @@ set_parameter_property PERIDOT_GENCODE HDL_PARAMETER true
 
 add_parameter RECONF_DELAY_CYCLE integer
 set_parameter_property RECONF_DELAY_CYCLE HDL_PARAMETER true
-set_parameter_property RECONF_DELAY_CYCLE ENABLED false
 set_parameter_property RECONF_DELAY_CYCLE DERIVED true
 set_parameter_property RECONF_DELAY_CYCLE VISIBLE $debugview
 add_parameter RECONF_DELAY_TIME integer 200
@@ -138,19 +134,16 @@ set_parameter_property RECONF_DELAY_TIME ALLOWED_RANGES 1:1000
 
 add_parameter CONFIG_CYCLE integer
 set_parameter_property CONFIG_CYCLE HDL_PARAMETER true
-set_parameter_property CONFIG_CYCLE ENABLED false
 set_parameter_property CONFIG_CYCLE DERIVED true
 set_parameter_property CONFIG_CYCLE VISIBLE $debugview
 
 add_parameter RESET_TIMER_CYCLE integer
 set_parameter_property RESET_TIMER_CYCLE HDL_PARAMETER true
-set_parameter_property RESET_TIMER_CYCLE ENABLED false
 set_parameter_property RESET_TIMER_CYCLE DERIVED true
 set_parameter_property RESET_TIMER_CYCLE VISIBLE $debugview
 
 add_parameter SWI_EPCSBOOT_FEATURE string
 set_parameter_property SWI_EPCSBOOT_FEATURE HDL_PARAMETER true
-set_parameter_property SWI_EPCSBOOT_FEATURE ENABLED false
 set_parameter_property SWI_EPCSBOOT_FEATURE DERIVED true
 set_parameter_property SWI_EPCSBOOT_FEATURE VISIBLE $debugview
 add_parameter SWI_USE_EPCSBOOT boolean true
@@ -159,7 +152,6 @@ set_parameter_property SWI_USE_EPCSBOOT DISPLAY_HINT boolean
 
 add_parameter SWI_UIDREAD_FEATURE string
 set_parameter_property SWI_UIDREAD_FEATURE HDL_PARAMETER true
-set_parameter_property SWI_UIDREAD_FEATURE ENABLED false
 set_parameter_property SWI_UIDREAD_FEATURE DERIVED true
 set_parameter_property SWI_UIDREAD_FEATURE VISIBLE $debugview
 add_parameter SWI_USE_UIDREAD boolean true
@@ -168,7 +160,6 @@ set_parameter_property SWI_USE_UIDREAD DISPLAY_HINT boolean
 
 add_parameter SWI_MESSAGE_FEATURE string
 set_parameter_property SWI_MESSAGE_FEATURE HDL_PARAMETER true
-set_parameter_property SWI_MESSAGE_FEATURE ENABLED false
 set_parameter_property SWI_MESSAGE_FEATURE DERIVED true
 set_parameter_property SWI_MESSAGE_FEATURE VISIBLE $debugview
 add_parameter SWI_USE_MESSAGE boolean true
@@ -410,7 +401,6 @@ proc generate_synth {entityname} {
 	# PERIDOT ip files
 	#-----------------------------------
 
-#	set hdlpath "../../.."
 	set hdlpath "./hdl"
 
 	add_fileset_file peridot_board_eeprom.v VERILOG PATH "${hdlpath}/peridot_board_eeprom.v"
