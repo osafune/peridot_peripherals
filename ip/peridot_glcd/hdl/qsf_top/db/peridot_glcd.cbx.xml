@@ -1,6 +1,0 @@
-<?xml version="1.0" ?>
-<LOG_ROOT>
-	<PROJECT NAME="peridot_glcd">
-		<CBX_INST_ENTRY INSTANCE_NAME="|peridot_glcd|peridot_glcd_dma:U1|dcfifo_mixed_widths:u0" CBX_FILE_NAME="dcfifo_7op1.tdf"/>
-	</PROJECT>
-</LOG_ROOT>
