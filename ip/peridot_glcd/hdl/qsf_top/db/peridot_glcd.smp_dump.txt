@@ -1,0 +1,15 @@
+
+State Machine - |peridot_glcd|peridot_glcd_wrstate:U2|lcdc_state
+Name lcdc_state.DONE lcdc_state.WRNEGATE lcdc_state.WRASSERT lcdc_state.RSETWAIT lcdc_state.IDLE 
+lcdc_state.IDLE 0 0 0 0 0 
+lcdc_state.RSETWAIT 0 0 0 1 1 
+lcdc_state.WRASSERT 0 0 1 0 1 
+lcdc_state.WRNEGATE 0 1 0 0 1 
+lcdc_state.DONE 1 0 0 0 1 
+
+State Machine - |peridot_glcd|peridot_glcd_dma:U1|dma_state
+Name dma_state.DONE dma_state.DATAWAIT dma_state.READISSUE dma_state.IDLE 
+dma_state.IDLE 0 0 0 0 
+dma_state.READISSUE 0 0 1 1 
+dma_state.DATAWAIT 0 1 0 1 
+dma_state.DONE 1 0 0 1 

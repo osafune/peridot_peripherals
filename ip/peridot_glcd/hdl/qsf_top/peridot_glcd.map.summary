@@ -1,0 +1,14 @@
+Analysis & Synthesis Status : Successful - Sun Mar 12 06:09:12 2017
+Quartus II 64-Bit Version : 9.1 Build 350 03/24/2010 SP 2.46 SJ Full Version
+Revision Name : peridot_glcd
+Top-level Entity Name : peridot_glcd
+Family : Cyclone III
+Total logic elements : 368
+    Total combinational functions : 257
+    Dedicated logic registers : 229
+Total registers : 229
+Total pins : 137
+Total virtual pins : 0
+Total memory bits : 4,096
+Embedded Multiplier 9-bit elements : 0
+Total PLLs : 0
