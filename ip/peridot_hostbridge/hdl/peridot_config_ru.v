@@ -79,8 +79,6 @@ module peridot_config_ru #(
 	wire			dc_read_sig;
 	wire [31:0]		dc_readdata_sig;
 
-	(* altera_attribute = "-name CUT ON -to nconfig_in_reg[0]" *)
-
 
 /* ¦ˆÈ~‚ÌwireAregéŒ¾‚Í‹Ö~¦ */
 

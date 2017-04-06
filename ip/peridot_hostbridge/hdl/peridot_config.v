@@ -92,9 +92,6 @@ module peridot_config #(
 	wire			ru_nconfig_sig;
 	wire			ru_nstatus_sig;
 
-	(* altera_attribute = "-name CUT ON -to streset_reg[0]" *)
-	(* altera_attribute = "-name CUT ON -to perireset_reg[0]" *)
-
 
 /* ※以降のwire、reg宣言は禁止※ */
 

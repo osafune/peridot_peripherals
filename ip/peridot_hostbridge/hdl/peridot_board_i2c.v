@@ -72,9 +72,6 @@ module peridot_board_i2c (
 	reg  [7:0]		txdata_reg;
 	reg  [7:0]		rxdata_reg;
 
-	(* altera_attribute = "-name CUT ON -to scl_in_reg[0]" *)
-	(* altera_attribute = "-name CUT ON -to sda_in_reg[0]" *)
-
 
 /* ※以降のwire、reg宣言は禁止※ */
 

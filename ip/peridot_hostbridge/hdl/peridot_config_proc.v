@@ -100,11 +100,6 @@ module peridot_config_proc (
 	wire			resp_ready_sig;
 	wire			resp_valid_sig;
 
-	(* altera_attribute = "-name CUT ON -to scl_in_reg" *)
-	(* altera_attribute = "-name CUT ON -to sda_in_reg" *)
-	(* altera_attribute = "-name CUT ON -to bootsel_reg" *)
-	(* altera_attribute = "-name CUT ON -to nstatus_reg" *)
-
 
 /* ※以降のwire、reg宣言は禁止※ */
 

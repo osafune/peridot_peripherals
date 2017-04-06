@@ -3,7 +3,7 @@
 //
 //   DEGISN : S.OSAFUNE (J-7SYSTEM WORKS LIMITED)
 //   DATE   : 2015/05/21 -> 2015/05/22
-//   UPDATE : 2017/03/01
+//   UPDATE : 2017/04/06
 //
 // ===================================================================
 // *******************************************************************
@@ -36,6 +36,7 @@ module peridot_i2c (
 	output wire			ins_irq,
 
 	// External Interface
+	output wire			i2c_reset_out,
 	output wire			i2c_scl_oe,
 	output wire			i2c_sda_oe,
 	input wire			i2c_scl,
@@ -348,6 +349,7 @@ module peridot_i2c (
 
 	///// I2C信号入出力 /////
 
+	assign i2c_reset_out = i2crst_reg;
 	assign i2c_scl_oe = scl_oe_reg;
 	assign i2c_sda_oe = sda_oe_reg;
 	assign scl_sig = i2c_scl_in_reg[1];
