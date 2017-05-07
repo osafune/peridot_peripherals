@@ -1,14 +1,15 @@
 -- ===================================================================
--- TITLE : Loreley-WSG (8bitPCM sound module)
+-- TITLE : PERIDOT-NGS / Loreley-WSG (8bitPCM sound module)
 --
 --     DESIGN : S.OSAFUNE (J-7SYSTEM WORKS LIMITED)
 --     DATE   : 2011/09/12 -> 2011/09/13
 --            : 2011/06/13 (FIXED)
---     MODIFY : 2016/10/25 CycloneIV/MAX10ƒAƒbƒvƒf[ƒg 
+--     MODIFY : 2016/10/25 CycloneIV/MAX10ã‚¢ãƒƒãƒ—ãƒ‡ãƒ¼ãƒˆ 
+--				2017/04/06 LPM FIFOã®ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹å¤‰æ›´ 
 --
 -- ===================================================================
 -- *******************************************************************
---    (C) 2011-2016, J-7SYSTEM WORKS LIMITED.  All rights Reserved.
+--    (C) 2011-2017, J-7SYSTEM WORKS LIMITED.  All rights Reserved.
 --
 -- * This module is a free sourcecode and there is NO WARRANTY.
 -- * No restriction on use. You can use, modify and redistribute it
@@ -18,23 +19,26 @@
 --   notice.
 -- *******************************************************************
 
---	0	: PCMCH FSDIVƒŒƒWƒXƒ^(WO)
---	1	: PCMCH FIFOƒŒƒWƒXƒ^(WO)
---		:       STATUSƒŒƒWƒXƒ^(RO)  bit1:fifoinput ready, bit0:play
+--	0	: PCMCH FSDIVãƒ¬ã‚¸ã‚¹ã‚¿(WO)
+--	1	: PCMCH FIFOãƒ¬ã‚¸ã‚¹ã‚¿(WO)
+--		:       STATUSãƒ¬ã‚¸ã‚¹ã‚¿(RO)  bit1:fifoinput ready, bit0:play
 --
---	write‚Í‚PƒNƒƒbƒN•AƒEƒFƒCƒgEƒz[ƒ‹ƒh–³‚µ 
--- 	ƒŠ[ƒh‚ÍƒAƒhƒŒƒXŠm’èŒã1ƒNƒƒbƒNˆÈ“à 
+--	writeã¯ï¼‘ã‚¯ãƒ­ãƒƒã‚¯å¹…ã€ã‚¦ã‚§ã‚¤ãƒˆãƒ»ãƒ›ãƒ¼ãƒ«ãƒ‰ç„¡ã— 
+-- 	ãƒªãƒ¼ãƒ‰ã¯ã‚¢ãƒ‰ãƒ¬ã‚¹ç¢ºå®šå¾Œ1ã‚¯ãƒ­ãƒƒã‚¯ä»¥å†… 
 --
--- FSDIVƒŒƒWƒXƒ^ : Ä¶‘¬“x‚ğİ’è‚·‚éB0:“™‘¬A1-255:1/256`255/256ƒXƒ[Ä¶ 
+-- FSDIVãƒ¬ã‚¸ã‚¹ã‚¿ : å†ç”Ÿé€Ÿåº¦ã‚’è¨­å®šã™ã‚‹ã€‚0:ç­‰é€Ÿã€1-255:1/256ï½255/256ã‚¹ãƒ­ãƒ¼å†ç”Ÿ 
 --
--- fifo_irq : Ä¶fifo‚É256ƒ[ƒhˆÈã‚Ì‹ó‚«‚ª‚ ‚é‚Æ‚«‚É'1'‚É‚È‚é 
--- start_sync : fsƒ^ƒCƒ~ƒ“ƒOM†islot_clkƒhƒƒCƒ“‚Å‚PƒNƒƒbƒN•j 
+-- fifo_irq : å†ç”Ÿfifoã«256ãƒ¯ãƒ¼ãƒ‰ä»¥ä¸Šã®ç©ºããŒã‚ã‚‹ã¨ãã«'1'ã«ãªã‚‹ 
+-- start_sync : fsã‚¿ã‚¤ãƒŸãƒ³ã‚°ä¿¡å·ï¼ˆslot_clkãƒ‰ãƒ¡ã‚¤ãƒ³ã§ï¼‘ã‚¯ãƒ­ãƒƒã‚¯å¹…ï¼‰ 
 
 
 library IEEE;
 use IEEE.std_logic_1164.all;
 use IEEE.std_logic_arith.all;
 use IEEE.std_logic_unsigned.all;
+
+library altera_mf;
+use altera_mf.altera_mf_components.all;
 
 entity wsg_pcm8 is
 	port(
@@ -64,21 +68,6 @@ architecture RTL of wsg_pcm8 is
 	signal pcm_playcount_reg	: std_logic_vector(8 downto 0);
 	signal pcm_playcount_sig	: std_logic_vector(8 downto 0);
 
-
-	component wsg_pcmfifo
-	PORT
-	(
-		aclr		: IN STD_LOGIC  := '0';
-		data		: IN STD_LOGIC_VECTOR (7 DOWNTO 0);
-		rdclk		: IN STD_LOGIC ;
-		rdreq		: IN STD_LOGIC ;
-		wrclk		: IN STD_LOGIC ;
-		wrreq		: IN STD_LOGIC ;
-		q			: OUT STD_LOGIC_VECTOR (7 DOWNTO 0);
-		rdempty		: OUT STD_LOGIC ;
-		wrusedw		: OUT STD_LOGIC_VECTOR (10 DOWNTO 0)
-	);
-	end component;
 	signal pcm_fiforead_sig		: std_logic;
 	signal pcm_fifowrite_sig	: std_logic;
 	signal pcm_wrusedw_sig		: std_logic_vector(10 downto 0);
@@ -89,7 +78,7 @@ architecture RTL of wsg_pcm8 is
 begin
 
 
-	-- PCM‰¹Œ¹‚ÌƒŒƒWƒXƒ^ˆ— 
+	-- PCMéŸ³æºã®ãƒ¬ã‚¸ã‚¹ã‚¿å‡¦ç† 
 
 	irq_sig  <= '1' when(pcm_wrusedw_sig < 1024-256) else '0';
 	play_sig <= '1' when(pcm_wrusedw_sig /= 0) else '0';
@@ -101,7 +90,7 @@ begin
 
 	fifo_irq <= irq_sig;
 
-	process (clk, reset) begin						-- ƒŒƒWƒXƒ^‘¤ƒNƒƒbƒNƒhƒƒCƒ“ 
+	process (clk, reset) begin						-- ãƒ¬ã‚¸ã‚¹ã‚¿å´ã‚¯ãƒ­ãƒƒã‚¯ãƒ‰ãƒ¡ã‚¤ãƒ³ 
 		if (reset = '1') then
 			pcm_speed_reg <= (others=>'0');
 
@@ -114,16 +103,16 @@ begin
 	end process;
 
 
-	-- FIFO§ŒäM†‚Ì¶¬ 
+	-- FIFOåˆ¶å¾¡ä¿¡å·ã®ç”Ÿæˆ 
 
 	pcm_playstep_sig  <= (8=>'1',others=>'0') when(pcm_playstep_reg = 0) else ('0' & pcm_playstep_reg);
 	pcm_playcount_sig <= ('0' & pcm_playcount_reg(7 downto 0));
 
-	process (slot_clk) begin						-- ƒXƒƒbƒg‘¤ƒNƒƒbƒNƒhƒƒCƒ“ 
+	process (slot_clk) begin						-- ã‚¹ãƒ­ãƒƒãƒˆå´ã‚¯ãƒ­ãƒƒã‚¯ãƒ‰ãƒ¡ã‚¤ãƒ³ 
 		if rising_edge(slot_clk) then
 			pcm_playstep_reg <= pcm_speed_reg;
 
-			if (pcm_fifoempty_sig = '1') then		-- FIFO empty‚ÅÄ¶I—¹‚ÆŒ©‚È‚· 
+			if (pcm_fifoempty_sig = '1') then		-- FIFO emptyã§å†ç”Ÿçµ‚äº†ã¨è¦‹ãªã™ 
 				pcm_playcount_reg <= (others=>'0');
 			elsif (start_sync = '1') then
 				pcm_playcount_reg <= pcm_playcount_sig + pcm_playstep_sig;
@@ -132,27 +121,42 @@ begin
 	end process;
 
 
-	-- PCM-FIFO‚ÌƒCƒ“ƒXƒ^ƒ“ƒX 
+	-- PCM-FIFOã®ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹ 
 
 	pcm_fifowrite_sig <= '1' when(address = "1" and write = '1') else '0';
 	pcm_fiforead_sig  <= '1' when(start_sync = '1' and pcm_playcount_reg(8) = '1') else '0';
 
-	U_PCMFIFO : wsg_pcmfifo
+	U_PCMFIFO : dcfifo
+	GENERIC MAP (
+		lpm_type			=> "dcfifo",
+		lpm_showahead		=> "ON",
+		lpm_numwords		=> 1024,
+		lpm_width			=> 8,
+		lpm_widthu			=> 11,
+		add_usedw_msb_bit	=> "ON",
+		overflow_checking	=> "ON",
+		underflow_checking	=> "ON",
+		use_eab				=> "ON",
+		write_aclr_synch	=> "OFF",
+		rdsync_delaypipe	=> 4,
+		wrsync_delaypipe	=> 4
+	)
 	PORT MAP (
-		aclr		=> '0',
-		wrclk		=> clk,
-		wrreq		=> pcm_fifowrite_sig,
-		data		=> writedata,
-		wrusedw		=> pcm_wrusedw_sig,
+		aclr	=> '0',
 
-		rdclk		=> slot_clk,
-		rdreq		=> pcm_fiforead_sig,
-		q			=> pcm_fifoout_sig,
-		rdempty		=> pcm_fifoempty_sig
+		wrclk	=> clk,
+		wrreq	=> pcm_fifowrite_sig,
+		data	=> writedata,
+		wrusedw	=> pcm_wrusedw_sig,
+
+		rdclk	=> slot_clk,
+		rdreq	=> pcm_fiforead_sig,
+		q		=> pcm_fifoout_sig,
+		rdempty	=> pcm_fifoempty_sig
 	);
 
 
-	-- PCMƒf[ƒ^o—Í 
+	-- PCMãƒ‡ãƒ¼ã‚¿å‡ºåŠ› 
 
 	pcm_out <= pcm_fifoout_sig when(pcm_fifoempty_sig = '0') else (others=>'0');
 

@@ -1,14 +1,15 @@
 -- ===================================================================
--- TITLE : Loreley-WSG DAC I/F module
+-- TITLE : PERIDOT-NGS / Loreley-WSG DAC I/F module
 --
 --     DESIGN : S.OSAFUNE (J-7SYSTEM WORKS LIMITED)
 --     DATE   : 2008/07/01 -> 2008/07/01
 --            : 2008/07/01 (FIXED)
---     MODIFY : 2016/10/25 CycloneIV E/MAX10ƒAƒbƒvƒf[ƒg 
+--     MODIFY : 2016/10/25 CycloneIV E/MAX10ã‚¢ãƒƒãƒ—ãƒ‡ãƒ¼ãƒˆ 
+--            : 2017/04/06 LPM_MULTã®ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹å¤‰æ›´ 
 --
 -- ===================================================================
 -- *******************************************************************
---    (C) 2008-2016, J-7SYSTEM WORKS LIMITED.  All rights Reserved.
+--    (C) 2008-2017, J-7SYSTEM WORKS LIMITED.  All rights Reserved.
 --
 -- * This module is a free sourcecode and there is NO WARRANTY.
 -- * No restriction on use. You can use, modify and redistribute it
@@ -18,20 +19,23 @@
 --   notice.
 -- *******************************************************************
 
--- 16bitPCMƒf[ƒ^‚Æ15bitƒ{ƒŠƒ…[ƒ€’l‚©‚ç16bit‚Ìƒf[ƒ^‚ğ¶¬ 
--- ‰E‹l‚ßAMSBƒtƒ@[ƒXƒgALRCK:Lch='H',Rch='L'A32bitƒf[ƒ^’·‚Å‘—M 
+-- 16bitPCMãƒ‡ãƒ¼ã‚¿ã¨15bitãƒœãƒªãƒ¥ãƒ¼ãƒ å€¤ã‹ã‚‰16bitã®ãƒ‡ãƒ¼ã‚¿ã‚’ç”Ÿæˆ 
+-- å³è©°ã‚ã€MSBãƒ•ã‚¡ãƒ¼ã‚¹ãƒˆã€LRCK:Lch='H',Rch='L'ã€32bitãƒ‡ãƒ¼ã‚¿é•·ã§é€ä¿¡ 
 
--- ƒ{ƒŠƒ…[ƒ€’l‚Í0x4000(16384)‚ªÅ‘å 
--- 0x4000‚ğ‰z‚¦‚éƒf[ƒ^‚ğİ’è‚µ‚½ê‡‚ÍPCMƒf[ƒ^‚Ìƒ‰ƒbƒvƒAƒ‰ƒEƒ“ƒh‚ğ 
--- ‹N‚±‚·‚½‚ßAƒ{ƒŠƒ…[ƒ€’l‚Í‘O’i‚Å“K‹Xƒ}ƒXƒN‚·‚é‚±‚Æ 
--- pcmdata“ü—Í‚¨‚æ‚Ñvolume“ü—Í‚ÍƒŒƒWƒXƒ^ó‚¯‚Å‚Í‚È‚¢‚Ì‚ÅA‘O’i‚Í 
--- ƒŒƒWƒXƒ^o—Í‚É‚·‚é‚±‚Æ 
+-- ãƒœãƒªãƒ¥ãƒ¼ãƒ å€¤ã¯0x4000(16384)ãŒæœ€å¤§ 
+-- 0x4000ã‚’è¶Šãˆã‚‹ãƒ‡ãƒ¼ã‚¿ã‚’è¨­å®šã—ãŸå ´åˆã¯PCMãƒ‡ãƒ¼ã‚¿ã®ãƒ©ãƒƒãƒ—ã‚¢ãƒ©ã‚¦ãƒ³ãƒ‰ã‚’ 
+-- èµ·ã“ã™ãŸã‚ã€ãƒœãƒªãƒ¥ãƒ¼ãƒ å€¤ã¯å‰æ®µã§é©å®œãƒã‚¹ã‚¯ã™ã‚‹ã“ã¨ 
+-- pcmdataå…¥åŠ›ãŠã‚ˆã³volumeå…¥åŠ›ã¯ãƒ¬ã‚¸ã‚¹ã‚¿å—ã‘ã§ã¯ãªã„ã®ã§ã€å‰æ®µã¯ 
+-- ãƒ¬ã‚¸ã‚¹ã‚¿å‡ºåŠ›ã«ã™ã‚‹ã“ã¨ 
 
 
 library IEEE;
 use IEEE.std_logic_1164.all;
 use IEEE.std_logic_signed.all;
 use IEEE.std_logic_arith.all;
+
+LIBRARY lpm;
+USE lpm.lpm_components.all;
 
 entity wsg_audout is
 	generic(
@@ -46,9 +50,9 @@ entity wsg_audout is
 		clk_ena		: in  std_logic := '1';		-- Pulse width 1clock time (128fs)
 		fs_timing	: out std_logic;
 
-		volume_l	: in  std_logic_vector(14 downto 0);	-- •„†‚È‚µ 
+		volume_l	: in  std_logic_vector(14 downto 0);	-- ç¬¦å·ãªã— 
 		volume_r	: in  std_logic_vector(14 downto 0);
-		pcmdata_l	: in  std_logic_vector(15 downto 0);	-- •„†•t‚« 
+		pcmdata_l	: in  std_logic_vector(15 downto 0);	-- ç¬¦å·ä»˜ã 
 		pcmdata_r	: in  std_logic_vector(15 downto 0);
 
 		dac_bclk	: out std_logic;
@@ -66,15 +70,6 @@ architecture RTL of wsg_audout is
 	signal pcmdata_r_reg	: std_logic_vector(15 downto 0);
 	signal fs_timing_sig	: std_logic;
 	signal fs8_timing_sig	: std_logic;
-
-
-	component wsg_mul_s16x16
-	PORT (
-		dataa		: IN STD_LOGIC_VECTOR (15 DOWNTO 0);
-		datab		: IN STD_LOGIC_VECTOR (15 DOWNTO 0);
-		result		: OUT STD_LOGIC_VECTOR (31 DOWNTO 0)
-	);
-	end component;
 	signal mul_l_sig		: std_logic_vector(31 downto 0);
 	signal mul_r_sig		: std_logic_vector(31 downto 0);
 
@@ -101,18 +96,32 @@ begin
 	test_fs8timing <= fs8_timing_sig;
 
 
---==== ƒ}ƒXƒ^[ƒ{ƒŠƒ…[ƒ€‚ÆI2So—Í•” ================================
+--==== ãƒã‚¹ã‚¿ãƒ¼ãƒœãƒªãƒ¥ãƒ¼ãƒ ã¨I2Så‡ºåŠ›éƒ¨ ================================
 
-	-- ƒ}ƒXƒ^[ƒ{ƒŠƒ…[ƒ€ 
+	-- ãƒã‚¹ã‚¿ãƒ¼ãƒœãƒªãƒ¥ãƒ¼ãƒ  
 
-	vol_l : wsg_mul_s16x16
+	vol_l : lpm_mult
+	generic map (
+		lpm_type			=> "LPM_MULT",
+		lpm_representation	=> "SIGNED",
+		lpm_widtha			=> 16,
+		lpm_widthb			=> 16,
+		lpm_widthp			=> 32
+	)
 	port map (
 		dataa	=> pcmdata_l,
 		datab	=> ('0' & volume_l),
 		result	=> mul_l_sig
 	);
 
-	vol_r : wsg_mul_s16x16
+	vol_r : lpm_mult
+	generic map (
+		lpm_type			=> "LPM_MULT",
+		lpm_representation	=> "SIGNED",
+		lpm_widtha			=> 16,
+		lpm_widthb			=> 16,
+		lpm_widthp			=> 32
+	)
 	port map (
 		dataa	=> pcmdata_r,
 		datab	=> ('0' & volume_r),
@@ -120,7 +129,7 @@ begin
 	);
 
 
-	-- 16bit-RJM†¶¬ 
+	-- 16bit-RJä¿¡å·ç”Ÿæˆ 
 
 	process(clk, reset)begin
 		if (reset = '1') then
@@ -155,13 +164,13 @@ begin
 
 
 
---==== 1bitDACo—Í•” ================================================
+--==== 1bitDACå‡ºåŠ›éƒ¨ ================================================
 
 	fs_timing_sig  <= '1' when(clk_ena = '1' and bclkcount = 0) else '0';
 	fs8_timing_sig <= '1' when(clk_ena = '1' and bclkcount(3 downto 0) = "0000") else '0';
 
 
-	-- 1bitDAC‚ÌƒCƒ“ƒXƒ^ƒ“ƒX 
+	-- 1bitDACã®ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹ 
 
 	dac_l : wsg_dsdac8
 	generic map (

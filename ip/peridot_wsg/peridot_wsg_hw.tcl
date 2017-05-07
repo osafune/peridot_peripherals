@@ -2,7 +2,7 @@
 # TITLE : PERIDOT-NGS / "PERIDOT WSG Sound Generator"
 #
 #   DEGISN : S.OSAFUNE (J-7SYSTEM WORKS LIMITED)
-#   DATE   : 2016/10/25 -> 2017/04/05
+#   DATE   : 2016/10/25 -> 2017/05/08
 #
 # ===================================================================
 # *******************************************************************
@@ -26,7 +26,7 @@ package require -exact qsys 16.1
 # module peridot_wsg
 # 
 set_module_property NAME peridot_wsg
-set_module_property DISPLAY_NAME "PERIDOT WSG Sound Generator (Alpha test version)"
+set_module_property DISPLAY_NAME "PERIDOT WSG Sound Generator (beta test version)"
 set_module_property DESCRIPTION "PERIDOT WSG Sound Generator"
 set_module_property GROUP "PERIDOT Peripherals"
 set_module_property AUTHOR "J-7SYSTEM WORKS LIMITED"
@@ -47,19 +47,14 @@ set_fileset_property QUARTUS_SYNTH TOP_LEVEL wsg_component
 set_fileset_property QUARTUS_SYNTH ENABLE_RELATIVE_INCLUDE_PATHS false
 set_fileset_property QUARTUS_SYNTH ENABLE_FILE_OVERWRITE_MODE false
 add_fileset_file wsg_component.vhd		VHDL PATH hdl/wsg_component.vhd TOP_LEVEL_FILE
-add_fileset_file wsg_audout.vhd			VHDL PATH hdl/wsg_audout.vhd
 add_fileset_file wsg_businterface.vhd	VHDL PATH hdl/wsg_businterface.vhd
-add_fileset_file wsg_dsdac8.vhd			VHDL PATH hdl/wsg_dsdac8.vhd
-add_fileset_file wsg_extmodule.vhd		VHDL PATH hdl/wsg_extmodule.vhd
-add_fileset_file wsg_mul_s9x9.vhd		VHDL PATH hdl/wsg_mul_s9x9.vhd
-add_fileset_file wsg_mul_s16x16.vhd		VHDL PATH hdl/wsg_mul_s16x16.vhd
-add_fileset_file wsg_pcm8.vhd			VHDL PATH hdl/wsg_pcm8.vhd
-add_fileset_file wsg_pcmfifo.vhd		VHDL PATH hdl/wsg_pcmfifo.vhd
 add_fileset_file wsg_slotengine.vhd		VHDL PATH hdl/wsg_slotengine.vhd
-add_fileset_file wsg_slotregister.vhd	VHDL PATH hdl/wsg_slotregister.vhd
-add_fileset_file wsg_wavetable.vhd		VHDL PATH hdl/wsg_wavetable.vhd
-#add_fileset_file wsg_component.sdc		SDC PATH hdl/wsg_component.sdc
+add_fileset_file wsg_extmodule.vhd		VHDL PATH hdl/wsg_extmodule.vhd
+add_fileset_file wsg_pcm8.vhd			VHDL PATH hdl/wsg_pcm8.vhd
+add_fileset_file wsg_audout.vhd			VHDL PATH hdl/wsg_audout.vhd
+add_fileset_file wsg_dsdac8.vhd			VHDL PATH hdl/wsg_dsdac8.vhd
 #add_fileset_file wsg_wavetable.mif		MIF PATH hdl/wsg_wavetable.mif
+#add_fileset_file wsg_component.sdc		SDC PATH hdl/wsg_component.sdc
 
 
 # 
@@ -70,12 +65,14 @@ set_parameter_property AUDIOCLOCKFREQ DEFAULT_VALUE 24576000
 set_parameter_property AUDIOCLOCKFREQ DISPLAY_NAME "External Audio clock input "
 set_parameter_property AUDIOCLOCKFREQ TYPE INTEGER
 set_parameter_property AUDIOCLOCKFREQ UNITS Hertz
+set_parameter_property AUDIOCLOCKFREQ ALLOWED_RANGES 1000000:256000000
 set_parameter_property AUDIOCLOCKFREQ HDL_PARAMETER true
 add_parameter SAMPLINGFREQ INTEGER 32000
 set_parameter_property SAMPLINGFREQ DEFAULT_VALUE 32000
 set_parameter_property SAMPLINGFREQ DISPLAY_NAME "WSG and PCM sound playback frequency "
 set_parameter_property SAMPLINGFREQ TYPE INTEGER
 set_parameter_property SAMPLINGFREQ UNITS Hertz
+set_parameter_property SAMPLINGFREQ ALLOWED_RANGES 1000:96000
 set_parameter_property SAMPLINGFREQ HDL_PARAMETER true
 add_parameter MAXSLOTNUM INTEGER 64
 set_parameter_property MAXSLOTNUM DEFAULT_VALUE 64
@@ -195,10 +192,15 @@ set_interface_property export CMSIS_SVD_VARIABLES ""
 set_interface_property export SVD_ADDRESS_GROUP ""
 
 add_interface_port export audio_clk audio_clk Input 1
-add_interface_port export dac_bclk dac_bclk Output 1
-add_interface_port export dac_lrck dac_lrck Output 1
-add_interface_port export dac_data dac_data Output 1
+add_interface_port export dac_bclk bclk Output 1
+add_interface_port export dac_lrck lrck Output 1
+add_interface_port export dac_data sdat Output 1
 add_interface_port export aud_l aud_l Output 1
 add_interface_port export aud_r aud_r Output 1
 add_interface_port export mute mute Output 1
+add_interface_port export kb_scko kb_scko Output 1
+add_interface_port export kb_load_n kb_load_n Output 1
+add_interface_port export kb_sdin kb_sdin Input 1
+
+
 

@@ -1,20 +1,22 @@
 -- ===================================================================
--- TITLE : Loreley-WSG BUS Interface
+-- TITLE : PERIDOT-NGS / Loreley-WSG BUS Interface
 --
 --     DESIGN : S.OSAFUNE (J-7SYSTEM WORKS LIMITED)
 --     DATE   : 2009/01/01 -> 2009/01/09
 --            : 2009/01/15 (FIXED)
 --
---     MODIFY : 2009/06/12 ŠO•”‰¹Œ¹ƒ|[ƒg‚ğ’Ç‰Á 
---            : 2009/06/25 ƒ^ƒCƒ}B‚Ì•ª‰ğ”\‚ğ•ÏX(2ms¨1ms) 
---            : 2009/06/27 Šg’£‰¹Œ¹ƒ|[ƒg‚ÌƒoƒCƒgƒAƒNƒZƒX•s‹ï‡‚ğC³ 
---            : 2011/09/13 ƒ}ƒXƒ^[ƒ{ƒŠƒ…[ƒ€ƒŒƒWƒXƒ^‚ğ’Ç‰Á 
+--     MODIFY : 2009/06/12 å¤–éƒ¨éŸ³æºãƒãƒ¼ãƒˆã‚’è¿½åŠ  
+--            : 2009/06/25 ã‚¿ã‚¤ãƒBã®åˆ†è§£èƒ½ã‚’å¤‰æ›´(2msâ†’1ms) 
+--            : 2009/06/27 æ‹¡å¼µéŸ³æºãƒãƒ¼ãƒˆã®ãƒã‚¤ãƒˆã‚¢ã‚¯ã‚»ã‚¹ä¸å…·åˆã‚’ä¿®æ­£ 
+--            : 2011/09/13 ãƒã‚¹ã‚¿ãƒ¼ãƒœãƒªãƒ¥ãƒ¼ãƒ ãƒ¬ã‚¸ã‚¹ã‚¿ã‚’è¿½åŠ  
 --
---     MODIFY : 2016/10/25 CycloneIV/MAX10—pƒAƒbƒvƒf[ƒg 
+--     MODIFY : 2016/10/25 CycloneIV/MAX10ç”¨ã‚¢ãƒƒãƒ—ãƒ‡ãƒ¼ãƒˆ 
+--            : 2017/04/06 ã‚¹ãƒ­ãƒƒãƒˆãƒ¬ã‚¸ã‚¹ã‚¿ã€æ³¢å½¢ãƒ†ãƒ¼ãƒ–ãƒ«ã®ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹å¤‰æ›´ 
+--            : 2017/05/08 ã‚·ã‚¹ãƒ†ãƒ ãƒ¬ã‚¸ã‚¹ã‚¿ã‚¢ãƒ‰ãƒ¬ã‚¹å¤‰æ›´ã€ã‚¢ã‚¯ã‚»ã‚¹ä¸å…·åˆã‚’ä¿®æ­£ã€ã‚­ãƒ¼å…¥åŠ›è¿½åŠ  
 --
 -- ===================================================================
 -- *******************************************************************
---    (C) 2009-2016, J-7SYSTEM WORKS LIMITED.  All rights Reserved.
+--    (C) 2009-2017, J-7SYSTEM WORKS LIMITED.  All rights Reserved.
 --
 -- * This module is a free sourcecode and there is NO WARRANTY.
 -- * No restriction on use. You can use, modify and redistribute it
@@ -24,10 +26,10 @@
 --   notice.
 -- *******************************************************************
 
--- ƒŠ[ƒh‚Í‚RƒNƒƒbƒN•iƒAƒhƒŒƒXŠm’èŒã‚QƒNƒƒbƒNwaitjˆÈã 
--- ƒ‰ƒCƒg‚Í‚PƒNƒƒbƒN• 
--- ƒEƒFƒCƒgEƒz[ƒ‹ƒh‚È‚µ 
--- Šg’£‰¹Œ¹ƒ‚ƒWƒ…[ƒ‹‚à“¯—l‚ÌƒAƒNƒZƒX‚Ås‚¦‚é‚±‚Æ 
+-- ãƒªãƒ¼ãƒ‰ã¯ï¼“ã‚¯ãƒ­ãƒƒã‚¯å¹…ï¼ˆã‚¢ãƒ‰ãƒ¬ã‚¹ç¢ºå®šå¾Œï¼’ã‚¯ãƒ­ãƒƒã‚¯waitï¼‰ä»¥ä¸Š 
+-- ãƒ©ã‚¤ãƒˆã¯ï¼‘ã‚¯ãƒ­ãƒƒã‚¯å¹… 
+-- ã‚¦ã‚§ã‚¤ãƒˆãƒ»ãƒ›ãƒ¼ãƒ«ãƒ‰ãªã— 
+-- æ‹¡å¼µéŸ³æºãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«ã‚‚åŒæ§˜ã®ã‚¢ã‚¯ã‚»ã‚¹ã§è¡Œãˆã‚‹ã“ã¨ 
 
 
 library IEEE;
@@ -35,7 +37,14 @@ use IEEE.std_logic_1164.all;
 use IEEE.std_logic_unsigned.all;
 use IEEE.std_logic_arith.all;
 
+library altera_mf;
+use altera_mf.altera_mf_components.all;
+
 entity wsg_businterface is
+	generic(
+		WAVETABLE_INIT_FILE	: string := "UNUSED"
+--		WAVETABLE_INIT_FILE	: string := "wsg_wavetable.mif"
+	);
 	port(
 		clk				: in  std_logic;	-- system clock
 		reset			: in  std_logic;	-- async reset
@@ -44,8 +53,11 @@ entity wsg_businterface is
 		mute_out		: out std_logic;
 		mastervol_l		: out std_logic_vector(14 downto 0);
 		mastervol_r		: out std_logic_vector(14 downto 0);
+		inkey_scko		: out std_logic;	-- external key serial-input
+		inkey_load_n	: out std_logic;
+		inkey_sdin		: in  std_logic;
 
-	--==== AvalonBUS I/F signal ======================================
+	--==== AvalonMM Slave signal =====================================
 
 		address			: in  std_logic_vector(9 downto 0);
 		readdata		: out std_logic_vector(15 downto 0);
@@ -55,7 +67,7 @@ entity wsg_businterface is
 		byteenable		: in  std_logic_vector(1 downto 0);
 		irq				: out std_logic;
 
-	--==== External module I/F signal ================================
+	--==== External module signal ====================================
 
 		ext_address		: out std_logic_vector(5 downto 0);		-- External address space
 		ext_readdata	: in  std_logic_vector(7 downto 0);
@@ -63,7 +75,7 @@ entity wsg_businterface is
 		ext_write		: out std_logic;
 		ext_irq			: in  std_logic := '0';					-- External interrupt input
 
-	--==== Slotengine I/F signal =====================================
+	--==== Slotengine signal =========================================
 
 		slot_start		: out std_logic;	-- engine process start ('clk' domain)
 		slot_done		: in  std_logic;	-- Async slot done signal (need rise edge detect)
@@ -114,61 +126,31 @@ architecture RTL of wsg_businterface is
 	signal timbref_sig		: std_logic_vector(12 downto 0);
 	signal timbcount_reg	: std_logic_vector(12 downto 0);
 	signal timbtimeup_sig	: std_logic;
+	signal seqcount_reg		: std_logic_vector(15 downto 0);
+
+	signal inkeycount_reg	: std_logic_vector(5 downto 0);
+	signal inkeyshift_reg	: std_logic_vector(31 downto 0);
+	signal inkey_reg		: std_logic_vector(31 downto 0);
 
 	signal mvol_l_reg		: std_logic_vector(14 downto 0);
 	signal mvol_r_reg		: std_logic_vector(14 downto 0);
-
 	signal readdata_reg		: std_logic_vector(15 downto 0);
-
-	component wsg_slotregister
-	PORT
-	(
-		address_a	: IN STD_LOGIC_VECTOR (7 DOWNTO 0);
-		address_b	: IN STD_LOGIC_VECTOR (7 DOWNTO 0);
-		byteena_a	: IN STD_LOGIC_VECTOR (1 DOWNTO 0) :=  (OTHERS => '1');
-		clock_a		: IN STD_LOGIC ;
-		clock_b		: IN STD_LOGIC ;
-		data_a		: IN STD_LOGIC_VECTOR (17 DOWNTO 0);
-		data_b		: IN STD_LOGIC_VECTOR (17 DOWNTO 0);
-		wren_a		: IN STD_LOGIC  := '1';
-		wren_b		: IN STD_LOGIC  := '1';
-		q_a			: OUT STD_LOGIC_VECTOR (17 DOWNTO 0);
-		q_b			: OUT STD_LOGIC_VECTOR (17 DOWNTO 0)
-	);
-	end component;
 	signal reg_rddata_sig	: std_logic_vector(17 downto 0);
 	signal reg_wrdata_sig	: std_logic_vector(17 downto 0);
 	signal reg_wrena_sig	: std_logic;
-
-	component wsg_wavetable
-	PORT
-	(
-		address_a	: IN STD_LOGIC_VECTOR (7 DOWNTO 0);
-		address_b	: IN STD_LOGIC_VECTOR (8 DOWNTO 0);
-		byteena_a	: IN STD_LOGIC_VECTOR (1 DOWNTO 0) :=  (OTHERS => '1');
-		clock_a		: IN STD_LOGIC ;
-		clock_b		: IN STD_LOGIC ;
-		data_a		: IN STD_LOGIC_VECTOR (15 DOWNTO 0);
-		data_b		: IN STD_LOGIC_VECTOR (7 DOWNTO 0);
-		wren_a		: IN STD_LOGIC  := '1';
-		wren_b		: IN STD_LOGIC  := '1';
-		q_a			: OUT STD_LOGIC_VECTOR (15 DOWNTO 0);
-		q_b			: OUT STD_LOGIC_VECTOR (7 DOWNTO 0)
-	);
-	end component;
 	signal wav_rddata_sig	: std_logic_vector(15 downto 0);
 	signal wav_wrena_sig	: std_logic;
 
 begin
 
 
---==== AvalonBUS “üo—Í ==============================================
+--==== AvalonBUS å…¥å‡ºåŠ› ==============================================
 
-	-- “Ç‚İo‚µƒŒƒWƒXƒ^‘I‘ğ 
-		--	00_0XXX_XXXX : ƒVƒXƒeƒ€ƒŒƒWƒXƒ^(128ƒoƒCƒg) 
-		--	00_1XXX_XXXX : Šg’£‰¹Œ¹ƒŒƒWƒXƒ^(128ƒoƒCƒgA¦‚½‚¾‚µ‰ºˆÊ8bit‚Ì‚İ‚Ìƒ}ƒbƒsƒ“ƒO) 
-		--	01_XXXX_XXXX : ƒXƒƒbƒgƒŒƒWƒXƒ^(256ƒoƒCƒg)
-		--	1X_XXXX_XXXX : ”gŒ`ƒe[ƒuƒ‹ƒƒ‚ƒŠ(512ƒoƒCƒg)
+	-- èª­ã¿å‡ºã—ãƒ¬ã‚¸ã‚¹ã‚¿é¸æŠ 
+		--	00_0XXX_XXXX : ã‚·ã‚¹ãƒ†ãƒ ãƒ¬ã‚¸ã‚¹ã‚¿(128ãƒã‚¤ãƒˆ) 
+		--	00_1XXX_XXXX : æ‹¡å¼µéŸ³æºãƒ¬ã‚¸ã‚¹ã‚¿(128ãƒã‚¤ãƒˆã€â€»ãŸã ã—ãƒ‡ãƒ¼ã‚¿ã¯ä¸‹ä½8bitã®ã¿ã®ãƒãƒƒãƒ”ãƒ³ã‚°) 
+		--	01_XXXX_XXXX : ã‚¹ãƒ­ãƒƒãƒˆãƒ¬ã‚¸ã‚¹ã‚¿(256ãƒã‚¤ãƒˆ)
+		--	1X_XXXX_XXXX : æ³¢å½¢ãƒ†ãƒ¼ãƒ–ãƒ«ãƒ¡ãƒ¢ãƒª(512ãƒã‚¤ãƒˆ)
 
 	readdata <= ("00000000" & ext_readdata) when (address(9 downto 7)="001") else readdata_reg;
 
@@ -178,7 +160,7 @@ begin
 			if (address(9) = '1') then
 				readdata_reg <= wav_rddata_sig;
 			else
-				if (address(8 downto 3) = "000000") then
+				if (address(8) = '0') then
 					readdata_reg <= sys_rddata_sig;
 				else
 					readdata_reg( 7 downto 0) <= reg_rddata_sig( 7 downto 0);
@@ -190,40 +172,67 @@ begin
 	end process;
 
 
-	-- Š„‚è‚İM†o—Í 
+	-- å‰²ã‚Šè¾¼ã¿ä¿¡å·å‡ºåŠ› 
 
 	irq <= (timaovf_reg and timairq_reg) or (timbovf_reg and timbirq_reg) or ext_irq;
 
 
-	-- ‘‚«‚İƒŒƒWƒXƒ^‘I‘ğ 
+	-- æ›¸ãè¾¼ã¿ãƒ¬ã‚¸ã‚¹ã‚¿é¸æŠ 
 
-	sys_wrena_sig <= write when (address(9 downto 3)="0000000") else '0';
+	sys_wrena_sig <= write when (address(9 downto 7)="000") else '0';
 	reg_wrena_sig <= write when (address(9 downto 8)="01") else '0';
 	wav_wrena_sig <= write when (address(9)='1') else '0';
 
 
-	-- Šg’£‰¹Œ¹ƒoƒXo—Í
+	-- æ‹¡å¼µéŸ³æºãƒã‚¹å‡ºåŠ›
 
 	ext_address   <= address(6 downto 1);
 	ext_writedata <= writedata(7 downto 0);
 	ext_write     <= write when (address(9 downto 7)="001" and byteenable(0)='1') else '0';
 
 
-	-- ƒXƒƒbƒgƒŒƒWƒXƒ^‚ÌƒCƒ“ƒXƒ^ƒ“ƒX 
+	-- ã‚¹ãƒ­ãƒƒãƒˆãƒ¬ã‚¸ã‚¹ã‚¿ã®ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹ 
 
 	reg_wrdata_sig( 8 downto 0) <= '0' & writedata( 7 downto 0);
 	reg_wrdata_sig(17 downto 9) <= '0' & writedata(15 downto 8);
 
-	wsg_slotregister_inst : wsg_slotregister
-	PORT MAP (
-		clock_a		 => clk,
+	wsg_slotregister_inst : altsyncram
+	generic map (
+		lpm_type => "altsyncram",
+		operation_mode => "BIDIR_DUAL_PORT",
+		byte_size => 9,
+		numwords_a => 256,
+		widthad_a => 8,
+		width_a => 18,
+		width_byteena_a => 2,
+		numwords_b => 256,
+		widthad_b => 8,
+		width_b => 18,
+		width_byteena_b => 1,
+		address_reg_b => "CLOCK1",
+		indata_reg_b => "CLOCK1",
+		wrcontrol_wraddress_reg_b => "CLOCK1",
+		clock_enable_input_a => "BYPASS",
+		clock_enable_input_b => "BYPASS",
+		clock_enable_output_a => "BYPASS",
+		clock_enable_output_b => "BYPASS",
+		outdata_aclr_a => "NONE",
+		outdata_aclr_b => "NONE",
+		outdata_reg_a => "UNREGISTERED",
+		outdata_reg_b => "UNREGISTERED",
+		read_during_write_mode_port_a => "NEW_DATA_NO_NBE_READ",
+		read_during_write_mode_port_b => "NEW_DATA_WITH_NBE_READ",
+		power_up_uninitialized => "FALSE"
+	)
+	port map (
+		clock0		 => clk,
 		address_a	 => address(8 downto 1),
 		q_a			 => reg_rddata_sig,
 		data_a		 => reg_wrdata_sig,
 		wren_a		 => reg_wrena_sig,
 		byteena_a	 => byteenable,
 
-		clock_b		 => slot_clk,
+		clock1		 => slot_clk,
 		address_b	 => reg_address,
 		q_b			 => reg_readdata,
 		data_b		 => reg_writedata,
@@ -231,18 +240,47 @@ begin
 	);
 
 
-	-- ”gŒ`ƒe[ƒuƒ‹‚ÌƒCƒ“ƒXƒ^ƒ“ƒX 
+	-- æ³¢å½¢ãƒ†ãƒ¼ãƒ–ãƒ«ã®ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹ 
 
-	wsg_wavetable_inst : wsg_wavetable
-	PORT MAP (
-		clock_a		 => clk,
+	wsg_wavetable_inst : altsyncram
+	generic map (
+		lpm_type => "altsyncram",
+		operation_mode => "BIDIR_DUAL_PORT",
+		byte_size => 8,
+		numwords_a => 256,
+		widthad_a => 8,
+		width_a => 16,
+		width_byteena_a => 2,
+		numwords_b => 512,
+		widthad_b => 9,
+		width_b => 8,
+		width_byteena_b => 1,
+		address_reg_b => "CLOCK1",
+		indata_reg_b => "CLOCK1",
+		wrcontrol_wraddress_reg_b => "CLOCK1",
+		clock_enable_input_a => "BYPASS",
+		clock_enable_input_b => "BYPASS",
+		clock_enable_output_a => "BYPASS",
+		clock_enable_output_b => "BYPASS",
+		outdata_aclr_a => "NONE",
+		outdata_aclr_b => "NONE",
+		outdata_reg_a => "UNREGISTERED",
+		outdata_reg_b => "UNREGISTERED",
+		read_during_write_mode_port_a => "NEW_DATA_NO_NBE_READ",
+		read_during_write_mode_port_b => "NEW_DATA_WITH_NBE_READ",
+		init_file => WAVETABLE_INIT_FILE,
+		init_file_layout => "PORT_B",
+		power_up_uninitialized => "FALSE"
+	)
+	port map (
+		clock0		 => clk,
 		address_a	 => address(8 downto 1),
 		q_a			 => wav_rddata_sig,
 		data_a		 => writedata,
 		wren_a		 => wav_wrena_sig,
 		byteena_a	 => byteenable,
 
-		clock_b		 => slot_clk,
+		clock1		 => slot_clk,
 		address_b	 => wav_address,
 		q_b			 => wav_readdata,
 		data_b		 => (others=>'0'),
@@ -250,14 +288,17 @@ begin
 	);
 
 
-	-- ƒVƒXƒeƒ€ƒŒƒWƒXƒ^“Ç‚İo‚µ‘I‘ğ 
+	-- ã‚·ã‚¹ãƒ†ãƒ ãƒ¬ã‚¸ã‚¹ã‚¿èª­ã¿å‡ºã—é¸æŠ 
 
-	with address(2 downto 1) select sys_rddata_sig <=
-		sys_setup_sig		when "00",
-		sys_timer_sig		when "01",
-		'0' & mvol_l_reg	when "10",
-		'0' & mvol_r_reg	when "11",
-		(others=>'X')		when others;
+	with address(3 downto 1) select sys_rddata_sig <=
+		sys_setup_sig			when "000",
+		sys_timer_sig			when "001",
+		seqcount_reg			when "010",
+		'0' & mvol_l_reg		when "100",
+		'0' & mvol_r_reg		when "101",
+		inkey_reg(15 downto 0)	when "110",
+		inkey_reg(31 downto 16)	when "111",
+		(others=>'X')			when others;
 
 	sys_setup_sig(15) <= keysync_reg;
 	sys_setup_sig(14 downto 8) <= (others=>'0');
@@ -273,7 +314,7 @@ begin
 	sys_timer_sig <= timbref_reg & timaref_reg;
 
 
-	-- ƒVƒXƒeƒ€ƒŒƒWƒXƒ^‘‚«‚İ 
+	-- ã‚·ã‚¹ãƒ†ãƒ ãƒ¬ã‚¸ã‚¹ã‚¿æ›¸ãè¾¼ã¿ 
 
 	process (clk, reset) begin
 		if (reset = '1') then
@@ -288,39 +329,54 @@ begin
 			timbovf_reg    <= '0';
 			timbstart_reg  <= '0';
 			timbref_reg    <= (others=>'0');
+			seqcount_reg   <= (others=>'0');
 			mvol_l_reg     <= (others=>'0');
 			mvol_r_reg     <= (others=>'0');
 
 		elsif rising_edge(clk) then
 
-			-- keysyncƒrƒbƒg‚Ìˆ— 
+			-- keysyncãƒ“ãƒƒãƒˆã®å‡¦ç† 
 			if (fssync_sig = '1') then
 				keysync_fs_reg <= keysync_reg;
 			end if;
 
-			if (slotack_sig = '1' and keysync_fs_reg = keysync_reg) then
-				keysync_reg <= '0';
-			elsif (sys_wrena_sig = '1' and address(1) = '0' and byteenable(1) = '1') then
+			if (sys_wrena_sig = '1' and address(3 downto 1) = "000" and byteenable(1) = '1') then
 				keysync_reg <= keysync_reg or writedata(15);
+			elsif (slotack_sig = '1' and keysync_fs_reg = keysync_reg) then
+				keysync_reg <= '0';
 			end if;
 
-			-- fsƒCƒ“ƒ^[ƒoƒ‹ƒ^ƒCƒ}‚ÆƒI[ƒo[ƒtƒ[ƒrƒbƒg‚Ìˆ— 
-			if (fssync_sig = '1' and timacount_reg = timaref_reg) then
+			-- fsã‚¤ãƒ³ã‚¿ãƒ¼ãƒãƒ«ã‚¿ã‚¤ãƒã¨ã‚ªãƒ¼ãƒãƒ¼ãƒ•ãƒ­ãƒ¼ãƒ“ãƒƒãƒˆã®å‡¦ç† 
+			if (sys_wrena_sig = '1' and address(3 downto 1) = "000" and byteenable(0) = '1') then
+				timaovf_reg <= timaovf_reg and writedata(3);
+			elsif (sys_wrena_sig = '1' and address(3 downto 1) = "010") then
+				timaovf_reg <= '0';
+			elsif (fssync_sig = '1' and timacount_reg = timaref_reg and seqcount_reg = 0) then
 				timaovf_reg <= '1';
-			elsif (sys_wrena_sig = '1' and address(1) = '0' and byteenable(0) = '1') then
-				timaovf_reg <= timaovf_reg and writedata(6);
 			end if;
 
-			if (fssync_sig = '1' and timbcount_reg = timbref_sig) then
+			if (sys_wrena_sig = '1' and address(3 downto 1) = "000" and byteenable(0) = '1') then
+				timbovf_reg <= timbovf_reg and writedata(6);
+			elsif (fssync_sig = '1' and timbcount_reg = timbref_sig) then
 				timbovf_reg <= '1';
-			elsif (sys_wrena_sig = '1' and address(1) = '0' and byteenable(0) = '1') then
-				timbovf_reg <= timbovf_reg and writedata(3);
 			end if;
 
-			-- ‚»‚êˆÈŠO‚ÌƒŒƒWƒXƒ^‚Ìˆ— 
+			-- ã‚·ãƒ¼ã‚±ãƒ³ã‚¹ã‚«ã‚¦ãƒ³ã‚¿ã®å‡¦ç† 
+			if (sys_wrena_sig = '1' and address(3 downto 1) = "010") then
+				if (byteenable(1) = '1') then
+					seqcount_reg(15 downto 8) <= writedata(15 downto 8);
+				end if;
+				if (byteenable(0) = '1') then
+					seqcount_reg(7 downto 0) <= writedata(7 downto 0);
+				end if;
+			elsif (fssync_sig = '1' and timacount_reg = timaref_reg and seqcount_reg /= 0) then
+				seqcount_reg <= seqcount_reg - 1;
+			end if;
+
+			-- ãã‚Œä»¥å¤–ã®ãƒ¬ã‚¸ã‚¹ã‚¿ã®å‡¦ç† 
 			if (sys_wrena_sig = '1') then
-				case address(2 downto 1) is
-				when "00" =>
+				case address(3 downto 1) is
+				when "000" =>
 					if (byteenable(0) = '1') then
 						timbirq_reg   <= writedata(7);
 						timbstart_reg <= writedata(5);
@@ -329,7 +385,7 @@ begin
 						mute_reg      <= writedata(0);
 					end if;
 
-				when "01" =>
+				when "001" =>
 					if (byteenable(1) = '1') then
 						timbref_reg <= writedata(15 downto 8);
 					end if;
@@ -337,7 +393,7 @@ begin
 						timaref_reg <= writedata(7 downto 0);
 					end if;
 
-				when "10" =>
+				when "100" =>
 					if (byteenable(1) = '1') then
 						mvol_l_reg(14 downto 8) <= writedata(14 downto 8);
 					end if;
@@ -345,7 +401,7 @@ begin
 						mvol_l_reg(7 downto 0)  <= writedata(7 downto 0);
 					end if;
 
-				when "11" =>
+				when "101" =>
 					if (byteenable(1) = '1') then
 						mvol_r_reg(14 downto 8) <= writedata(14 downto 8);
 					end if;
@@ -361,7 +417,7 @@ begin
 	end process;
 
 
-	-- ƒVƒXƒeƒ€ƒŒƒWƒXƒ^o—Í 
+	-- ã‚·ã‚¹ãƒ†ãƒ ãƒ¬ã‚¸ã‚¹ã‚¿å‡ºåŠ› 
 
 	mute_out    <= mute_reg;
 	keysync_out <= keysync_reg;
@@ -370,9 +426,9 @@ begin
 
 
 
---==== fs“¯ŠúM†¶¬ƒuƒƒbƒN ========================================
+--==== fsåŒæœŸä¿¡å·ç”Ÿæˆãƒ–ãƒ­ãƒƒã‚¯ ========================================
 
-	-- ƒXƒƒbƒgƒGƒ“ƒWƒ“ƒLƒbƒNM†‚ğ¶¬ 
+	-- ã‚¹ãƒ­ãƒƒãƒˆã‚¨ãƒ³ã‚¸ãƒ³ã‚­ãƒƒã‚¯ä¿¡å·ã‚’ç”Ÿæˆ 
 
 	slot_start <= start_reg;
 
@@ -383,7 +439,7 @@ begin
 		elsif rising_edge(clk) then
 			if (fssync_sig = '1') then
 				start_reg <= '1';
-			elsif (done0_reg = '0' and done1_reg = '1') then	-- slot_done‚Ì—§‰º‚è‚Åstart‚ğ‰ğœ 
+			elsif (done0_reg = '0' and done1_reg = '1') then	-- slot_doneã®ç«‹ä¸‹ã‚Šã§startã‚’è§£é™¤ 
 				start_reg <= '0';
 			end if;
 
@@ -391,7 +447,7 @@ begin
 	end process;
 
 
-	-- ƒXƒƒbƒgƒGƒ“ƒWƒ“I—¹M†‚Ì“¯Šú‰» (slot_done‚Ì—§‚¿ã‚ª‚èƒGƒbƒW‚ğŒŸo)
+	-- ã‚¹ãƒ­ãƒƒãƒˆã‚¨ãƒ³ã‚¸ãƒ³çµ‚äº†ä¿¡å·ã®åŒæœŸåŒ– (slot_doneã®ç«‹ã¡ä¸ŠãŒã‚Šã‚¨ãƒƒã‚¸ã‚’æ¤œå‡º)
 
 	slotack_sig <= '1' when(done0_reg = '1' and done1_reg = '0') else '0';
 
@@ -410,7 +466,7 @@ begin
 	end process;
 
 
-	-- fsM†‚Ì“¯Šú‰» (async_fs‚Ì—§‚¿ã‚ª‚èƒGƒbƒW‚ğŒŸo)
+	-- fsä¿¡å·ã®åŒæœŸåŒ– (async_fsã®ç«‹ã¡ä¸ŠãŒã‚Šã‚¨ãƒƒã‚¸ã‚’æ¤œå‡º)
 
 	fssync_sig <= '1' when(extfs0_reg = '1' and extfs1_reg = '0') else '0';
 
@@ -429,9 +485,9 @@ begin
 	end process;
 
 
-	-- fsƒCƒ“ƒ^[ƒoƒ‹ƒ^ƒCƒ} 
+	-- fsã‚¤ãƒ³ã‚¿ãƒ¼ãƒãƒ«ã‚¿ã‚¤ãƒ 
 
-	timbref_sig <= timbref_reg & "00000";	-- ƒ^ƒCƒ}B‚Ífs/32‚ÅƒJƒEƒ“ƒg‚·‚é 
+	timbref_sig <= timbref_reg & "00000";	-- ã‚¿ã‚¤ãƒBã¯fs/32ã§ã‚«ã‚¦ãƒ³ãƒˆã™ã‚‹ 
 
 	process (clk, reset) begin
 		if (reset = '1') then
@@ -440,26 +496,26 @@ begin
 
 		elsif rising_edge(clk) then
 
-			-- ƒ^ƒCƒ}‚`‚ÌƒJƒEƒ“ƒgˆ— 
+			-- ã‚¿ã‚¤ãƒï¼¡ã®ã‚«ã‚¦ãƒ³ãƒˆå‡¦ç† 
 			if (timastart_reg = '1') then
 				if (fssync_sig = '1') then
 					if (timacount_reg = timaref_reg) then
 						timacount_reg <= (others=>'0');
 					else
-						timacount_reg <= timacount_reg + '1';
+						timacount_reg <= timacount_reg + 1;
 					end if;
 				end if;
 			else
 				timacount_reg <= (others=>'0');
 			end if;
 
-			-- ƒ^ƒCƒ}‚a‚ÌƒJƒEƒ“ƒgˆ— 
+			-- ã‚¿ã‚¤ãƒï¼¢ã®ã‚«ã‚¦ãƒ³ãƒˆå‡¦ç† 
 			if (timbstart_reg = '1') then
 				if (fssync_sig = '1') then
 					if (timbcount_reg = timbref_sig) then
 						timbcount_reg <= (others=>'0');
 					else
-						timbcount_reg <= timbcount_reg + '1';
+						timbcount_reg <= timbcount_reg + 1;
 					end if;
 				end if;
 			else
@@ -468,6 +524,30 @@ begin
 
 		end if;
 	end process;
+
+
+	-- å¤–éƒ¨ã‚­ãƒ¼å…¥åŠ›ã‚·ãƒ•ãƒˆãƒ¬ã‚¸ã‚¹ã‚¿ 
+
+	process (clk, reset) begin
+		if (reset = '1') then
+			inkeycount_reg <= (others=>'0');
+
+		elsif rising_edge(clk) then
+			if (fssync_sig = '1') then
+				inkeycount_reg <= inkeycount_reg + 1;
+
+				if (inkeycount_reg = "000000") then
+					inkey_reg <= inkeyshift_reg;
+				elsif (inkeycount_reg(0) = '1') then
+					inkeyshift_reg <= inkey_sdin & inkeyshift_reg(31 downto 1);
+				end if;
+
+			end if;
+		end if;
+	end process;
+
+	inkey_scko   <= inkeycount_reg(0);
+	inkey_load_n <= '0' when(inkeycount_reg(5 downto 1) = "00000") else '1';
 
 
 

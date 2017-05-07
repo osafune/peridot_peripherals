@@ -1,14 +1,14 @@
 -- ===================================================================
--- TITLE : Loreley-WSG Delta-Sigma DAC output module
+-- TITLE : PERIDOT-NGS / Loreley-WSG Delta-Sigma DAC output module
 --
 --     DESIGN : S.OSAFUNE (J-7SYSTEM WORKS LIMITED)
 --     DATE   : 2007/02/18 -> 2007/02/18
 --            : 2007/02/21 (FIXED)
---     MODIFY : 2016/10/25 CycloneIV/MAX10ƒAƒbƒvƒf[ƒg 
+--     MODIFY : 2016/10/25 CycloneIV/MAX10ã‚¢ãƒƒãƒ—ãƒ‡ãƒ¼ãƒˆ 
 --
 -- ===================================================================
 -- *******************************************************************
---    (C) 2007-2016, J-7SYSTEM WORKS LIMITED.  All rights Reserved.
+--    (C) 2007-2017, J-7SYSTEM WORKS LIMITED.  All rights Reserved.
 --
 -- * This module is a free sourcecode and there is NO WARRANTY.
 -- * No restriction on use. You can use, modify and redistribute it
@@ -18,21 +18,21 @@
 --   notice.
 -- *******************************************************************
 
--- œ‚W”{üŒ`•âŠÔƒXƒe[ƒW 
---   üŒ`•âŠÔ‚Ì‚½‚ßAŒ´M†f(t)‚É‘Î‚µ‚ÄA1/(2n-1)^2 * f((2n-1)*t)‚Ì 
---   ‚ŽŸƒmƒCƒY‚ªdô‚·‚éB 
+-- â—ï¼˜å€ç·šå½¢è£œé–“ã‚¹ãƒ†ãƒ¼ã‚¸ 
+--   ç·šå½¢è£œé–“ã®ãŸã‚ã€åŽŸä¿¡å·f(t)ã«å¯¾ã—ã¦ã€1/(2n-1)^2 * f((2n-1)*t)ã® 
+--   é«˜æ¬¡ãƒŽã‚¤ã‚ºãŒé‡ç•³ã™ã‚‹ã€‚ 
 --
---    Œ´M†  ‚RŽŸ  ‚TŽŸ  ‚VŽŸ  ‚XŽŸ  11ŽŸ  13ŽŸ  dd 
+--    åŽŸä¿¡å·  ï¼“æ¬¡  ï¼•æ¬¡  ï¼—æ¬¡  ï¼™æ¬¡  11æ¬¡  13æ¬¡  â€¥â€¥ 
 --      0dB  -19dB -27dB -33dB -38dB -41dB -44dB 
 --
--- œo—Í‡™‡”•Ï’²ƒXƒe[ƒW 
---   ƒtƒ‹ƒXƒs[ƒh‚Å“®ì‚·‚é‚Pƒrƒbƒg‚PŽŸ‡™‡”•Ï’²ƒuƒƒbƒNB 
+-- â—å‡ºåŠ›âŠ¿âˆ‘å¤‰èª¿ã‚¹ãƒ†ãƒ¼ã‚¸ 
+--   ãƒ•ãƒ«ã‚¹ãƒ”ãƒ¼ãƒ‰ã§å‹•ä½œã™ã‚‹ï¼‘ãƒ“ãƒƒãƒˆï¼‘æ¬¡âŠ¿âˆ‘å¤‰èª¿ãƒ–ãƒ­ãƒƒã‚¯ã€‚ 
 --
--- œƒ|ƒbƒvƒmƒCƒY 
---   ‡™‡”•Ï’²‚Ì\‘¢ãA“dŒ¹“Š“üŽž‚Ìƒ|ƒbƒvƒmƒCƒY‚Í‰ñ”ð•s‰Âi‚Å‚«‚È‚­‚Í 
---   ‚È‚¢‚ªAƒƒWƒbƒNƒŠƒ\[ƒX‚Æ‚ÌƒgƒŒ[ƒhƒIƒtjB 
---   ƒ|ƒbƒvƒmƒCƒY‚ª•s“s‡‚É‚È‚éê‡AACƒJƒbƒvƒŠƒ“ƒOƒRƒ“ƒfƒ“ƒT‚ÌŒã’i‚É 
---   ƒ~ƒ…[ƒgƒgƒ‰ƒ“ƒWƒXƒ^‚ð”z’u‚·‚é‚±‚Æ‚Å‰ü‘P‰Â”\B 
+-- â—ãƒãƒƒãƒ—ãƒŽã‚¤ã‚º 
+--   âŠ¿âˆ‘å¤‰èª¿ã®æ§‹é€ ä¸Šã€é›»æºæŠ•å…¥æ™‚ã®ãƒãƒƒãƒ—ãƒŽã‚¤ã‚ºã¯å›žé¿ä¸å¯ï¼ˆã§ããªãã¯ 
+--   ãªã„ãŒã€ãƒ­ã‚¸ãƒƒã‚¯ãƒªã‚½ãƒ¼ã‚¹ã¨ã®ãƒˆãƒ¬ãƒ¼ãƒ‰ã‚ªãƒ•ï¼‰ã€‚ 
+--   ãƒãƒƒãƒ—ãƒŽã‚¤ã‚ºãŒä¸éƒ½åˆã«ãªã‚‹å ´åˆã€ACã‚«ãƒƒãƒ—ãƒªãƒ³ã‚°ã‚³ãƒ³ãƒ‡ãƒ³ã‚µã®å¾Œæ®µã« 
+--   ãƒŸãƒ¥ãƒ¼ãƒˆãƒˆãƒ©ãƒ³ã‚¸ã‚¹ã‚¿ã‚’é…ç½®ã™ã‚‹ã“ã¨ã§æ”¹å–„å¯èƒ½ã€‚ 
 
 
 library IEEE;
@@ -68,7 +68,7 @@ architecture RTL of wsg_dsdac8 is
 begin
 
 
--- üŒ`‚W”{ƒI[ƒo[ƒTƒ“ƒvƒŠƒ“ƒOƒXƒe[ƒW -----
+-- ç·šå½¢ï¼˜å€ã‚ªãƒ¼ãƒãƒ¼ã‚µãƒ³ãƒ—ãƒªãƒ³ã‚°ã‚¹ãƒ†ãƒ¼ã‚¸ -----
 
 	process(clk, reset)begin
 		if (reset = '1') then
@@ -91,7 +91,7 @@ begin
 	end process;
 
 
--- ‡™‡”•Ï’²ƒXƒe[ƒW -----
+-- âŠ¿âˆ‘å¤‰èª¿ã‚¹ãƒ†ãƒ¼ã‚¸ -----
 
 	pcm_sig(pcm_sig'left) <= not osvpcm_reg(osvpcm_reg'left);
 	pcm_sig(pcm_sig'left-1 downto 0) <= osvpcm_reg(osvpcm_reg'left-1 downto 3);
@@ -111,7 +111,7 @@ begin
 	end process;
 
 
-	-- DACo—Í 
+	-- DACå‡ºåŠ› 
 
 	dac_out <= dacout_reg;
 

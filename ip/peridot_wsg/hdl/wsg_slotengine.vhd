@@ -1,19 +1,20 @@
 -- ===================================================================
--- TITLE : Loreley-WSG Slot Engine
+-- TITLE : PERIDOT-NGS / Loreley-WSG Slot Engine
 --
 --     DESIGN : S.OSAFUNE (J-7SYSTEM WORKS LIMITED)
 --     DATE   : 2009/01/01 -> 2009/01/04
 --            : 2009/01/14 (FIXED)
---     MODIFY : 2011/06/10 PCMƒ|[ƒg‚ğ•ª—£ 
---            : 2011/06/25 ƒpƒ“İ’è‚ğ•ÏX ¨ Œ³‚É–ß‚·(2012/06/05)
---            : 2012/05/29 FREQƒŒƒWƒXƒ^d—l‚ğ•ÏX 
---            : 2012/06/05 ˆÊ‘Š•Ï’²‚ğ’Ç‰Á 
+--     MODIFY : 2011/06/10 PCMãƒãƒ¼ãƒˆã‚’åˆ†é›¢ 
+--            : 2011/06/25 ãƒ‘ãƒ³è¨­å®šã‚’å¤‰æ›´ â†’ å…ƒã«æˆ»ã™(2012/06/05)
+--            : 2012/05/29 FREQãƒ¬ã‚¸ã‚¹ã‚¿ä»•æ§˜ã‚’å¤‰æ›´ 
+--            : 2012/06/05 ä½ç›¸å¤‰èª¿ã‚’è¿½åŠ  
 --
---     MODIFY : 2016/10/25 CycloneIV/MAX10—pƒAƒbƒvƒf[ƒg 
+--     MODIFY : 2016/10/25 CycloneIV/MAX10ç”¨ã‚¢ãƒƒãƒ—ãƒ‡ãƒ¼ãƒˆ 
+--            : 2017/04/06 LPM_MULTã®ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹å¤‰æ›´ 
 --
 -- ===================================================================
 -- *******************************************************************
---    (C) 2009-2016, J-7SYSTEM WORKS LIMITED.  All rights Reserved.
+--    (C) 2009-2017, J-7SYSTEM WORKS LIMITED.  All rights Reserved.
 --
 -- * This module is a free sourcecode and there is NO WARRANTY.
 -- * No restriction on use. You can use, modify and redistribute it
@@ -28,6 +29,9 @@ library IEEE;
 use IEEE.std_logic_1164.all;
 use IEEE.std_logic_unsigned.all;
 use IEEE.std_logic_arith.all;
+
+LIBRARY lpm;
+USE lpm.lpm_components.all;
 
 entity wsg_slotengine is
 	generic(
@@ -131,15 +135,6 @@ architecture RTL of wsg_slotengine is
 	signal pcmdata_l_reg	: std_logic_vector(15 downto 0);
 	signal pcmdata_r_reg	: std_logic_vector(15 downto 0);
 
-
-	component wsg_mul_s9x9
-	PORT
-	(
-		dataa		: IN STD_LOGIC_VECTOR (8 DOWNTO 0);
-		datab		: IN STD_LOGIC_VECTOR (8 DOWNTO 0);
-		result		: OUT STD_LOGIC_VECTOR (17 DOWNTO 0)
-	);
-	end component;
 	signal mul_a_reg		: std_logic_vector(7 downto 0);
 	signal mul_b_reg		: std_logic_vector(7 downto 0);
 	signal mul_q_sig		: std_logic_vector(17 downto 0);
@@ -155,13 +150,13 @@ begin
 	test_mul_q		<= mul_q_sig(15 downto 0);
 
 
---==== ƒXƒƒbƒgˆ—ƒXƒe[ƒgƒ}ƒVƒ“ ====================================
+--==== ã‚¹ãƒ­ãƒƒãƒˆå‡¦ç†ã‚¹ãƒ†ãƒ¼ãƒˆãƒã‚·ãƒ³ ====================================
 
-	-- ƒXƒƒbƒgƒGƒ“ƒWƒ“ƒLƒbƒNM†‚Ì“¯Šú‰» (slot_start‚Ì—§‚¿ã‚ª‚èƒGƒbƒW‚ğŒŸo)
+	-- ã‚¹ãƒ­ãƒƒãƒˆã‚¨ãƒ³ã‚¸ãƒ³ã‚­ãƒƒã‚¯ä¿¡å·ã®åŒæœŸåŒ– (slot_startã®ç«‹ã¡ä¸ŠãŒã‚Šã‚¨ãƒƒã‚¸ã‚’æ¤œå‡º)
 
 	start_sig <= '1' when(start0_reg = '1' and start1_reg = '0') else '0';
 
-	start_sync <= start_sig;	-- ŠO•”ƒ‚ƒWƒ…[ƒ‹“¯Šú—p 
+	start_sync <= start_sig;	-- å¤–éƒ¨ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«åŒæœŸç”¨ 
 
 	process (clk, reset) begin
 		if (reset = '1') then
@@ -177,12 +172,12 @@ begin
 		end if;
 	end process;
 
-	-- ƒXƒƒbƒgƒGƒ“ƒWƒ“I—¹M†‚ğ¶¬ 
+	-- ã‚¹ãƒ­ãƒƒãƒˆã‚¨ãƒ³ã‚¸ãƒ³çµ‚äº†ä¿¡å·ã‚’ç”Ÿæˆ 
 
 	slot_done <= '1' when(state = IDLE) else '0';
 
 
-	-- ”gŒ`‡¬ƒGƒ“ƒWƒ“ 
+	-- æ³¢å½¢åˆæˆã‚¨ãƒ³ã‚¸ãƒ³ 
 
 	process (clk, reset) begin
 		if (reset = '1') then
@@ -194,7 +189,7 @@ begin
 
 		elsif rising_edge(clk) then
 
-		-- ƒXƒƒbƒgˆ—ƒXƒe[ƒg‚ğ‹N“® --------
+		-- ã‚¹ãƒ­ãƒƒãƒˆå‡¦ç†ã‚¹ãƒ†ãƒ¼ãƒˆã‚’èµ·å‹• --------
 			case state is
 			when IDLE =>
 				if (start_sig = '1') then
@@ -211,14 +206,14 @@ begin
 					state <= IDLE;
 				end if;
 
-		-- ƒXƒƒbƒg–ˆ‚É”gŒ`‚ğ‡¬ --------
+		-- ã‚¹ãƒ­ãƒƒãƒˆæ¯ã«æ³¢å½¢ã‚’åˆæˆ --------
 		
-			-- STATUSƒŒƒWƒXƒ^‚Ìƒ[ƒhƒŠƒNƒGƒXƒg 
+			-- STATUSãƒ¬ã‚¸ã‚¹ã‚¿ã®ãƒ­ãƒ¼ãƒ‰ãƒªã‚¯ã‚¨ã‚¹ãƒˆ 
 			when REGREAD0 =>
 				state <= REGREAD1;
 
 
-			-- FREQƒŒƒWƒXƒ^‚Ìƒ[ƒhƒŠƒNƒGƒXƒg 
+			-- FREQãƒ¬ã‚¸ã‚¹ã‚¿ã®ãƒ­ãƒ¼ãƒ‰ãƒªã‚¯ã‚¨ã‚¹ãƒˆ 
 			when REGREAD1 =>
 				state <= REGREAD2;
 
@@ -226,10 +221,10 @@ begin
 				play_reg <= reg_play_sig;
 				pan_reg  <= reg_pan_sig;
 
-				phaseoffs_reg <= phaseoffs_sig;		-- ‘O’i‚©‚ç‚ÌˆÊ‘Š•Ï’²’l 
+				phaseoffs_reg <= phaseoffs_sig;		-- å‰æ®µã‹ã‚‰ã®ä½ç›¸å¤‰èª¿å€¤ 
 
 
-			-- WORKƒŒƒWƒXƒ^‚Ìƒ[ƒhƒŠƒNƒGƒXƒg 
+			-- WORKãƒ¬ã‚¸ã‚¹ã‚¿ã®ãƒ­ãƒ¼ãƒ‰ãƒªã‚¯ã‚¨ã‚¹ãƒˆ 
 			when REGREAD2 =>
 				state <= REGREAD3;
 
@@ -245,24 +240,24 @@ begin
 				end if;
 
 
-			-- ƒAƒhƒŒƒX‚æ‚ÑƒXƒƒbƒg“®ìó‘ÔŠm’è 
+			-- ã‚¢ãƒ‰ãƒ¬ã‚¹ã‚ˆã³ã‚¹ãƒ­ãƒƒãƒˆå‹•ä½œçŠ¶æ…‹ç¢ºå®š 
 			when REGREAD3 =>
 				state <= WAVEREAD;
 
 				playaddr_reg <= reg_playaddr_sig;
 
-				pcmsel_reg <= freq_zf_sig;			-- FREQƒŒƒWƒXƒ^=0‚È‚çPCMƒ`ƒƒƒlƒ‹‚ğÄ¶ 
+				pcmsel_reg <= freq_zf_sig;			-- FREQãƒ¬ã‚¸ã‚¹ã‚¿=0ãªã‚‰PCMãƒãƒ£ãƒãƒ«ã‚’å†ç”Ÿ 
 
 				vol_l_reg <= voldata_sig;
 				mul_a_reg <= "0" & pan_r_sig(6 downto 0);
 
 
-			-- WaveTable‚ÌƒŠ[ƒhƒŠƒNƒGƒXƒg 
+			-- WaveTableã®ãƒªãƒ¼ãƒ‰ãƒªã‚¯ã‚¨ã‚¹ãƒˆ 
 			when WAVEREAD =>
 				state <= REGWRITE;
 
 				if (keysync_reg = '0') then
-					play_reg <= not playaddr_zf_sig;	-- ƒL[SYNC‚ª–³Œø‚È‚çŒ»ó‚Ì“®ì‚ğŒp‘± 
+					play_reg <= not playaddr_zf_sig;	-- ã‚­ãƒ¼SYNCãŒç„¡åŠ¹ãªã‚‰ç¾çŠ¶ã®å‹•ä½œã‚’ç¶™ç¶š 
 				end if;
 
 				playaddr_reg <= playaddr_reg + ("000" & addrstep_sig(16 downto 2));
@@ -270,12 +265,12 @@ begin
 				vol_r_reg <= voldata_sig;
 
 
-			-- WORKƒŒƒWƒXƒ^‚Ìƒ‰ƒCƒgƒoƒbƒN 
+			-- WORKãƒ¬ã‚¸ã‚¹ã‚¿ã®ãƒ©ã‚¤ãƒˆãƒãƒƒã‚¯ 
 			when REGWRITE =>
 				state <= WAVEADD0;
 
 				if (play_reg = '1') then
-					if (pcmsel_reg = '1') then		-- PCMÄ¶İ’è‚Ìê‡ 
+					if (pcmsel_reg = '1') then		-- PCMå†ç”Ÿè¨­å®šã®å ´åˆ 
 						mul_a_reg <= extpcm_data;
 					else
 						mul_a_reg <= wav_readdata;
@@ -286,7 +281,7 @@ begin
 				mul_b_reg <= vol_l_reg;
 
 
-			-- ¶ƒ`ƒƒƒlƒ‹”gŒ`o—Í‰ÁZ 
+			-- å·¦ãƒãƒ£ãƒãƒ«æ³¢å½¢å‡ºåŠ›åŠ ç®— 
 			when WAVEADD0 =>
 				state <= WAVEADD1;
 
@@ -294,7 +289,7 @@ begin
 				waveadd_l_reg <= waveadd_l_reg + wavedata_sig;
 
 
-			-- ‰Eƒ`ƒƒƒlƒ‹”gŒ`o—Í‰ÁZ 
+			-- å³ãƒãƒ£ãƒãƒ«æ³¢å½¢å‡ºåŠ›åŠ ç®— 
 			when WAVEADD1 =>
 				if (slotcount_reg = (MAXSLOTNUM-1)) then
 					state <= IDLE;
@@ -304,7 +299,7 @@ begin
 				slotcount_reg <= slotcount_reg + 1;
 
 				if (pan_zf_sig = '0') then
-					mul_b_reg <= (others=>'0');		-- PANİ’è‚ª—LŒø‚Ìê‡‚ÍŒã’i‚ÌˆÊ‘Š•Ï’²—Ê‚ğ0‚É‚·‚é 
+					mul_b_reg <= (others=>'0');		-- PANè¨­å®šãŒæœ‰åŠ¹ã®å ´åˆã¯å¾Œæ®µã®ä½ç›¸å¤‰èª¿é‡ã‚’0ã«ã™ã‚‹ 
 				else
 					mul_b_reg <= vol_reg;
 				end if;
@@ -319,9 +314,9 @@ begin
 	end process;
 
 
---==== ƒŒƒWƒXƒ^ƒoƒX“üo—Í ============================================
+--==== ãƒ¬ã‚¸ã‚¹ã‚¿ãƒã‚¹å…¥å‡ºåŠ› ============================================
 
-	-- ƒ[ƒhƒŒƒWƒXƒ^ƒrƒbƒg\¬ --
+	-- ãƒ­ãƒ¼ãƒ‰ãƒ¬ã‚¸ã‚¹ã‚¿ãƒ“ãƒƒãƒˆæ§‹æˆ --
 
 	reg_vol_sig  <= reg_readdata(16 downto 9);
 	reg_play_sig <= reg_readdata(7);
@@ -331,7 +326,7 @@ begin
 	reg_playaddr_sig <= reg_readdata(17 downto 0);
 
 
-	-- FREQƒŒƒWƒXƒ^İ’è¨ADDRSTEP’l•ÏŠ· --
+	-- FREQãƒ¬ã‚¸ã‚¹ã‚¿è¨­å®šâ†’ADDRSTEPå€¤å¤‰æ› --
 
 	freq_zf_sig   <= '1' when(freq_reg = 0) else '0';
 	freq_oct_sig  <= freq_reg(11 downto 9);
@@ -348,7 +343,7 @@ begin
 		"00000001" & freq_step_sig		when others;
 
 
-	-- ƒ‰ƒCƒgƒoƒbƒNƒŒƒWƒXƒ^ƒrƒbƒg\¬ --
+	-- ãƒ©ã‚¤ãƒˆãƒãƒƒã‚¯ãƒ¬ã‚¸ã‚¹ã‚¿ãƒ“ãƒƒãƒˆæ§‹æˆ --
 
 	playaddr_zf_sig <= '1' when(playaddr_reg = 0) else '0';
 	nextaddr_sig <= (0=>'1',others=>'0') when(playaddr_zf_sig = '1') else playaddr_reg;
@@ -357,7 +352,7 @@ begin
 	reg_write <= '1' when(state = REGWRITE) else '0';
 
 
-	-- ƒAƒhƒŒƒXo—Í --
+	-- ã‚¢ãƒ‰ãƒ¬ã‚¹å‡ºåŠ› --
 
 	reg_address <=	("1" & slotcount_reg & "0") when(state = REGREAD0) else
 					("1" & slotcount_reg & "1") when(state = REGREAD1) else
@@ -369,7 +364,7 @@ begin
 	extpcm_ch <= bank_reg;
 
 
---==== ”gŒ`E‰¹—Ê’læZ ==============================================
+--==== æ³¢å½¢ãƒ»éŸ³é‡å€¤ä¹—ç®— ==============================================
 
 	phaseoffs_sig <= mul_q_sig(15 downto 0);
 
@@ -379,12 +374,20 @@ begin
 
 	voldata_sig <= mul_q_sig(14 downto 7);
 
-	wsg_mul_s9x9_inst : wsg_mul_s9x9
-	PORT MAP (
-		dataa	 => (mul_a_reg(7) & mul_a_reg),
-		datab	 => ('0' & mul_b_reg),
-		result	 => mul_q_sig
+	wsg_mul_s9x9_inst : lpm_mult
+	generic map (
+		lpm_type			=> "LPM_MULT",
+		lpm_representation	=> "SIGNED",
+		lpm_widtha			=> 9,
+		lpm_widthb			=> 9,
+		lpm_widthp			=> 18
+	)
+	port map (
+		dataa	=> (mul_a_reg(7) & mul_a_reg),
+		datab	=> ('0' & mul_b_reg),
+		result	=> mul_q_sig
 	);
+
 
 	wavedata_sig(21 downto 15)<= (others=>mul_q_sig(15));
 	wavedata_sig(14 downto 0) <= mul_q_sig(14 downto 0);

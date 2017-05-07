@@ -1,10 +1,10 @@
 -- ===================================================================
--- TITLE : Loreley-WSG (External sound module)
+-- TITLE : PERIDOT-NGS / Loreley-WSG (External sound module)
 --
 --     DESIGN : S.OSAFUNE (J-7SYSTEM WORKS LIMITED)
 --     DATE   : 2011/06/11 -> 2011/06/11
 --            : 2012/06/12 (FIXED)
---     MODIFY : 2016/10/30 CycloneIV/MAX10ƒAƒbƒvƒf[ƒg 
+--     MODIFY : 2016/10/30 CycloneIV/MAX10ã‚¢ãƒƒãƒ—ãƒ‡ãƒ¼ãƒˆ 
 --
 -- ===================================================================
 -- *******************************************************************
@@ -18,24 +18,24 @@
 --   notice.
 -- *******************************************************************
 
---	0	: PCMCH0 FSDIVƒŒƒWƒXƒ^ 
---	1	: PCMCH0 FIFOƒŒƒWƒXƒ^(WO) / STATUSƒŒƒWƒXƒ^(RO)
---	2	: PCMCH1 FSDIVƒŒƒWƒXƒ^ 
---	3	: PCMCH1 FIFOƒŒƒWƒXƒ^(WO) / STATUSƒŒƒWƒXƒ^(RO)
---	4	: PCMCH2 FSDIVƒŒƒWƒXƒ^ 
---	5	: PCMCH2 FIFOƒŒƒWƒXƒ^(WO) / STATUSƒŒƒWƒXƒ^(RO)
---	6	: PCMCH3 FSDIVƒŒƒWƒXƒ^ 
---	7	: PCMCH3 FIFOƒŒƒWƒXƒ^(WO) / STATUSƒŒƒWƒXƒ^(RO)
---	8	: PCMCH4 FSDIVƒŒƒWƒXƒ^ 
---	9	: PCMCH4 FIFOƒŒƒWƒXƒ^(WO) / STATUSƒŒƒWƒXƒ^(RO)
---	10	: PCMCH5 FSDIVƒŒƒWƒXƒ^ 
---	11	: PCMCH5 FIFOƒŒƒWƒXƒ^(WO) / STATUSƒŒƒWƒXƒ^(RO)
---	12	: PCMCH6 FSDIVƒŒƒWƒXƒ^ 
---	13	: PCMCH6 FIFOƒŒƒWƒXƒ^(WO) / STATUSƒŒƒWƒXƒ^(RO)
---	14	: PCMCH7 FSDIVƒŒƒWƒXƒ^ 
---	15	: PCMCH7 FIFOƒŒƒWƒXƒ^(WO) / STATUSƒŒƒWƒXƒ^(RO)
---	16	: PCMIRQƒŒƒWƒXƒ^ (RO)
---	17	: PCMIRQENAƒŒƒWƒXƒ^ 
+--	0	: PCMCH0 FSDIVãƒ¬ã‚¸ã‚¹ã‚¿ 
+--	1	: PCMCH0 FIFOãƒ¬ã‚¸ã‚¹ã‚¿(WO) / STATUSãƒ¬ã‚¸ã‚¹ã‚¿(RO)
+--	2	: PCMCH1 FSDIVãƒ¬ã‚¸ã‚¹ã‚¿ 
+--	3	: PCMCH1 FIFOãƒ¬ã‚¸ã‚¹ã‚¿(WO) / STATUSãƒ¬ã‚¸ã‚¹ã‚¿(RO)
+--	4	: PCMCH2 FSDIVãƒ¬ã‚¸ã‚¹ã‚¿ 
+--	5	: PCMCH2 FIFOãƒ¬ã‚¸ã‚¹ã‚¿(WO) / STATUSãƒ¬ã‚¸ã‚¹ã‚¿(RO)
+--	6	: PCMCH3 FSDIVãƒ¬ã‚¸ã‚¹ã‚¿ 
+--	7	: PCMCH3 FIFOãƒ¬ã‚¸ã‚¹ã‚¿(WO) / STATUSãƒ¬ã‚¸ã‚¹ã‚¿(RO)
+--	8	: PCMCH4 FSDIVãƒ¬ã‚¸ã‚¹ã‚¿ 
+--	9	: PCMCH4 FIFOãƒ¬ã‚¸ã‚¹ã‚¿(WO) / STATUSãƒ¬ã‚¸ã‚¹ã‚¿(RO)
+--	10	: PCMCH5 FSDIVãƒ¬ã‚¸ã‚¹ã‚¿ 
+--	11	: PCMCH5 FIFOãƒ¬ã‚¸ã‚¹ã‚¿(WO) / STATUSãƒ¬ã‚¸ã‚¹ã‚¿(RO)
+--	12	: PCMCH6 FSDIVãƒ¬ã‚¸ã‚¹ã‚¿ 
+--	13	: PCMCH6 FIFOãƒ¬ã‚¸ã‚¹ã‚¿(WO) / STATUSãƒ¬ã‚¸ã‚¹ã‚¿(RO)
+--	14	: PCMCH7 FSDIVãƒ¬ã‚¸ã‚¹ã‚¿ 
+--	15	: PCMCH7 FIFOãƒ¬ã‚¸ã‚¹ã‚¿(WO) / STATUSãƒ¬ã‚¸ã‚¹ã‚¿(RO)
+--	16	: PCMIRQãƒ¬ã‚¸ã‚¹ã‚¿ (RO)
+--	17	: PCMIRQENAãƒ¬ã‚¸ã‚¹ã‚¿ 
 --	18-63: reserved
 
 -- ext ch0  : PCMCH0
@@ -52,7 +52,7 @@
 -- ext ch11 : reserved
 -- ext ch12 : reserved
 -- ext ch13 : reserved
--- ext ch14 : NOISE (ƒzƒƒCƒgƒmƒCƒY / “Ç‚Ýž‚Þ‚½‚Ñ‚Éˆá‚¤’l‚ð•Ô‚·)
+-- ext ch14 : NOISE (ãƒ›ãƒ¯ã‚¤ãƒˆãƒŽã‚¤ã‚º / èª­ã¿è¾¼ã‚€ãŸã³ã«é•ã†å€¤ã‚’è¿”ã™)
 -- ext ch15 : reserved
 
 
@@ -63,7 +63,7 @@ use IEEE.std_logic_unsigned.all;
 
 entity wsg_extmodule is
 	generic(
-		PCM_CHANNEL_GENNUM	: integer := 4			-- PCM‰¹Œ¹ŽÀ‘•”(0`8) 
+		PCM_CHANNEL_GENNUM	: integer := 4			-- PCMéŸ³æºå®Ÿè£…æ•°(0ï½ž8) 
 	);
 	port(
 		clk				: in  std_logic;		-- system clock
@@ -89,15 +89,15 @@ end wsg_extmodule;
 
 architecture RTL of wsg_extmodule is
 
-	-- Šg’£‰¹Œ¹¶¬ƒpƒ‰ƒ[ƒ^ 
-	constant PCM_CHANNEL_MAXNUM		: integer := 8;			-- PCM‰¹Œ¹Å‘å” 
+	-- æ‹¡å¼µéŸ³æºç”Ÿæˆãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿ 
+	constant PCM_CHANNEL_MAXNUM		: integer := 8;			-- PCMéŸ³æºæœ€å¤§æ•° 
 
-	constant LFSR_BITLENGTH			: integer := 17;		-- ƒmƒCƒY‰¹ƒpƒ‰ƒ[ƒ^ 
+	constant LFSR_BITLENGTH			: integer := 17;		-- ãƒŽã‚¤ã‚ºéŸ³ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿ 
 	constant LFSR_XORTAP1			: integer := 17;
 	constant LFSR_XORTAP2			: integer := 14;
 
 
-	-- “à•”ƒm[ƒh‚¨‚æ‚ÑƒRƒ“ƒ|[ƒlƒ“ƒgéŒ¾ 
+	-- å†…éƒ¨ãƒŽãƒ¼ãƒ‰ãŠã‚ˆã³ã‚³ãƒ³ãƒãƒ¼ãƒãƒ³ãƒˆå®£è¨€ 
 	signal slot_clk_sig			: std_logic;
 	signal slot_reset_reg		: std_logic;
 	signal slot_reset_sig		: std_logic;
@@ -141,9 +141,9 @@ architecture RTL of wsg_extmodule is
 begin
 
 
---==== ƒ^ƒCƒ~ƒ“ƒOM†¶¬ ===========================================
+--==== ã‚¿ã‚¤ãƒŸãƒ³ã‚°ä¿¡å·ç”Ÿæˆ ===========================================
 
-	-- slot_clkŒnƒŠƒZƒbƒgM†‚ð¶¬ 
+	-- slot_clkç³»ãƒªã‚»ãƒƒãƒˆä¿¡å·ã‚’ç”Ÿæˆ 
 
 	process (slot_clk) begin
 		if rising_edge(slot_clk) then
@@ -155,9 +155,9 @@ begin
 	slot_reset_sig <= slot_reset_reg;
 
 
---==== ƒoƒXƒCƒ“ƒ^[ƒtƒF[ƒX =========================================
+--==== ãƒã‚¹ã‚¤ãƒ³ã‚¿ãƒ¼ãƒ•ã‚§ãƒ¼ã‚¹ =========================================
 
-	-- ƒŒƒWƒXƒ^“Ç‚Ýo‚µ§Œä 
+	-- ãƒ¬ã‚¸ã‚¹ã‚¿èª­ã¿å‡ºã—åˆ¶å¾¡ 
 
 	with address(5 downto 1) select readdata_sig <=
 		pcm_readdata_sig(0)		when "00000",
@@ -180,19 +180,19 @@ begin
 	readdata <= readdata_reg;
 
 
-	-- ƒŒƒWƒXƒ^‘‚«ž‚Ý§Œä 
+	-- ãƒ¬ã‚¸ã‚¹ã‚¿æ›¸ãè¾¼ã¿åˆ¶å¾¡ 
 
 	pcm_regwrite_sig <= write;
 
 
-	-- Š„‚èž‚ÝM†§Œä 
+	-- å‰²ã‚Šè¾¼ã¿ä¿¡å·åˆ¶å¾¡ 
 
 	irq  <= pcm_irq_reg;
 
 
---==== PCM‰¹Œ¹ƒuƒƒbƒN (PCM8) =======================================
+--==== PCMéŸ³æºãƒ–ãƒ­ãƒƒã‚¯ (PCM8) =======================================
 
-	-- PCM‰¹Œ¹Š„‚èž‚Ý§ŒäƒuƒƒbƒN 
+	-- PCMéŸ³æºå‰²ã‚Šè¾¼ã¿åˆ¶å¾¡ãƒ–ãƒ­ãƒƒã‚¯ 
 
 	pcm_irqreaddata_sig <= pcm_fifoirq_sig when(address(0 downto 0)="0") else pcm_irqena_sig;
 
@@ -220,7 +220,7 @@ begin
 	end process;
 
 
-	-- PCM‰¹Œ¹‚ÌƒCƒ“ƒXƒ^ƒ“ƒX 
+	-- PCMéŸ³æºã®ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹ 
 
 GEN_PCM : if PCM_CHANNEL_GENNUM > 0 generate
 	GEN_PCMLOOP : for i in 0 to PCM_CHANNEL_GENNUM-1 generate
@@ -248,9 +248,9 @@ end generate;
 GEN_PCMDUMMYSIG : if PCM_CHANNEL_GENNUM < PCM_CHANNEL_MAXNUM generate
 	GEN_DUMMYLOOP : for i in PCM_CHANNEL_GENNUM to PCM_CHANNEL_MAXNUM-1 generate
 
-		pcm_irq_sig(i)     <= '0';				-- ‘¶Ý‚µ‚È‚¢PCMƒ`ƒƒƒlƒ‹‚©‚ç‚ÌŠ„‚èž‚Ý‚Í‚©‚©‚ç‚È‚¢ 
-		pcm_fifoirq_sig(i) <= '1';				-- ‘¶Ý‚µ‚È‚¢PCMƒ`ƒƒƒlƒ‹‚Íí‚ÉEMPTY‚É‚È‚é 
-		pcm_irqena_sig(i)  <= '0';				-- ‘¶Ý‚µ‚È‚¢PCMƒ`ƒƒƒlƒ‹‚ÌIRQENAƒŒƒWƒXƒ^‚Íí‚É'0'‚ð“Ç‚Ýo‚· 
+		pcm_irq_sig(i)     <= '0';				-- å­˜åœ¨ã—ãªã„PCMãƒãƒ£ãƒãƒ«ã‹ã‚‰ã®å‰²ã‚Šè¾¼ã¿ã¯ã‹ã‹ã‚‰ãªã„ 
+		pcm_fifoirq_sig(i) <= '1';				-- å­˜åœ¨ã—ãªã„PCMãƒãƒ£ãƒãƒ«ã¯å¸¸ã«EMPTYã«ãªã‚‹ 
+		pcm_irqena_sig(i)  <= '0';				-- å­˜åœ¨ã—ãªã„PCMãƒãƒ£ãƒãƒ«ã®IRQENAãƒ¬ã‚¸ã‚¹ã‚¿ã¯å¸¸ã«'0'ã‚’èª­ã¿å‡ºã™ 
 		pcm_write_sig(i)   <= 'X';
 		pcm_readdata_sig(i)<= (others=>'X');
 		pcm_ch_out_sig(i)  <= (others=>'0');
@@ -260,7 +260,7 @@ end generate;
 
 
 
---==== ƒmƒCƒYƒuƒƒbƒN (LFSR) ========================================
+--==== ãƒŽã‚¤ã‚ºãƒ–ãƒ­ãƒƒã‚¯ (LFSR) ========================================
 
 	process (slot_clk_sig, slot_reset_sig) begin
 		if (slot_reset_sig = '1') then
@@ -276,7 +276,7 @@ end generate;
 
 
 
---==== ƒXƒƒbƒgƒGƒ“ƒWƒ“‚Ö‚Ìo—Í =====================================
+--==== ã‚¹ãƒ­ãƒƒãƒˆã‚¨ãƒ³ã‚¸ãƒ³ã¸ã®å‡ºåŠ› =====================================
 
 	with extpcm_ch select extpcmmpx_sig <=
 		pcm_ch_out_sig(0)	when "0000",		-- ext ch0 : pcm0

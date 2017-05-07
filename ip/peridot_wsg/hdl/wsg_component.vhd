@@ -1,14 +1,17 @@
 -- ===================================================================
--- TITLE : Loreley-WSG (WaveTable Sound Genarator)
+-- TITLE : PERIDOT-NGS / WaveTable Sound Genarator
 --
 --     DESIGN : S.OSAFUNE (J-7SYSTEM WORKS LIMITED)
 --     DATE   : 2009/01/01 -> 2009/01/09
 --            : 2009/01/15 (FIXED)
---     MODIFY : 2016/10/25 CycloneIV/MAX10—pƒAƒbƒvƒf[ƒg 
+--
+--     MODIFY : 2016/10/25 CycloneIV/MAX10ç”¨ã‚¢ãƒƒãƒ—ãƒ‡ãƒ¼ãƒˆ 
+--            : 2017/04/06 PERIDOTãƒšãƒªãƒ•ã‚§ãƒ©ãƒ«å¯¾å¿œ 
+--            : 2017/05/08 ã‚¢ãƒ‰ãƒ¬ã‚¹ä¿®æ­£ã€ã‚­ãƒ¼å…¥åŠ›å¯¾å¿œ 
 --
 -- ===================================================================
 -- *******************************************************************
---    (C) 2009-2016, J-7SYSTEM WORKS LIMITED.  All rights Reserved.
+--    (C) 2009-2017, J-7SYSTEM WORKS LIMITED.  All rights Reserved.
 --
 -- * This module is a free sourcecode and there is NO WARRANTY.
 -- * No restriction on use. You can use, modify and redistribute it
@@ -28,13 +31,14 @@ entity wsg_component is
 	generic(
 		AUDIOCLOCKFREQ		: integer := 24576000;	-- input audio_clk freq
 		SAMPLINGFREQ		: integer := 32000;		-- output sampleing freq
-		MAXSLOTNUM			: integer := 64;		-- generate slot number(32`64)
-		PCM_CHANNEL_GENNUM	: integer := 2			-- PCM instance number(0`8) 
+		MAXSLOTNUM			: integer := 64;		-- generate slot number(32ï½64)
+		PCM_CHANNEL_GENNUM	: integer := 2;			-- PCM instance number(0ï½8) 
+		WAVETABLE_INIT_FILE	: string := "UNUSED"
 	);
 	port(
 		csi_global_reset	: in  std_logic;
 
-		----- AvalonƒoƒXM†(ƒƒ‚ƒŠƒXƒŒ[ƒu) -----------
+		----- AvalonMMä¿¡å·(ãƒ¡ãƒ¢ãƒªã‚¹ãƒ¬ãƒ¼ãƒ–) -----------
 		avs_s1_clk			: in  std_logic;
 
 		avs_s1_address		: in  std_logic_vector(9 downto 1);
@@ -46,7 +50,7 @@ entity wsg_component is
 
 		avs_s1_irq			: out std_logic;
 
-		----- ƒI[ƒfƒBƒIM† -----------
+		----- ã‚ªãƒ¼ãƒ‡ã‚£ã‚ªä¿¡å· -----------
 		audio_clk			: in  std_logic;		-- 24.576MHz typ
 
 		dac_bclk			: out std_logic;
@@ -54,7 +58,12 @@ entity wsg_component is
 		dac_data			: out std_logic;
 		aud_l				: out std_logic;
 		aud_r				: out std_logic;
-		mute				: out std_logic
+		mute				: out std_logic;
+
+		----- å¤–éƒ¨ã‚­ãƒ¼å…¥åŠ› -----------
+		kb_scko				: out std_logic;
+		kb_load_n			: out std_logic;
+		kb_sdin				: in  std_logic
 	);
 end wsg_component;
 
@@ -73,6 +82,9 @@ architecture RTL of wsg_component is
 
 
 	component wsg_businterface
+	generic(
+		WAVETABLE_INIT_FILE	: string
+	);
 	port(
 		clk				: in  std_logic;	-- system clock
 		reset			: in  std_logic;	-- async reset
@@ -80,6 +92,9 @@ architecture RTL of wsg_component is
 		mute_out		: out std_logic;
 		mastervol_l		: out std_logic_vector(14 downto 0);
 		mastervol_r		: out std_logic_vector(14 downto 0);
+		inkey_scko		: out std_logic;	-- external key serial-input
+		inkey_load_n	: out std_logic;
+		inkey_sdin		: in  std_logic;
 
 		address			: in  std_logic_vector(9 downto 0);
 		readdata		: out std_logic_vector(15 downto 0);
@@ -128,7 +143,7 @@ architecture RTL of wsg_component is
 
 	component wsg_extmodule
 	generic(
-		PCM_CHANNEL_GENNUM	: integer			-- PCM‰¹Œ¹À‘•”(0`8) 
+		PCM_CHANNEL_GENNUM	: integer			-- PCMéŸ³æºå®Ÿè£…æ•°(0ï½8) 
 	);
 	port(
 		clk				: in  std_logic;		-- system clock
@@ -189,9 +204,9 @@ architecture RTL of wsg_component is
 		clk_ena		: in  std_logic := '1';		-- Pulse width 1clock time (128fs)
 		fs_timing	: out std_logic;
 
-		volume_l	: in  std_logic_vector(14 downto 0);	-- •„†‚È‚µ 
+		volume_l	: in  std_logic_vector(14 downto 0);	-- ç¬¦å·ãªã— 
 		volume_r	: in  std_logic_vector(14 downto 0);
-		pcmdata_l	: in  std_logic_vector(15 downto 0);	-- •„†•t‚« 
+		pcmdata_l	: in  std_logic_vector(15 downto 0);	-- ç¬¦å·ä»˜ã 
 		pcmdata_r	: in  std_logic_vector(15 downto 0);
 
 		dac_bclk	: out std_logic;
@@ -205,9 +220,9 @@ architecture RTL of wsg_component is
 
 begin
 
---==== ƒ^ƒCƒ~ƒ“ƒOM†¶¬ ===========================================
+--==== ã‚¿ã‚¤ãƒŸãƒ³ã‚°ä¿¡å·ç”Ÿæˆ ===========================================
 
-	-- ƒI[ƒfƒBƒIƒNƒƒbƒNŒnƒŠƒZƒbƒgM†‚ğ¶¬ 
+	-- ã‚ªãƒ¼ãƒ‡ã‚£ã‚ªã‚¯ãƒ­ãƒƒã‚¯ç³»ãƒªã‚»ãƒƒãƒˆä¿¡å·ã‚’ç”Ÿæˆ 
 
 	audio_clk_sig   <= audio_clk;
 	audio_reset_sig <= audio_reset_reg;
@@ -219,7 +234,7 @@ begin
 	end process;
 
 
-	-- fsƒ^ƒCƒ~ƒ“ƒOM†‚ğ¶¬ 
+	-- fsã‚¿ã‚¤ãƒŸãƒ³ã‚°ä¿¡å·ã‚’ç”Ÿæˆ 
 
 	process (audio_clk_sig, audio_reset_sig) begin
 		if (audio_reset_sig = '1') then
@@ -238,9 +253,12 @@ begin
 	fs128_timing_sig <= '1' when (divcount = 0) else '0';
 
 
---==== ƒŒƒWƒXƒ^‚¨‚æ‚ÑƒoƒXƒCƒ“ƒ^[ƒtƒF[ƒX ===========================
+--==== ãƒ¬ã‚¸ã‚¹ã‚¿ãŠã‚ˆã³ãƒã‚¹ã‚¤ãƒ³ã‚¿ãƒ¼ãƒ•ã‚§ãƒ¼ã‚¹ ===========================
 
 	U_BUSIF : wsg_businterface
+	generic map (
+		WAVETABLE_INIT_FILE	=> WAVETABLE_INIT_FILE
+	)
 	port map (
 		clk				=> avs_s1_clk,
 		reset			=> csi_global_reset,
@@ -248,6 +266,9 @@ begin
 		mute_out		=> mute_sig,
 		mastervol_l		=> mastervol_l_sig,
 		mastervol_r		=> mastervol_r_sig,
+		inkey_scko		=> kb_scko,
+		inkey_load_n	=> kb_load_n,
+		inkey_sdin		=> kb_sdin,
 
 		address			=> (avs_s1_address & '0'),
 		readdata		=> avs_s1_readdata,
@@ -277,7 +298,7 @@ begin
 	);
 
 
---==== Šg’£‰¹Œ¹ƒ†ƒjƒbƒgiƒIƒvƒVƒ‡ƒ“j================================
+--==== æ‹¡å¼µéŸ³æºãƒ¦ãƒ‹ãƒƒãƒˆï¼ˆã‚ªãƒ—ã‚·ãƒ§ãƒ³ï¼‰================================
 
 	U_EXT : wsg_extmodule
 	generic map (
@@ -300,7 +321,7 @@ begin
 	);
 
 
---==== ”gŒ`‡¬ƒGƒ“ƒWƒ“ =============================================
+--==== æ³¢å½¢åˆæˆã‚¨ãƒ³ã‚¸ãƒ³ =============================================
 
 	U_SLOT : wsg_slotengine
 	generic map (
@@ -330,7 +351,7 @@ begin
 
 
 
---==== ƒI[ƒfƒBƒIo—Í•” =============================================
+--==== ã‚ªãƒ¼ãƒ‡ã‚£ã‚ªå‡ºåŠ›éƒ¨ =============================================
 
 	U_AUD : wsg_audout
 	generic map (
