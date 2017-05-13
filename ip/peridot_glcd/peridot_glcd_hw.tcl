@@ -3,6 +3,7 @@
 #
 #   DEGISN : S.OSAFUNE (J-7SYSTEM WORKS LIMITED)
 #   DATE   : 2017/03/12 -> 2017/03/12
+#   MODIFY : 2017/05/13 17.0 beta
 #
 # ===================================================================
 # *******************************************************************
@@ -26,11 +27,11 @@ package require -exact qsys 16.1
 # module peridot_i2c_master
 # 
 set_module_property NAME peridot_glcd_controller
-set_module_property DISPLAY_NAME "PERIDOT GLCD controller (Beta test version)"
+set_module_property DISPLAY_NAME "PERIDOT GLCD controller"
 set_module_property DESCRIPTION "PERIDOT GLCD controller"
 set_module_property GROUP "PERIDOT Peripherals"
 set_module_property AUTHOR "J-7SYSTEM WORKS LIMITED"
-set_module_property VERSION 16.1
+set_module_property VERSION 17.0
 set_module_property INTERNAL false
 set_module_property OPAQUE_ADDRESS_MAP true
 set_module_property INSTANTIATE_IN_SYSTEM_MODULE true

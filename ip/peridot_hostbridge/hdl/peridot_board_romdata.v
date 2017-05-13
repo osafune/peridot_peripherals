@@ -3,7 +3,8 @@
 //
 //   DEGISN : S.OSAFUNE (J-7SYSTEM WORKS LIMITED)
 //   DATE   : 2017/01/20 -> 2017/01/25
-//   UPDATE : 2017/03/01
+//   MODIFY : 2017/03/01
+//          : 2017/05/11 EPCQ-UIDの読み出しに対応 
 //
 // ===================================================================
 // *******************************************************************
@@ -22,6 +23,7 @@
 
 module peridot_board_romdata #(
 	parameter CHIPUID_FEATURE	= "ENABLE",
+	parameter EPCQUID_FEATURE	= "DISABLE",
 	parameter DEVICE_FAMILY		= "",
 	parameter PERIDOT_GENCODE	= 8'h4e,				// generation code
 	parameter UID_VALUE			= 64'hffffffffffffffff
@@ -38,7 +40,9 @@ module peridot_board_romdata #(
 	// Interface: Condit (UID)
 	output wire			uid_enable,			// uid functon valid = '1' / invalid = '0'
 	output wire [63:0]	uid,				// uid data
-	output wire			uid_valid			// uid datavalid = '1' / invalid = '0'
+	output wire			uid_valid,			// uid datavalid = '1' / invalid = '0'
+	input wire  [63:0]	spiuid,				// epcq uid data
+	input wire			spiuid_valid		// epcq uid datavalid = '1' / invalid = '0'
 );
 
 
@@ -118,11 +122,11 @@ generate
 			.chip_id		(uid_data_sig)
 		);
 	end
-	else if (CHIPUID_FEATURE == "ENABLE" && DEVICE_FAMILY == "Cyclone V") begin
+	else if (CHIPUID_FEATURE == "ENABLE" &&(DEVICE_FAMILY == "Cyclone V" || DEVICE_FAMILY == "Arria V" || DEVICE_FAMILY == "Arria V GZ" || DEVICE_FAMILY == "Stratix V")) begin
 		assign uid_enable_sig = 1'b1;
 
 		altchip_id #(
-			.DEVICE_FAMILY	("Cyclone V"),
+			.DEVICE_FAMILY	(DEVICE_FAMILY),
 			.ID_VALUE		(64'hffffffffffffffff)
 		)
 		u1_cyclone5_uid (
@@ -132,7 +136,12 @@ generate
 			.chip_id		(uid_data_sig)
 		);
 	end
-	else begin	// CycloneIV E or other
+	else if (EPCQUID_FEATURE == "ENABLE") begin
+		assign uid_enable_sig = 1'b1;
+		assign uid_valid_sig = spiuid_valid;
+		assign uid_data_sig = spiuid;
+	end
+	else begin	// other
 		assign uid_enable_sig = 1'b0;
 		assign uid_valid_sig = 1'b1;
 		assign uid_data_sig = UID_VALUE;

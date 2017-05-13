@@ -1,6 +1,6 @@
 PERDOT Hostbridge モジュール
 βテスト版
-2017/03/09 s.osafune@j7system.jp
+2017/05/12 s.osafune@j7system.jp
 
 
 ■ ポート
@@ -17,6 +17,7 @@ corereset - コアモジュールのマスターリセット入力（Qsysの外�
 hostuart  - ホスト通信インターフェース（Generic UART）
 hostft    - ホスト通信インターフェース（FT245 Async FIFO）
 swi       - SWIペリフェラルの出力信号（cpureset_request,led）
+swi_conf  - SWIペリフェラルのコンフィグ選択信号（bootsel）
 swi_epcs  - SWIペリフェラルのEPCS/EPCQ信号
 
 avsclockは80MHz以下かつavmclock以下にしなけれなりません。
@@ -56,13 +57,22 @@ avsclockは80MHz以下かつavmclock以下にしなけれなりません。
 ・Instance alt_dual_boot cores
 　　リコンフィグ機能を利用しない場合に、alt_dual_bootコアを内部でインスタンス
 　　するかどうかを指定します。
-　　MAX10のデュアルコンフィギュレーションスキームを利用している時にこのオプションを
+　　MAX10のデュアルコンフィギュレーションスキームの選択時にこのオプションを
 　　無効にした場合、PERIDOT Hostbridgeコンポーネントの外部でalt_dual_bootコアを
 　　インスタンスする必要があります。
 
+・Use a dual configuration by two of EPCS/EPCQ devices.
+　　2つのEPCS/EPCQ(x1)デバイスを使用してデュアルブート機能を行います。
+　　CycloneIV、CycloneV、Cyclone10 LPファミリで選択が可能です。
+　　この機能を使うためにはFPGAの外にcso_nを入れ替える回路が必要です。
+　　74LVC157を推奨。
+
 ・Use chip-UID for a board serial number
 　　デバイスユニークIDをPERIDOTボードシリアルとして利用します。
-　　MAX10ファミリ、CycloneVファミリで選択が可能です。
+　　MAX10ファミリ、CycloneV、ArriaV、StratixVファミリではデバイス単体で使用可能
+　　です。
+　　CycloneIV、Cyclone10 LPファミリではコンフィグレーションデバイスとの併用で
+　　使用可能になります。
 　　このオプションが無効の場合は、ボードシリアルは固定値が設定されます。
 
 ・PERIDOT identifier
@@ -91,11 +101,13 @@ avsclockは80MHz以下かつavmclock以下にしなけれなりません。
 
 ・Use chip-UID readout registers
 　　SWIのデバイスユニークIDを読み出すレジスタを利用します。
-　　Use chip-UID for a board serial numberオプションが無効の場合、UIDレジスタには
-　　固定値が設定されます。
+　　Use chip-UID for a board serial numberオプションが無効の場合、このチェックは
+　　無効になります。
 
 ・Use EPCS/EPCQ access registers
 　　SWIのEPCS/EPCQにアクセスするレジスタ（SPIマスタ機能）を利用します。
+　　CycloneIV、Cyclone10 LPファミリでデバイスユニークIDを利用する場合は、この
+　　チェックは常に有効になります。
 
 ・Use message and software interrput registers
 　　SWIのメッセージレジスタおよびソフトウェア割り込み機能を利用します。

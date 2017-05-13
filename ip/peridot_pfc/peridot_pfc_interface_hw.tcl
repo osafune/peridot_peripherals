@@ -3,6 +3,7 @@
 #
 #   DEGISN : S.OSAFUNE (J-7SYSTEM WORKS LIMITED)
 #   DATE   : 2017/02/20 -> 2017/03/01
+#   MODIFY : 2017/05/13 17.0 beta
 #
 # ===================================================================
 # *******************************************************************
@@ -30,7 +31,7 @@ set_module_property DISPLAY_NAME "PERIDOT PFC interface"
 set_module_property DESCRIPTION "PERIDOT PFC interface"
 set_module_property GROUP "PERIDOT Peripherals"
 set_module_property AUTHOR "J-7SYSTEM WORKS LIMITED"
-set_module_property VERSION 16.1
+set_module_property VERSION 17.0
 set_module_property INTERNAL false
 set_module_property OPAQUE_ADDRESS_MAP true
 set_module_property INSTANTIATE_IN_SYSTEM_MODULE true
@@ -66,11 +67,6 @@ add_fileset_file peridot_pfc_ioe.v VERILOG PATH hdl/peridot_pfc_ioe.v
 # 
 add_interface clock clock end
 set_interface_property clock clockRate 0
-set_interface_property clock ENABLED true
-set_interface_property clock EXPORT_OF ""
-set_interface_property clock PORT_NAME_MAP ""
-set_interface_property clock CMSIS_SVD_VARIABLES ""
-set_interface_property clock SVD_ADDRESS_GROUP ""
 
 add_interface_port clock csi_clk clk Input 1
 
@@ -81,11 +77,6 @@ add_interface_port clock csi_clk clk Input 1
 add_interface reset reset end
 set_interface_property reset associatedClock clock
 set_interface_property reset synchronousEdges DEASSERT
-set_interface_property reset ENABLED true
-set_interface_property reset EXPORT_OF ""
-set_interface_property reset PORT_NAME_MAP ""
-set_interface_property reset CMSIS_SVD_VARIABLES ""
-set_interface_property reset SVD_ADDRESS_GROUP ""
 
 add_interface_port reset rsi_reset reset Input 1
 
@@ -110,11 +101,6 @@ set_interface_property avalon_slave readWaitTime 1
 set_interface_property avalon_slave setupTime 0
 set_interface_property avalon_slave timingUnits Cycles
 set_interface_property avalon_slave writeWaitTime 0
-set_interface_property avalon_slave ENABLED true
-set_interface_property avalon_slave EXPORT_OF ""
-set_interface_property avalon_slave PORT_NAME_MAP ""
-set_interface_property avalon_slave CMSIS_SVD_VARIABLES ""
-set_interface_property avalon_slave SVD_ADDRESS_GROUP ""
 
 add_interface_port avalon_slave avs_address address Input 4
 add_interface_port avalon_slave avs_read read Input 1
@@ -133,11 +119,6 @@ set_interface_assignment avalon_slave embeddedsw.configuration.isPrintableDevice
 add_interface export conduit end
 set_interface_property export associatedClock clock
 set_interface_property export associatedReset reset
-set_interface_property export ENABLED true
-set_interface_property export EXPORT_OF ""
-set_interface_property export PORT_NAME_MAP ""
-set_interface_property export CMSIS_SVD_VARIABLES ""
-set_interface_property export SVD_ADDRESS_GROUP ""
 
 add_interface_port export coe_pfc_clk pfc_clk Output 1
 add_interface_port export coe_pfc_reset pfc_reset Output 1

@@ -3,6 +3,7 @@
 #
 #   DEGISN : S.OSAFUNE (J-7SYSTEM WORKS LIMITED)
 #   DATE   : 2017/01/24 -> 2017/03/09
+#   MODIFY : 2017/05/13 17.0 beta
 #
 # ===================================================================
 # *******************************************************************
@@ -30,14 +31,15 @@ set_module_property DISPLAY_NAME "PERIDOT Host Bridge (beta test version)"
 set_module_property DESCRIPTION "PERIDOT Host to Avalon-MM bridge"
 set_module_property GROUP "PERIDOT Peripherals"
 set_module_property AUTHOR "J-7SYSTEM WORKS LIMITED"
-set_module_property VERSION 16.1
+set_module_property VERSION 17.0
 set_module_property INTERNAL false
 set_module_property OPAQUE_ADDRESS_MAP true
 set_module_property INSTANTIATE_IN_SYSTEM_MODULE true
+set_module_property ELABORATION_CALLBACK elaboration_callback
+set_module_property EDITABLE false
 set_module_property HIDE_FROM_SOPC true
 set_module_property HIDE_FROM_QUARTUS true
-set_module_property EDITABLE false
-set_module_property ELABORATION_CALLBACK elaboration_callback
+set_module_property SUPPORTED_DEVICE_FAMILIES {"MAX 10" "Cyclone IV E" "Cyclone IV GX" "Cyclone 10 LP" "Cyclone V" "Arria II" "Arria V" "Arria V GZ" "Arria 10" "Stratix V"}
 
 
 # 
@@ -50,7 +52,8 @@ set_fileset_property quartus_synth TOP_LEVEL peridot_hostbridge
 # 
 # parameters
 # 
-set debugview false
+#set debugview false
+set debugview true
 
 add_parameter DEVICE_FAMILY string
 set_parameter_property DEVICE_FAMILY SYSTEM_INFO {DEVICE_FAMILY}
@@ -93,10 +96,22 @@ set_parameter_property USE_ALTDUALBOOT DISPLAY_NAME "Instance alt_dual_boot core
 set_parameter_property USE_ALTDUALBOOT DESCRIPTION "When not using a reconfiguration function by a dual configuration scheme, is turned on."
 set_parameter_property USE_ALTDUALBOOT DISPLAY_HINT boolean
 
+add_parameter EPCSDUALBOOT_FEATURE string
+set_parameter_property EPCSDUALBOOT_FEATURE HDL_PARAMETER true
+set_parameter_property EPCSDUALBOOT_FEATURE DERIVED true
+set_parameter_property EPCSDUALBOOT_FEATURE VISIBLE $debugview
+add_parameter USE_EPCSDUALBOOT boolean true
+set_parameter_property USE_EPCSDUALBOOT DISPLAY_NAME "Use a dual configuration by two of EPCS/EPCQ devices."
+set_parameter_property USE_EPCSDUALBOOT DISPLAY_HINT boolean
+
 add_parameter CHIPUID_FEATURE string
 set_parameter_property CHIPUID_FEATURE HDL_PARAMETER true
 set_parameter_property CHIPUID_FEATURE DERIVED true
 set_parameter_property CHIPUID_FEATURE VISIBLE $debugview
+add_parameter EPCQUID_FEATURE string
+set_parameter_property EPCQUID_FEATURE HDL_PARAMETER true
+set_parameter_property EPCQUID_FEATURE DERIVED true
+set_parameter_property EPCQUID_FEATURE VISIBLE $debugview
 add_parameter USE_CHIPUID boolean true
 set_parameter_property USE_CHIPUID DISPLAY_NAME "Use chip-UID for a board serial number"
 set_parameter_property USE_CHIPUID DISPLAY_HINT boolean
@@ -199,6 +214,7 @@ add_display_item Hostbridge HOSTUART_INFIFODEPTH parameter
 add_display_item ConfigurationLayer USE_RECONFIG parameter
 add_display_item ConfigurationLayer RECONF_DELAY_TIME parameter
 add_display_item ConfigurationLayer USE_ALTDUALBOOT parameter
+add_display_item ConfigurationLayer USE_EPCSDUALBOOT parameter
 add_display_item ConfigurationLayer USE_CHIPUID parameter
 add_display_item ConfigurationLayer PERIDOT_GENCODE parameter
 
@@ -377,14 +393,18 @@ set_interface_property swi associatedReset avsreset
 add_interface_port swi coe_cpureset cpu_resetrequest Output 1
 add_interface_port swi coe_led led Output 4
 
+add_interface swi_conf conduit end
+set_interface_property swi_conf associatedClock avsclock
+set_interface_property swi_conf associatedReset avsreset
+add_interface_port swi_conf coe_bootsel bootsel Input 1
+
 add_interface swi_epcs conduit end
 set_interface_property swi_epcs associatedClock avsclock
 set_interface_property swi_epcs associatedReset avsreset
-add_interface_port swi_epcs coe_cso_n cso_n Output 1
+add_interface_port swi_epcs coe_cso_n cso_n Output 2
 add_interface_port swi_epcs coe_dclk dclk Output 1
 add_interface_port swi_epcs coe_asdo asdo Output 1
 add_interface_port swi_epcs coe_data0 data0 Input 1
-
 
 
 
@@ -411,6 +431,7 @@ proc generate_synth {entityname} {
 	add_fileset_file peridot_config_ru.v VERILOG PATH "${hdlpath}/peridot_config_ru.v"
 	add_fileset_file peridot_csr_spi.v VERILOG PATH "${hdlpath}/peridot_csr_spi.v"
 	add_fileset_file peridot_csr_swi.v VERILOG PATH "${hdlpath}/peridot_csr_swi.v"
+	add_fileset_file peridot_csr_swi_ruid.v VERILOG PATH "${hdlpath}/peridot_csr_swi_ruid.v"
 	add_fileset_file peridot_hostbridge.sdc SDC PATH "${hdlpath}/peridot_hostbridge.sdc"
 	add_fileset_file peridot_hostbridge.v VERILOG PATH "${hdlpath}/peridot_hostbridge.v" TOP_LEVEL_FILE
 	add_fileset_file peridot_mm_master.v VERILOG PATH "${hdlpath}/peridot_mm_master.v"
@@ -430,7 +451,11 @@ proc generate_synth {entityname} {
 	add_fileset_file altera_avalon_st_packets_to_bytes.v VERILOG PATH "${quartus_ip}/sopc_builder_ip/altera_avalon_st_packets_to_bytes/altera_avalon_st_packets_to_bytes.v"
 
 	if {[get_parameter_value CHIPUID_FEATURE] == "ENABLE"} {
-		add_fileset_file altchip_id.v VERILOG PATH "${quartus_ip}/altchip_id/source/altchip_id.v"
+		if {[get_parameter_value DEVICE_FAMILY] == "Arria 10"} {
+			add_fileset_file altera_chip_id_a10.sv SYSTEM_VERILOG PATH "${quartus_ip}/pgm/altera_arria10_chip_id/altera_chip_id_a10.sv"
+		} else {
+			add_fileset_file altchip_id.v VERILOG PATH "${quartus_ip}/altchip_id/source/altchip_id.v"
+		}
 	}
 
 	if {[get_parameter_value RECONFIG_FEATURE] == "ENABLE" || [get_parameter_value INSTANCE_ALTDUALBOOT] == "ENABLE"} {
@@ -502,6 +527,8 @@ proc elaboration_callback {} {
 	#-----------------------------------
 
 	set devfamily [get_parameter_value DEVICE_FAMILY]
+	set use_epcq_ruid false
+
 	if {$devfamily == "MAX 10"} {
 		set_parameter_property USE_RECONFIG ENABLED true
 	} else {
@@ -509,15 +536,25 @@ proc elaboration_callback {} {
 		send_message info "${devfamily} isn't supporting reconfiguration function."
 	}
 
-#	if {$devfamily == "MAX 10" || $devfamily == "Cyclone V" || $devfamily == "Arria V" || $devfamily == "Arria V GZ" || $devfamily == "Straix V"} {
-#	}
-	if {$devfamily == "MAX 10" || $devfamily == "Cyclone V"} {
-		set_parameter_property USE_CHIPUID ENABLED true
+	if {$devfamily == "Cyclone IV E" || $devfamily == "Cyclone IV GX" || $devfamily == "Cyclone 10 LP" || $devfamily == "Cyclone V"} {
+		set_parameter_property USE_EPCSDUALBOOT ENABLED true
 	} else {
-		send_message info "${devfamily} isn't supporting chip-UID function."
-		set_parameter_property USE_CHIPUID ENABLED false
+		set_parameter_property USE_EPCSDUALBOOT ENABLED false
 	}
 
+	if {$devfamily == "MAX 10" || $devfamily == "Cyclone V" || $devfamily == "Arria V" || $devfamily == "Arria V GZ" || $devfamily == "Stratix V"} {
+		set_parameter_property USE_CHIPUID ENABLED true
+	} elseif {$devfamily == "Cyclone IV E" || $devfamily == "Cyclone IV GX" || $devfamily == "Cyclone 10 LP"} {
+		set_parameter_property USE_CHIPUID ENABLED true
+		set use_epcq_ruid true
+		send_message info "A chip-UID function of ${devfamily} is supported with an outside configuration device."
+	} else {
+		set_parameter_property USE_CHIPUID ENABLED false
+		send_message info "${devfamily} isn't supporting chip-UID function."
+	}
+
+
+	# Switch configuration layer
 
 	if {[get_parameter_value USE_RECONFIG] && [get_parameter_property USE_RECONFIG ENABLED]} {
 		set_parameter_value RECONFIG_FEATURE "ENABLE"
@@ -540,14 +577,40 @@ proc elaboration_callback {} {
 		set_parameter_value INSTANCE_ALTDUALBOOT "DISABLE"
 	}
 
-	if {[get_parameter_value USE_CHIPUID] && [get_parameter_property USE_CHIPUID ENABLED]} {
-		set_parameter_value CHIPUID_FEATURE "ENABLE"
+	if {[get_parameter_value USE_EPCSDUALBOOT] && [get_parameter_property USE_EPCSDUALBOOT ENABLED]} {
+		set_parameter_value EPCSDUALBOOT_FEATURE "ENABLE"
+		set_interface_property swi_conf ENABLED true
+		add_interface_port swi_epcs coe_cso_n cso_n Output 2
 	} else {
+		set_parameter_value EPCSDUALBOOT_FEATURE "DISABLE"
+		set_interface_property swi_conf ENABLED false
+		add_interface_port swi_epcs coe_cso_n cso_n Output 1
+	}
+
+	if {[get_parameter_value USE_CHIPUID] && [get_parameter_property USE_CHIPUID ENABLED]} {
+		if {$use_epcq_ruid} {
+			set_parameter_value CHIPUID_FEATURE "DISABLE"
+			set_parameter_value EPCQUID_FEATURE "ENABLE"
+		} else {
+			set_parameter_value CHIPUID_FEATURE "ENABLE"
+			set_parameter_value EPCQUID_FEATURE "DISABLE"
+		}
+	} else {
+		set use_epcq_ruid false
 		set_parameter_value CHIPUID_FEATURE "DISABLE"
+		set_parameter_value EPCQUID_FEATURE "DISABLE"
 	}
 
 
-	if {[get_parameter_value SWI_USE_EPCSBOOT]} {
+	# Switch software interface
+
+	if {$use_epcq_ruid} {
+		set_parameter_property SWI_USE_EPCSBOOT ENABLED false
+	} else {
+		set_parameter_property SWI_USE_EPCSBOOT ENABLED true
+	}
+
+	if {[get_parameter_value SWI_USE_EPCSBOOT] || $use_epcq_ruid} {
 		set_parameter_value SWI_EPCSBOOT_FEATURE "ENABLE"
 		set_interface_property swi_epcs ENABLED true
 	} else {
@@ -555,12 +618,14 @@ proc elaboration_callback {} {
 		set_interface_property swi_epcs ENABLED false
 	}
 
-	if {[get_parameter_value SWI_USE_UIDREAD]} {
-		set_parameter_value SWI_UIDREAD_FEATURE "ENABLE"
+	if {[get_parameter_value USE_CHIPUID] && [get_parameter_property USE_CHIPUID ENABLED]} {
+		set_parameter_property SWI_USE_UIDREAD ENABLED true
+	} else {
+		set_parameter_property SWI_USE_UIDREAD ENABLED false
+	}
 
-		if {[get_parameter_value CHIPUID_FEATURE] != "ENABLE"} {
-			send_message warning "The fixed value is read for chip-UID register of swi peripherals."
-		}
+	if {[get_parameter_value SWI_USE_UIDREAD] && [get_parameter_property SWI_USE_UIDREAD ENABLED]} {
+		set_parameter_value SWI_UIDREAD_FEATURE "ENABLE"
 	} else {
 		set_parameter_value SWI_UIDREAD_FEATURE "DISABLE"
 	}
@@ -605,12 +670,24 @@ proc elaboration_callback {} {
 	#-----------------------------------
 
 	# Software assignments for system.h
+	set value_use_uidread	0
+	set value_use_epcsboot	0
+	set value_use_dualepcs	0
+	set value_use_message	0
+	if {[get_parameter_value SWI_UIDREAD_FEATURE] == "ENABLE"} {set value_use_uidread 1}
+	if {[get_parameter_value SWI_EPCSBOOT_FEATURE] == "ENABLE"} {set value_use_epcsboot 1}
+	if {[get_parameter_value EPCSDUALBOOT_FEATURE] == "ENABLE"} {set value_use_dualepcs 1}
+	if {[get_parameter_value SWI_MESSAGE_FEATURE] == "ENABLE"} {set value_use_message 1}
+
 	set_module_assignment embeddedsw.CMacro.ID				[format 0x%08x [get_parameter_value SWI_CLASSID]]
 	set_module_assignment embeddedsw.CMacro.TIMESTAMP		[format %u [get_parameter_value SWI_TIMECODE]]
 	set_module_assignment embeddedsw.CMacro.CPURESET_KEY	[format 0x%04x [get_parameter_value SWI_CPURESET_KEY]]
-	set_module_assignment embeddedsw.CMacro.USE_UIDREAD		[expr ([get_parameter_value SWI_USE_UIDREAD]? 1 : 0)]
-	set_module_assignment embeddedsw.CMacro.USE_EPCSBOOT	[expr ([get_parameter_value SWI_USE_EPCSBOOT]? 1 : 0)]
-	set_module_assignment embeddedsw.CMacro.USE_MESSAGE		[expr ([get_parameter_value SWI_USE_MESSAGE]? 1 : 0)]
+	set_module_assignment embeddedsw.CMacro.USE_UIDREAD		$value_use_uidread
+	set_module_assignment embeddedsw.CMacro.USE_EPCSBOOT	$value_use_epcsboot
+	set_module_assignment embeddedsw.CMacro.USE_DUALEPCS	$value_use_dualepcs
+	set_module_assignment embeddedsw.CMacro.USE_MESSAGE		$value_use_message
+
+	send_message info "USE_UIDREAD = $value_use_uidread, USE_EPCSBOOT = $value_use_epcsboot, USE_DUALEPCS = $value_use_dualepcs, USE_MESSAGE = $value_use_message"
 
 	# Explain that timestamp will only be known during generation thus will not be shown
 	send_message info "Time code and clock rate will be automatically updated when this component is generated."

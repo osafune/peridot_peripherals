@@ -3,7 +3,8 @@
 //
 //   DEGISN : S.OSAFUNE (J-7SYSTEM WORKS LIMITED)
 //   DATE   : 2015/04/30 -> 2015/05/23
-//   UPDATE : 2017/03/01
+//   MODIFY : 2017/03/01 v16.1 beta
+//          : 2017/05/12 v17.0 beta
 //
 // ===================================================================
 // *******************************************************************
@@ -23,7 +24,7 @@
 // reg03(+C)  bit31-0:upper unique id(RO)
 // reg04(+10) bit31-16:deadkey(WO), bit15:uidvalid(RO), bit14:uidena(RO), bit13:epcsena(RO), bit12:mesena(RO),
 //				bit11:bootsel(RO), bit8:niosreset(RW), bit3-0:led(RW)
-// reg05(+14) bit15:irqena(RW), bit9:start(W)/ready(R), bit8:select(RW), bit7-0:txdata(W)/rxdata(R)
+// reg05(+14) bit15:irqena(RW), bit10:romsel(RW), bit9:start(W)/ready(R), bit8:select(RW), bit7-0:txdata(W)/rxdata(R)
 // reg06(+18) bit31-0:mutexmessage(RW)
 // reg07(+1C) bit0:swi(RW)
 
@@ -31,6 +32,8 @@
 
 module peridot_csr_swi #(
 	parameter EPCSBOOT_FEATURE	= "ENABLE",			// EPCS access register enable
+	parameter DUALEPCS_FEATURE	= "ENABLE",			// use of two EPCS/EPCQ devices
+	parameter SPIUID_FEATURE	= "ENABLE",			// configuration device UID readout
 	parameter UIDREAD_FEATURE	= "ENABLE",			// chip uid readout register enable
 	parameter MESSAGE_FEATURE	= "ENABLE",			// message and swi register enable
 	parameter CLOCKFREQ			= 25000000,			// peripheral drive clock freq(Hz)
@@ -56,12 +59,14 @@ module peridot_csr_swi #(
 	// External:
 	output wire			coe_cpureset,
 	output wire [3:0]	coe_led,
-	output wire			coe_cso_n,
+	output wire [1:0]	coe_cso_n,
 	output wire			coe_dclk,
 	output wire			coe_asdo,
 	input wire			coe_data0,
 
 	// Internal signal
+	output wire [63:0]	spiuid,
+	output wire 		spiuid_valid,
 	input wire			ru_bootsel,
 	input wire			uid_enable,
 	input wire [63:0]	uid,
@@ -106,10 +111,17 @@ module peridot_csr_swi #(
 	wire [31:0]		irq_readdata_sig;
 	wire			swi_irq_sig;
 
-	wire			epcs_enable_sig;
 	wire [31:0]		spi_readdata_sig;
 	wire			spi_irq_sig;
 	wire			spi_write_sig;
+	wire			ruid_write_sig;
+	wire [31:0]		ruid_witedata_sig;
+	wire			spiuid_valid_sig;
+	wire			epcs_enable_sig;
+	wire [31:0]		epcs_readata_sig;
+	wire			epcs_write_sig;
+	wire [31:0]		epcs_writedata_sig;
+	wire [1:0]		epcs_cso_n_sig;
 
 
 /* ※以降のwire、reg宣言は禁止※ */
@@ -201,28 +213,66 @@ endgenerate
 	end
 
 
+
+	///// SPI FlashユニークID読み出し /////
+
+generate
+	if (SPIUID_FEATURE == "ENABLE") begin
+		peridot_csr_swi_ruid #(
+			.RUID_COMMAND		(8'h4b),
+			.RUID_DUMMYBYTES	(4),
+			.RUID_UDATABYTES	(16)
+		)
+		u0 (
+			.clk			(clock_sig),
+			.reset			(reset_sig),
+
+			.ruid_readata	(epcs_readata_sig),
+			.ruid_write		(ruid_write_sig),
+			.ruid_writedata	(ruid_witedata_sig),
+			.spiuid			(spiuid),
+			.spiuid_valid	(spiuid_valid_sig)
+		);
+
+		assign spiuid_valid = spiuid_valid_sig;
+		assign spi_readdata_sig = (spiuid_valid_sig)? epcs_readata_sig : {{22{1'bx}}, 1'b0, {9{1'bx}}};
+		assign epcs_write_sig = (spiuid_valid_sig)? spi_write_sig : ruid_write_sig;
+		assign epcs_writedata_sig = (spiuid_valid_sig)? avs_writedata : ruid_witedata_sig;
+	end
+	else begin
+		assign spiuid = {64{1'bx}};
+		assign spiuid_valid = 1'b1;
+		assign spi_readdata_sig = epcs_readata_sig;
+		assign epcs_write_sig = spi_write_sig;
+		assign epcs_writedata_sig = avs_writedata;
+	end
+endgenerate
+
+
+
 	///// ブート用SPI-Flashペリフェラル /////
 
 generate
-	if (EPCSBOOT_FEATURE == "ENABLE") begin
+	if (EPCSBOOT_FEATURE == "ENABLE" || SPIUID_FEATURE == "ENABLE") begin
 		assign epcs_enable_sig = 1'b1;
 
 		peridot_csr_spi #(
+			.DEVSELECT_NUMBER		(2),
 			.DEFAULT_REG_BITRVS		(0),
 			.DEFAULT_REG_MODE		(0),
 			.DEFAULT_REG_CLKDIV		(SPI_REG_CLKDIV)
 		)
-		u0 (
+		u1 (
 			.csi_clk		(clock_sig),
 			.rsi_reset		(reset_sig),
 			.avs_address	(1'b0),
 			.avs_read		(1'b1),
-			.avs_readdata	(spi_readdata_sig),
-			.avs_write		(spi_write_sig),
-			.avs_writedata	(avs_writedata),
+			.avs_readdata	(epcs_readata_sig),
+			.avs_write		(epcs_write_sig),
+			.avs_writedata	(epcs_writedata_sig),
 			.ins_irq		(spi_irq_sig),
 
-			.spi_ss_n		(coe_cso_n),
+			.spi_ss_n		(epcs_cso_n_sig),
 			.spi_sclk		(coe_dclk),
 			.spi_mosi		(coe_asdo),
 			.spi_miso		(coe_data0)
@@ -230,11 +280,20 @@ generate
 	end
 	else begin
 		assign epcs_enable_sig = 1'b0;
-		assign spi_readdata_sig = {32{1'bx}};
+		assign epcs_readata_sig = {32{1'bx}};
 		assign spi_irq_sig = 1'b0;
-		assign coe_cso_n = 1'b1;
+		assign epcs_cso_n_sig = 2'b11;
 		assign coe_dclk = 1'b0;
 		assign coe_asdo = 1'b0;
+	end
+endgenerate
+
+generate
+	if (DUALEPCS_FEATURE == "ENABLE") begin
+		assign coe_cso_n = (bootsel_sig)? {epcs_cso_n_sig[0], epcs_cso_n_sig[1]} : epcs_cso_n_sig;
+	end
+	else begin
+		assign coe_cso_n = {1'b1, epcs_cso_n_sig[0]};
 	end
 endgenerate
 

@@ -35,11 +35,11 @@ module peridot_config_ru #(
 );
 
 
-/* ===== �O���ύX�\�p�����[�^ ========== */
+/* ===== 外部変更可能パラメータ ========== */
 
 
 
-/* ----- �����p�����[�^ ------------------ */
+/* ----- 内部パラメータ ------------------ */
 
 	localparam	STATE_INIT			= 5'd0,
 				STATE_GET_BOOTSEL	= 5'd1,
@@ -54,14 +54,14 @@ module peridot_config_ru #(
 				STATE_HALT			= 5'd10;
 
 
-/* ���ȍ~�̃p�����[�^�錾�͋֎~�� */
+/* ※以降のパラメータ宣言は禁止※ */
 
-/* ===== �m�[�h�錾 ====================== */
-				/* �����͑S�Đ��_�����Z�b�g�Ƃ���B�����Œ�`���Ă��Ȃ��m�[�h�̎g�p�͋֎~ */
-	wire			reset_sig = reset;				// ���W���[�������쓮�񓯊����Z�b�g 
+/* ===== ノード宣言 ====================== */
+				/* 内部は全て正論理リセットとする。ここで定義していないノードの使用は禁止 */
+	wire			reset_sig = reset;				// モジュール内部駆動非同期リセット 
 
-				/* �����͑S�Đ��G�b�W�쓮�Ƃ���B�����Œ�`���Ă��Ȃ��N���b�N�m�[�h�̎g�p�͋֎~ */
-	wire			clock_sig = clk;				// ���W���[�������쓮�N���b�N 
+				/* 内部は全て正エッジ駆動とする。ここで定義していないクロックノードの使用は禁止 */
+	wire			clock_sig = clk;				// モジュール内部駆動クロック 
 
 	reg  [2:0]		nconfig_in_reg;
 	wire			nconfig_rise_sig;
@@ -80,16 +80,16 @@ module peridot_config_ru #(
 	wire [31:0]		dc_readdata_sig;
 
 
-/* ���ȍ~��wire�Areg�錾�͋֎~�� */
+/* ※以降のwire、reg宣言は禁止※ */
 
-/* ===== �e�X�g�L�q ============== */
+/* ===== テスト記述 ============== */
 
 
 
-/* ===== ���W���[���\���L�q ============== */
+/* ===== モジュール構造記述 ============== */
 
-	///// �񓯊��M���̓����� /////
-	// ru_nconfig�̗����オ��G�b�W�ōăR���t�B�O�𔭍s 
+	///// 非同期信号の同期化 /////
+	// ru_nconfigの立ち上がりエッジで再コンフィグを発行 
 
 	always @(posedge clock_sig or posedge reset_sig) begin
 		if (reset_sig) begin
@@ -104,7 +104,7 @@ module peridot_config_ru #(
 
 
 
-	///// �����[�g�A�b�v�f�[�g�V�[�P���T /////
+	///// リモートアップデートシーケンサ /////
 
 	always @(posedge clock_sig or posedge reset_sig) begin
 		if (reset_sig) begin
@@ -209,7 +209,7 @@ module peridot_config_ru #(
 
 
 
-	///// �R���t�B�O���[�V�������W���[���C���X�^���X /////
+	///// コンフィグレーションモジュールインスタンス /////
 
 generate
 	if (DEVICE_FAMILY == "MAX 10") begin

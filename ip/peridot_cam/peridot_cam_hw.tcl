@@ -3,6 +3,7 @@
 #
 #   DEGISN : S.OSAFUNE (J-7SYSTEM WORKS LIMITED)
 #   DATE   : 2017/04/05 -> 2017/04/06
+#   MODIFY : 2017/05/13 17.0 beta
 #
 # ===================================================================
 # *******************************************************************
@@ -30,7 +31,7 @@ set_module_property DISPLAY_NAME "PERIDOT CAM interface (Alpha test version)"
 set_module_property DESCRIPTION "PERIDOT Camera input interface"
 set_module_property GROUP "PERIDOT Peripherals"
 set_module_property AUTHOR "J-7SYSTEM WORKS LIMITED"
-set_module_property VERSION 16.1
+set_module_property VERSION 17.0
 set_module_property INTERNAL false
 set_module_property OPAQUE_ADDRESS_MAP true
 set_module_property INSTANTIATE_IN_SYSTEM_MODULE true
@@ -49,6 +50,8 @@ set_fileset_property QUARTUS_SYNTH ENABLE_FILE_OVERWRITE_MODE false
 add_fileset_file peridot_cam.v		VERILOG PATH hdl/peridot_cam.v TOP_LEVEL_FILE
 add_fileset_file paridot_cam_avm.v	VERILOG PATH hdl/paridot_cam_avm.v
 add_fileset_file peridot_cam_avs.v	VERILOG PATH hdl/peridot_cam_avs.v
+add_fileset_file peridot_i2c.v		VERILOG PATH ../peridot_i2c/hdl/peridot_i2c.v
+add_fileset_file peridot_cam.sdc	SDC PATH hdl/peridot_cam.sdc
 
 
 # 
@@ -66,11 +69,6 @@ add_fileset_file peridot_cam_avs.v	VERILOG PATH hdl/peridot_cam_avs.v
 # 
 add_interface s1_clock clock end
 set_interface_property s1_clock clockRate 0
-set_interface_property s1_clock ENABLED true
-set_interface_property s1_clock EXPORT_OF ""
-set_interface_property s1_clock PORT_NAME_MAP ""
-set_interface_property s1_clock CMSIS_SVD_VARIABLES ""
-set_interface_property s1_clock SVD_ADDRESS_GROUP ""
 
 add_interface_port s1_clock csi_global_clk clk Input 1
 
@@ -80,11 +78,6 @@ add_interface_port s1_clock csi_global_clk clk Input 1
 add_interface s1_reset reset end
 set_interface_property s1_reset associatedClock s1_clock
 set_interface_property s1_reset synchronousEdges DEASSERT
-set_interface_property s1_reset ENABLED true
-set_interface_property s1_reset EXPORT_OF ""
-set_interface_property s1_reset PORT_NAME_MAP ""
-set_interface_property s1_reset CMSIS_SVD_VARIABLES ""
-set_interface_property s1_reset SVD_ADDRESS_GROUP ""
 
 add_interface_port s1_reset csi_global_reset reset Input 1
 
@@ -108,11 +101,6 @@ set_interface_property s1 readWaitTime 1
 set_interface_property s1 setupTime 0
 set_interface_property s1 timingUnits Cycles
 set_interface_property s1 writeWaitTime 0
-set_interface_property s1 ENABLED true
-set_interface_property s1 EXPORT_OF ""
-set_interface_property s1 PORT_NAME_MAP ""
-set_interface_property s1 CMSIS_SVD_VARIABLES ""
-set_interface_property s1 SVD_ADDRESS_GROUP ""
 
 add_interface_port s1 avs_s1_address address Input 2
 add_interface_port s1 avs_s1_write write Input 1
@@ -128,15 +116,9 @@ set_interface_assignment s1 embeddedsw.configuration.isPrintableDevice 0
 # connection point irq_s1
 # 
 add_interface irq_s1 interrupt end
-set_interface_property irq_s1 associatedAddressablePoint ""
+set_interface_property irq_s1 associatedAddressablePoint s1
 set_interface_property irq_s1 associatedClock s1_clock
-set_interface_property irq_s1 bridgedReceiverOffset ""
-set_interface_property irq_s1 bridgesToReceiver ""
-set_interface_property irq_s1 ENABLED true
-set_interface_property irq_s1 EXPORT_OF ""
-set_interface_property irq_s1 PORT_NAME_MAP ""
-set_interface_property irq_s1 CMSIS_SVD_VARIABLES ""
-set_interface_property irq_s1 SVD_ADDRESS_GROUP ""
+set_interface_property irq_s1 associatedReset s1_reset
 
 add_interface_port irq_s1 avs_s1_irq irq Output 1
 
@@ -146,11 +128,6 @@ add_interface_port irq_s1 avs_s1_irq irq Output 1
 # 
 add_interface m1_clock clock end
 set_interface_property m1_clock clockRate 0
-set_interface_property m1_clock ENABLED true
-set_interface_property m1_clock EXPORT_OF ""
-set_interface_property m1_clock PORT_NAME_MAP ""
-set_interface_property m1_clock CMSIS_SVD_VARIABLES ""
-set_interface_property m1_clock SVD_ADDRESS_GROUP ""
 
 add_interface_port m1_clock avm_m1_clk clk Input 1
 
@@ -175,11 +152,6 @@ set_interface_property m1 readWaitTime 1
 set_interface_property m1 setupTime 0
 set_interface_property m1 timingUnits Cycles
 set_interface_property m1 writeWaitTime 0
-set_interface_property m1 ENABLED true
-set_interface_property m1 EXPORT_OF ""
-set_interface_property m1 PORT_NAME_MAP ""
-set_interface_property m1 CMSIS_SVD_VARIABLES ""
-set_interface_property m1 SVD_ADDRESS_GROUP ""
 
 add_interface_port m1 avm_m1_address address Output 32
 add_interface_port m1 avm_m1_write write Output 1
@@ -195,13 +167,11 @@ add_interface_port m1 avm_m1_waitrequest waitrequest Input 1
 add_interface extcam conduit end
 set_interface_property extcam associatedClock ""
 set_interface_property extcam associatedReset ""
-set_interface_property extcam ENABLED true
-set_interface_property extcam EXPORT_OF ""
-set_interface_property extcam PORT_NAME_MAP ""
-set_interface_property extcam CMSIS_SVD_VARIABLES ""
-set_interface_property extcam SVD_ADDRESS_GROUP ""
 
 add_interface_port extcam cam_clk pclk Input 1
 add_interface_port extcam cam_data data Input 8
 add_interface_port extcam cam_href href Input 1
 add_interface_port extcam cam_vsync vsync Input 1
+add_interface_port extcam cam_reset_n reseto_n Output 1
+add_interface_port extcam sccb_sck sccb_c Output 1
+add_interface_port extcam sccb_data sccb_d Bidir 1

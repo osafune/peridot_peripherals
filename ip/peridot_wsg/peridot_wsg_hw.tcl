@@ -3,6 +3,7 @@
 #
 #   DEGISN : S.OSAFUNE (J-7SYSTEM WORKS LIMITED)
 #   DATE   : 2016/10/25 -> 2017/05/08
+#   MODIFY : 2017/05/13 17.0 beta
 #
 # ===================================================================
 # *******************************************************************
@@ -30,7 +31,7 @@ set_module_property DISPLAY_NAME "PERIDOT WSG Sound Generator (beta test version
 set_module_property DESCRIPTION "PERIDOT WSG Sound Generator"
 set_module_property GROUP "PERIDOT Peripherals"
 set_module_property AUTHOR "J-7SYSTEM WORKS LIMITED"
-set_module_property VERSION 16.1
+set_module_property VERSION 17.0
 set_module_property INTERNAL false
 set_module_property OPAQUE_ADDRESS_MAP true
 set_module_property INSTANTIATE_IN_SYSTEM_MODULE true
@@ -99,11 +100,6 @@ set_parameter_property PCM_CHANNEL_GENNUM HDL_PARAMETER true
 # 
 add_interface clock clock end
 set_interface_property clock clockRate 0
-set_interface_property clock ENABLED true
-set_interface_property clock EXPORT_OF ""
-set_interface_property clock PORT_NAME_MAP ""
-set_interface_property clock CMSIS_SVD_VARIABLES ""
-set_interface_property clock SVD_ADDRESS_GROUP ""
 
 add_interface_port clock avs_s1_clk clk Input 1
 
@@ -114,11 +110,6 @@ add_interface_port clock avs_s1_clk clk Input 1
 add_interface reset reset end
 set_interface_property reset associatedClock clock
 set_interface_property reset synchronousEdges DEASSERT
-set_interface_property reset ENABLED true
-set_interface_property reset EXPORT_OF ""
-set_interface_property reset PORT_NAME_MAP ""
-set_interface_property reset CMSIS_SVD_VARIABLES ""
-set_interface_property reset SVD_ADDRESS_GROUP ""
 
 add_interface_port reset csi_global_reset reset Input 1
 
@@ -144,11 +135,6 @@ set_interface_property s1 readWaitTime 2
 set_interface_property s1 setupTime 0
 set_interface_property s1 timingUnits Cycles
 set_interface_property s1 writeWaitTime 0
-set_interface_property s1 ENABLED true
-set_interface_property s1 EXPORT_OF ""
-set_interface_property s1 PORT_NAME_MAP ""
-set_interface_property s1 CMSIS_SVD_VARIABLES ""
-set_interface_property s1 SVD_ADDRESS_GROUP ""
 
 add_interface_port s1 avs_s1_address address Input 9
 add_interface_port s1 avs_s1_read read Input 1
@@ -166,17 +152,11 @@ set_interface_assignment s1 embeddedsw.configuration.isPrintableDevice 0
 # connection point irq
 # 
 add_interface irq interrupt end
-set_interface_property irq associatedAddressablePoint ""
-set_interface_property irq bridgedReceiverOffset ""
-set_interface_property irq bridgesToReceiver ""
-set_interface_property irq ENABLED true
-set_interface_property irq EXPORT_OF ""
-set_interface_property irq PORT_NAME_MAP ""
-set_interface_property irq CMSIS_SVD_VARIABLES ""
-set_interface_property irq SVD_ADDRESS_GROUP ""
+set_interface_property irq associatedAddressablePoint s1
+set_interface_property irq associatedClock clock
+set_interface_property irq associatedReset reset
 
 add_interface_port irq avs_s1_irq irq Output 1
-
 
 
 # 
@@ -185,11 +165,6 @@ add_interface_port irq avs_s1_irq irq Output 1
 add_interface export conduit end
 set_interface_property export associatedClock ""
 set_interface_property export associatedReset ""
-set_interface_property export ENABLED true
-set_interface_property export EXPORT_OF ""
-set_interface_property export PORT_NAME_MAP ""
-set_interface_property export CMSIS_SVD_VARIABLES ""
-set_interface_property export SVD_ADDRESS_GROUP ""
 
 add_interface_port export audio_clk audio_clk Input 1
 add_interface_port export dac_bclk bclk Output 1
@@ -201,6 +176,5 @@ add_interface_port export mute mute Output 1
 add_interface_port export kb_scko kb_scko Output 1
 add_interface_port export kb_load_n kb_load_n Output 1
 add_interface_port export kb_sdin kb_sdin Input 1
-
 
 

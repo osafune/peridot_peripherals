@@ -3,7 +3,8 @@
 //
 //   DEGISN : S.OSAFUNE (J-7SYSTEM WORKS LIMITED)
 //   DATE   : 2017/01/23 -> 2017/02/15
-//   UPDATE : 2017/03/01
+//   MODIFY : 2017/03/01 v16.1 beta
+//          : 2017/05/11 v17.0 beta
 //
 // ===================================================================
 // *******************************************************************
@@ -22,8 +23,10 @@ module peridot_hostbridge #(
 	parameter AVM_CLOCKFREQ			= 100000000,		// master drive clock freq(Hz)
 	parameter AVS_CLOCKFREQ			= 25000000,			// peripheral drive clock freq(Hz)
 	parameter RECONFIG_FEATURE		= "ENABLE",			// config:device remote update enable
-	parameter INSTANCE_ALTDUALBOOT  = "DISABLE",		// config:instanse dummy alt_dual_boot(RECONFIG_FEATURE = "DISABLE")
+	parameter INSTANCE_ALTDUALBOOT  = "DISABLE",		// config:instanse dummy alt_dual_boot (RECONFIG_FEATURE = "DISABLE")
+	parameter EPCSDUALBOOT_FEATURE	= "DISABLE",		// config:use of two EPCS/EPCQ devices (RECONFIG_FEATURE = "DISABLE")
 	parameter CHIPUID_FEATURE		= "ENABLE",			// config:device chip UID readout enable
+	parameter EPCQUID_FEATURE		= "DISABLE",		// config:flash device UID readout enable (CHIPUID_FEATURE = "DISABLE")
 	parameter HOSTINTERFACE_TYPE	= "UART",			// "UART" or "FT245"
 	parameter HOSTUART_BAUDRATE		= 115200,			// Host Interface baudrate (HOSTINTERFACE_TYPE = "UART")
 	parameter HOSTUART_INFIFODEPTH	= 6,				// bit width of infifo word depth (HOSTINTERFACE_TYPE = "UART")
@@ -81,7 +84,8 @@ module peridot_hostbridge #(
 
 	output wire [3:0]	coe_led,
 	output wire			coe_cpureset,
-	output wire			coe_cso_n,
+	input wire			coe_bootsel,
+	output wire [1:0]	coe_cso_n,
 	output wire			coe_dclk,
 	output wire			coe_asdo,
 	input wire			coe_data0
@@ -135,6 +139,8 @@ module peridot_hostbridge #(
 	wire			uid_enable_sig;
 	wire [63:0]		uid_sig;
 	wire			uid_valid_sig;
+	wire [63:0]		spiuid_sig;
+	wire			spiuid_valid_sig;
 
 
 /* ※以降のwire、reg宣言は禁止※ */
@@ -214,7 +220,9 @@ endgenerate
 
 	peridot_config #(
 		.RECONFIG_FEATURE		(RECONFIG_FEATURE),
+		.EPCSDUALBOOT_FEATURE	(EPCSDUALBOOT_FEATURE),
 		.CHIPUID_FEATURE		(CHIPUID_FEATURE),
+		.EPCQUID_FEATURE		(EPCQUID_FEATURE),
 		.INSTANCE_ALTDUALBOOT	(INSTANCE_ALTDUALBOOT),
 		.DEVICE_FAMILY			(DEVICE_FAMILY),
 		.PERIDOT_GENCODE		(PERIDOT_GENCODE),
@@ -242,11 +250,14 @@ endgenerate
 		.tx_data			(tx_data_sig),
 
 		.peri_clk			(avsclock_sig),
+		.boot_select		(coe_bootsel),			// 外部bootselスイッチ 
 		.ft_si				(ft_si_sig),
 		.ru_bootsel			(ru_bootsel_sig),
 		.uid_enable			(uid_enable_sig),
 		.uid				(uid_sig),
-		.uid_valid			(uid_valid_sig)
+		.uid_valid			(uid_valid_sig),
+		.spiuid				(spiuid_sig),
+		.spiuid_valid		(spiuid_valid_sig)
 	);
 
 
@@ -334,6 +345,8 @@ endgenerate
 
 	peridot_csr_swi #(
 		.EPCSBOOT_FEATURE		(SWI_EPCSBOOT_FEATURE),
+		.DUALEPCS_FEATURE		(EPCSDUALBOOT_FEATURE),
+		.SPIUID_FEATURE			(EPCQUID_FEATURE),
 		.UIDREAD_FEATURE		(SWI_UIDREAD_FEATURE),
 		.MESSAGE_FEATURE		(SWI_MESSAGE_FEATURE),
 		.CLOCKFREQ				(AVS_CLOCKFREQ),
@@ -360,6 +373,8 @@ endgenerate
 		.coe_asdo			(coe_asdo),
 		.coe_data0			(coe_data0),
 
+		.spiuid				(spiuid_sig),
+		.spiuid_valid		(spiuid_valid_sig),
 		.ru_bootsel			(ru_bootsel_sig),
 		.uid_enable			(uid_enable_sig),
 		.uid				(uid_sig),

@@ -3,7 +3,8 @@
 //
 //   DEGISN : S.OSAFUNE (J-7SYSTEM WORKS LIMITED)
 //   DATE   : 2017/01/20 -> 2017/01/25
-//   UPDATE : 2017/03/01
+//   MODIFY : 2017/03/01
+//          : 2017/05/11 EPCQ-UIDの読み出しに対応 
 //
 // ===================================================================
 // *******************************************************************
@@ -19,6 +20,7 @@
 
 module peridot_board_eeprom #(
 	parameter CHIPUID_FEATURE	= "ENABLE",
+	parameter EPCQUID_FEATURE	= "DISABLE",
 	parameter I2C_DEV_ADDRESS	= 7'b1010000,
 	parameter DEVICE_FAMILY		= "",
 	parameter PERIDOT_GENCODE	= 8'h4e,				// generation code
@@ -37,7 +39,9 @@ module peridot_board_eeprom #(
 	// Interface: Condit (UID)
 	output wire			uid_enable,			// uid functon valid = '1' / invalid = '0'
 	output wire [63:0]	uid,				// uid data
-	output wire			uid_valid			// uid datavalid = '1' / invalid = '0'
+	output wire			uid_valid,			// uid datavalid = '1' / invalid = '0'
+	input wire  [63:0]	spiuid,				// epcq uid data
+	input wire			spiuid_valid		// epcq uid datavalid = '1' / invalid = '0'
 );
 
 
@@ -206,21 +210,24 @@ module peridot_board_eeprom #(
 
 	peridot_board_romdata #(
 		.CHIPUID_FEATURE	(CHIPUID_FEATURE),
+		.EPCQUID_FEATURE	(EPCQUID_FEATURE),
 		.DEVICE_FAMILY		(DEVICE_FAMILY),
 		.PERIDOT_GENCODE	(PERIDOT_GENCODE),
 		.UID_VALUE			(UID_VALUE)
 	)
 	u1 (
-		.clk		(clock_sig),
-		.reset		(reset_sig),
-		.ready		(romready_sig),
+		.clk			(clock_sig),
+		.reset			(reset_sig),
+		.ready			(romready_sig),
 
-		.byteaddr	(bytecount_reg),
-		.bytedata	(senddata_sig),
+		.byteaddr		(bytecount_reg),
+		.bytedata		(senddata_sig),
 
-		.uid_enable	(uid_enable),
-		.uid		(uid),
-		.uid_valid	(uid_valid)
+		.uid_enable		(uid_enable),
+		.uid			(uid),
+		.uid_valid		(uid_valid),
+		.spiuid			(spiuid),
+		.spiuid_valid	(spiuid_valid)
 	);
 
 	assign senddatavalid_sig = (recieveack_sig && state_reg == STATE_READBYTE)? 1'b1 : 1'b0;

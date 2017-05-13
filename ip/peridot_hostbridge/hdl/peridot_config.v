@@ -3,7 +3,8 @@
 //
 //   DEGISN : S.OSAFUNE (J-7SYSTEM WORKS LIMITED)
 //   DATE   : 2017/01/22 -> 2017/01/30
-//   UPDATE : 2017/03/01
+//   MODIFY : 2017/03/01
+//          : 2017/05/11 EPCQ-UIDの読み出しに対応、EPCSデュアルブート対応 
 //
 // ===================================================================
 // *******************************************************************
@@ -19,7 +20,9 @@
 
 module peridot_config #(
 	parameter RECONFIG_FEATURE		= "ENABLE",
+	parameter EPCSDUALBOOT_FEATURE	= "DISABLE",
 	parameter CHIPUID_FEATURE		= "ENABLE",
+	parameter EPCQUID_FEATURE		= "DISABLE",
 	parameter INSTANCE_ALTDUALBOOT  = "ENABLE",
 	parameter DEVICE_FAMILY			= "",
 	parameter PERIDOT_GENCODE		= 8'h4e,		// generation code
@@ -54,11 +57,14 @@ module peridot_config #(
 
 	// Interface: Condit - async signal
 	input wire			peri_clk,		// Peripheals clock (1-80MHz)
+	input wire			boot_select,	// External bootsel signal
 	output wire			ft_si,			// FTDI Send Immediate
 	output wire			ru_bootsel,
 	output wire			uid_enable,
 	output wire [63:0]	uid,
-	output wire			uid_valid
+	output wire			uid_valid,
+	input wire  [63:0]	spiuid,
+	input wire			spiuid_valid
 );
 
 
@@ -160,6 +166,7 @@ module peridot_config #(
 
 	peridot_board_eeprom #(
 		.CHIPUID_FEATURE	(CHIPUID_FEATURE),
+		.EPCQUID_FEATURE	(EPCQUID_FEATURE),
 		.I2C_DEV_ADDRESS	(7'b1010000),
 		.DEVICE_FAMILY		(DEVICE_FAMILY),
 		.PERIDOT_GENCODE	(PERIDOT_GENCODE),
@@ -176,7 +183,9 @@ module peridot_config #(
 
 		.uid_enable		(uid_enable),
 		.uid			(uid),
-		.uid_valid		(uid_valid)
+		.uid_valid		(uid_valid),
+		.spiuid			(spiuid),
+		.spiuid_valid	(spiuid_valid)
 	);
 
 
@@ -239,7 +248,13 @@ generate
 
 	// それ以外のデバイスではリコンフィグ機能は無効 
 	else begin
-		assign ru_bootsel_sig = 1'b1;
+		if (EPCSDUALBOOT_FEATURE == "ENABLE") begin
+			assign ru_bootsel_sig = boot_select;
+		end
+		else begin
+			assign ru_bootsel_sig = 1'b1;
+		end
+
 		assign ru_nstatus_sig = 1'b1;
 	end
 endgenerate

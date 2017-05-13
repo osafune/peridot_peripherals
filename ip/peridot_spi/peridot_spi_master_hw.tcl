@@ -3,6 +3,7 @@
 #
 #   DEGISN : S.OSAFUNE (J-7SYSTEM WORKS LIMITED)
 #   DATE   : 2017/02/20 -> 2017/03/01
+#   MODIFY : 2017/05/13 17.0 beta
 #
 # ===================================================================
 # *******************************************************************
@@ -30,7 +31,7 @@ set_module_property DISPLAY_NAME "PERIDOT SPI master"
 set_module_property DESCRIPTION "PERIDOT SPI master"
 set_module_property GROUP "PERIDOT Peripherals"
 set_module_property AUTHOR "J-7SYSTEM WORKS LIMITED"
-set_module_property VERSION 16.1
+set_module_property VERSION 17.0
 set_module_property INTERNAL false
 set_module_property OPAQUE_ADDRESS_MAP true
 set_module_property INSTANTIATE_IN_SYSTEM_MODULE true
@@ -60,25 +61,32 @@ set_parameter_property CLOCKFREQ DISPLAY_NAME "Drive clock rate"
 set_parameter_property CLOCKFREQ UNITS Hertz
 set_parameter_property CLOCKFREQ HDL_PARAMETER false
 
+add_parameter DEVSELECT_NUMBER INTEGER 1
+set_parameter_property DEVSELECT_NUMBER TYPE INTEGER
+set_parameter_property DEVSELECT_NUMBER DISPLAY_NAME "Number of devices(ss_n)"
+set_parameter_property DEVSELECT_NUMBER UNITS None
+set_parameter_property DEVSELECT_NUMBER ALLOWED_RANGES 1:32
+set_parameter_property DEVSELECT_NUMBER HDL_PARAMETER true
+
 add_parameter DEFAULT_REG_BITRVS INTEGER 0
 set_parameter_property DEFAULT_REG_BITRVS TYPE INTEGER
-set_parameter_property DEFAULT_REG_BITRVS DISPLAY_NAME DEFAULT_REG_BITRVS
+set_parameter_property DEFAULT_REG_BITRVS DISPLAY_NAME "Default value of bit reverse register(BITRVS)"
 set_parameter_property DEFAULT_REG_BITRVS UNITS None
-set_parameter_property DEFAULT_REG_BITRVS ALLOWED_RANGES {0:1}
+set_parameter_property DEFAULT_REG_BITRVS ALLOWED_RANGES {0 1}
 set_parameter_property DEFAULT_REG_BITRVS HDL_PARAMETER true
 
 add_parameter DEFAULT_REG_MODE INTEGER 0
 set_parameter_property DEFAULT_REG_MODE TYPE INTEGER
-set_parameter_property DEFAULT_REG_MODE DISPLAY_NAME DEFAULT_REG_MODE
+set_parameter_property DEFAULT_REG_MODE DISPLAY_NAME "Default value of mode register(MODE)"
 set_parameter_property DEFAULT_REG_MODE UNITS None
-set_parameter_property DEFAULT_REG_MODE ALLOWED_RANGES {0:3}
+set_parameter_property DEFAULT_REG_MODE ALLOWED_RANGES {0 1 2 3}
 set_parameter_property DEFAULT_REG_MODE HDL_PARAMETER true
 
 add_parameter DEFAULT_REG_CLKDIV INTEGER 255
 set_parameter_property DEFAULT_REG_CLKDIV TYPE INTEGER
-set_parameter_property DEFAULT_REG_CLKDIV DISPLAY_NAME DEFAULT_REG_CLKDIV
+set_parameter_property DEFAULT_REG_CLKDIV DISPLAY_NAME "Default value of clock divider(CLKDIV)"
 set_parameter_property DEFAULT_REG_CLKDIV UNITS None
-set_parameter_property DEFAULT_REG_CLKDIV ALLOWED_RANGES {0:255}
+set_parameter_property DEFAULT_REG_CLKDIV ALLOWED_RANGES 0:255
 set_parameter_property DEFAULT_REG_CLKDIV HDL_PARAMETER true
 
 
@@ -92,11 +100,6 @@ set_parameter_property DEFAULT_REG_CLKDIV HDL_PARAMETER true
 # 
 add_interface clock clock end
 set_interface_property clock clockRate 0
-set_interface_property clock ENABLED true
-set_interface_property clock EXPORT_OF ""
-set_interface_property clock PORT_NAME_MAP ""
-set_interface_property clock CMSIS_SVD_VARIABLES ""
-set_interface_property clock SVD_ADDRESS_GROUP ""
 
 add_interface_port clock csi_clk clk Input 1
 
@@ -107,11 +110,6 @@ add_interface_port clock csi_clk clk Input 1
 add_interface reset reset end
 set_interface_property reset associatedClock clock
 set_interface_property reset synchronousEdges DEASSERT
-set_interface_property reset ENABLED true
-set_interface_property reset EXPORT_OF ""
-set_interface_property reset PORT_NAME_MAP ""
-set_interface_property reset CMSIS_SVD_VARIABLES ""
-set_interface_property reset SVD_ADDRESS_GROUP ""
 
 add_interface_port reset rsi_reset reset Input 1
 
@@ -136,11 +134,6 @@ set_interface_property s1 readWaitTime 1
 set_interface_property s1 setupTime 0
 set_interface_property s1 timingUnits Cycles
 set_interface_property s1 writeWaitTime 0
-set_interface_property s1 ENABLED true
-set_interface_property s1 EXPORT_OF ""
-set_interface_property s1 PORT_NAME_MAP ""
-set_interface_property s1 CMSIS_SVD_VARIABLES ""
-set_interface_property s1 SVD_ADDRESS_GROUP ""
 
 add_interface_port s1 avs_address address Input 1
 add_interface_port s1 avs_read read Input 1
@@ -160,13 +153,6 @@ add_interface irq interrupt end
 set_interface_property irq associatedAddressablePoint s1
 set_interface_property irq associatedClock clock
 set_interface_property irq associatedReset reset
-set_interface_property irq bridgedReceiverOffset ""
-set_interface_property irq bridgesToReceiver ""
-set_interface_property irq ENABLED true
-set_interface_property irq EXPORT_OF ""
-set_interface_property irq PORT_NAME_MAP ""
-set_interface_property irq CMSIS_SVD_VARIABLES ""
-set_interface_property irq SVD_ADDRESS_GROUP ""
 
 add_interface_port irq ins_irq irq Output 1
 
@@ -177,13 +163,8 @@ add_interface_port irq ins_irq irq Output 1
 add_interface export conduit end
 set_interface_property export associatedClock clock
 set_interface_property export associatedReset reset
-set_interface_property export ENABLED true
-set_interface_property export EXPORT_OF ""
-set_interface_property export PORT_NAME_MAP ""
-set_interface_property export CMSIS_SVD_VARIABLES ""
-set_interface_property export SVD_ADDRESS_GROUP ""
 
-add_interface_port export spi_ss_n ss_n Output 1
+add_interface_port export spi_ss_n ss_n Output {DEVSELECT_NUMBER}
 add_interface_port export spi_sclk sclk Output 1
 add_interface_port export spi_mosi mosi Output 1
 add_interface_port export spi_miso miso Input 1

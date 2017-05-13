@@ -3,7 +3,8 @@
 //
 //   DEGISN : S.OSAFUNE (J-7SYSTEM Works)
 //   DATE   : 2015/05/17 -> 2015/05/18
-//   UPDATE : 2017/03/01
+//   MODIFY : 2017/03/01
+//          : 2017/05/13 複数デバイスの接続に対応、CSアサートWAIT挿入 
 //
 // ===================================================================
 // *******************************************************************
@@ -17,10 +18,11 @@
 //   notice.
 // *******************************************************************
 
-// reg00(+0)  bit15:irqena(RW), bit9:start(W)/ready(R), bit8:select(RW), bit7-0:txdata(W)/rxdata(R)
+// reg00(+0)  bit15:irqena(RW), bit14-10:devsel(RW), bit9:start(W)/ready(R), bit8:select(RW), bit7-0:txdata(W)/rxdata(R)
 // reg01(+4)  bit15:bitrvs(RW), bit13-12:mode(RW), bit7-0:clkdiv(RW)
 
 module peridot_csr_spi #(
+	parameter DEVSELECT_NUMBER   = 1,			// Number of devices 1 to 32
 	parameter DEFAULT_REG_BITRVS = 0,			// init bitrvs value 0 or 1
 	parameter DEFAULT_REG_MODE   = 0,			// init mode value 0-3
 	parameter DEFAULT_REG_CLKDIV = 255			// init clkdiv value 0-255 (BitRate[bps] = <csi_clk>[Hz] / ((clkdiv + 1)*2) )
@@ -40,7 +42,7 @@ module peridot_csr_spi #(
 	output wire			ins_irq,
 
 	// External Interface
-	output wire			spi_ss_n,
+	output wire [DEVSELECT_NUMBER-1:0] spi_ss_n,
 	output wire			spi_sclk,
 	output wire			spi_mosi,
 	input wire			spi_miso
@@ -54,9 +56,10 @@ module peridot_csr_spi #(
 /* ----- 内部パラメータ ------------------ */
 
 	localparam	STATE_IDLE		= 5'd0,
-				STATE_ENTRY		= 5'd1,
-				STATE_SDI		= 5'd2,
-				STATE_SDO		= 5'd3,
+				STATE_CSWAIT	= 5'd1,
+				STATE_ENTRY		= 5'd2,
+				STATE_SDI		= 5'd3,
+				STATE_SDO		= 5'd4,
 				STATE_DONE		= 5'd31;
 
 
@@ -79,10 +82,13 @@ module peridot_csr_spi #(
 	reg				bitrvs_reg;
 	reg  [1:0]		mode_reg;
 	reg  [7:0]		divref_reg;
+	reg  [4:0]		devsel_reg;
 	reg				irqena_reg;
 	reg				ready_reg;
 	reg				sso_reg;
 	wire [7:0]		txdata_sig, rxdata_sig;
+
+	genvar i;
 
 
 /* ※以降のwire、reg宣言は禁止※ */
@@ -98,14 +104,19 @@ module peridot_csr_spi #(
 	assign ins_irq = (irqena_reg)? ready_reg : 1'b0;
 
 	assign avs_readdata =
-			(avs_address == 1'd0)? {16'b0, irqena_reg, 5'b0, ready_reg, sso_reg, rxdata_sig} :
+			(avs_address == 1'd0)? {16'b0, irqena_reg, devsel_reg, ready_reg, sso_reg, rxdata_sig} :
 			(avs_address == 1'd1)? {16'b0, bitrvs_reg, 1'b0, mode_reg, 4'b0, divref_reg} :
 			{32{1'bx}};
 
 	assign txdata_sig = (bitrvs_reg)? {avs_writedata[0], avs_writedata[1], avs_writedata[2], avs_writedata[3], avs_writedata[4], avs_writedata[5], avs_writedata[6], avs_writedata[7]} : avs_writedata[7:0];
 	assign rxdata_sig = (bitrvs_reg)? {rxbyte_reg[0], rxbyte_reg[1], rxbyte_reg[2], rxbyte_reg[3], rxbyte_reg[4], rxbyte_reg[5], rxbyte_reg[6], rxbyte_reg[7]} : rxbyte_reg;
 
-	assign spi_ss_n = ~sso_reg;
+	generate
+		for (i=0 ; i<DEVSELECT_NUMBER ; i=i+1) begin: gen_ss
+			assign spi_ss_n[i] = (devsel_reg == i)? ~sso_reg : 1'b1;
+		end
+	endgenerate
+
 	assign spi_sclk = sclk_reg;
 	assign spi_mosi = txbyte_reg[7];
 	assign sdi_sig  = spi_miso;
@@ -118,6 +129,7 @@ module peridot_csr_spi #(
 			mode_reg   <= DEFAULT_REG_MODE[1:0];
 			divref_reg <= DEFAULT_REG_CLKDIV[7:0];
 			irqena_reg <= 1'b0;		// irq disable
+			devsel_reg <= 5'd0;		// device no
 			sso_reg    <= 1'b0;		// select disable
 		end
 		else begin
@@ -127,19 +139,20 @@ module peridot_csr_spi #(
 					case (avs_address)
 					1'd0 : begin
 						if (avs_writedata[9]) begin
-							if (mode_reg[0] == 1'b0) begin	// MODE=0 or 2
-								state_reg <= STATE_SDI;
-							end
-							else begin						// MODE=1 or 3
-								state_reg <= STATE_ENTRY;
-							end
-
+							state_reg <= STATE_CSWAIT;
 							ready_reg <= 1'b0;
 							bitcount  <= 3'd0;
-							divcount  <= divref_reg;
+
+							if (avs_writedata[8] && !sso_reg) begin
+								divcount <= divref_reg;
+							end
+							else begin
+								divcount <= 1'd0;
+							end
 						end
 
 						irqena_reg <= avs_writedata[15];
+						devsel_reg <= avs_writedata[14:10];
 						sso_reg    <= avs_writedata[8];
 						sclk_reg   <= mode_reg[1];
 						txbyte_reg <= txdata_sig;
@@ -152,6 +165,22 @@ module peridot_csr_spi #(
 					end
 
 					endcase
+				end
+			end
+
+			STATE_CSWAIT : begin
+				if (divcount == 0) begin
+					if (!mode_reg[0]) begin			// MODE=0 or 2
+						state_reg <= STATE_SDI;
+					end
+					else begin						// MODE=1 or 3
+						state_reg <= STATE_ENTRY;
+					end
+
+					divcount <= divref_reg;
+				end
+				else begin
+					divcount <= divcount - 1'd1;
 				end
 			end
 
@@ -168,14 +197,14 @@ module peridot_csr_spi #(
 
 			STATE_SDI : begin
 				if (divcount == 0) begin
-					if (mode_reg[0] != 1'b0 && bitcount == 7) begin
+					if (mode_reg[0] && bitcount == 7) begin
 						state_reg <= STATE_DONE;
 					end
 					else begin
 						state_reg <= STATE_SDO;
 					end
 
-					if (mode_reg[0] != 1'b0) begin
+					if (mode_reg[0]) begin
 						bitcount <= bitcount + 1'd1;
 					end
 
@@ -190,14 +219,14 @@ module peridot_csr_spi #(
 
 			STATE_SDO : begin
 				if (divcount == 0) begin
-					if (mode_reg[0] == 1'b0 && bitcount == 7) begin
+					if (!mode_reg[0] && bitcount == 7) begin
 						state_reg <= STATE_DONE;
 					end
 					else begin
 						state_reg <= STATE_SDI;
 					end
 
-					if (mode_reg[0] == 1'b0) begin
+					if (!mode_reg[0]) begin
 						bitcount <= bitcount + 1'd1;
 					end
 
