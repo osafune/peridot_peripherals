@@ -52,8 +52,7 @@ set_fileset_property quartus_synth TOP_LEVEL peridot_hostbridge
 # 
 # parameters
 # 
-#set debugview false
-set debugview true
+set debugview false
 
 add_parameter DEVICE_FAMILY string
 set_parameter_property DEVICE_FAMILY SYSTEM_INFO {DEVICE_FAMILY}
@@ -687,7 +686,7 @@ proc elaboration_callback {} {
 	set_module_assignment embeddedsw.CMacro.USE_DUALEPCS	$value_use_dualepcs
 	set_module_assignment embeddedsw.CMacro.USE_MESSAGE		$value_use_message
 
-	send_message info "USE_UIDREAD = $value_use_uidread, USE_EPCSBOOT = $value_use_epcsboot, USE_DUALEPCS = $value_use_dualepcs, USE_MESSAGE = $value_use_message"
+#	send_message info "USE_UIDREAD = $value_use_uidread, USE_EPCSBOOT = $value_use_epcsboot, USE_DUALEPCS = $value_use_dualepcs, USE_MESSAGE = $value_use_message"
 
 	# Explain that timestamp will only be known during generation thus will not be shown
 	send_message info "Time code and clock rate will be automatically updated when this component is generated."
