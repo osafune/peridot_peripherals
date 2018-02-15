@@ -70,6 +70,11 @@ CPUバス接続(8bit-i80タイプ)のグラフィックLCDモジュール用コ�
 Qsysのメモリアドレス上に設定したVRAM領域からビットマップデータを自動転送し、高速な描画処理を行う事ができます。
 
 
+PERIDOT Melody Chime
+--------------------
+メロディチャイムを再生します。
+ペリフェラルレジスタに何か書き込む度にチャイムをトリガします。
+
 
 ライセンス
 =========
@@ -77,4 +82,4 @@ Qsysのメモリアドレス上に設定したVRAM領域からビットマップ
 [The MIT License (MIT)](https://opensource.org/licenses/MIT)  
 詳細は[license.txt](https://raw.githubusercontent.com/osafune/peridot_newgen/master/license.txt)を参照ください。  
 
-Copyright (c) 2017 J-7SYSTEM WORKS LIMITED.
+Copyright (c) 2017,2018 J-7SYSTEM WORKS LIMITED.
