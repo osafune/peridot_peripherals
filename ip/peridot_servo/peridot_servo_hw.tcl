@@ -3,19 +3,31 @@
 #
 #   DEGISN : S.OSAFUNE (J-7SYSTEM WORKS LIMITED)
 #   DATE   : 2017/02/20 -> 2017/03/01
-#   MODIFY : 2017/05/13 17.0 beta
+#   MODIFY : 2018/11/26 17.1 beta
 #
 # ===================================================================
-# *******************************************************************
-#    (C)2016-2017, J-7SYSTEM WORKS LIMITED.  All rights Reserved.
 #
-# * This module is a free sourcecode and there is NO WARRANTY.
-# * No restriction on use. You can use, modify and redistribute it
-#   for personal, non-profit or commercial products UNDER YOUR
-#   RESPONSIBILITY.
-# * Redistributions of source code must retain the above copyright
-#   notice.
-# *******************************************************************
+# The MIT License (MIT)
+# Copyright (c) 2018 J-7SYSTEM WORKS LIMITED.
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy of
+# this software and associated documentation files (the "Software"), to deal in
+# the Software without restriction, including without limitation the rights to
+# use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+# of the Software, and to permit persons to whom the Software is furnished to do
+# so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+#
 
 # 
 # request TCL package from ACDS 16.1
@@ -24,14 +36,14 @@ package require -exact qsys 16.1
 
 
 # 
-# module peridot_i2c_master
+# module peridot_servo
 # 
 set_module_property NAME peridot_servo
 set_module_property DISPLAY_NAME "PERIDOT RC-Servo controller"
 set_module_property DESCRIPTION "PERIDOT RC-Servo controller"
 set_module_property GROUP "PERIDOT Peripherals"
 set_module_property AUTHOR "J-7SYSTEM WORKS LIMITED"
-set_module_property VERSION 17.0
+set_module_property VERSION 17.1
 set_module_property INTERNAL false
 set_module_property OPAQUE_ADDRESS_MAP true
 set_module_property INSTANTIATE_IN_SYSTEM_MODULE true

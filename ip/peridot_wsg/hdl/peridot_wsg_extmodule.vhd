@@ -7,16 +7,28 @@
 --     MODIFY : 2016/10/30 CycloneIV/MAX10アップデート 
 --
 -- ===================================================================
--- *******************************************************************
---    (C) 2011-2016, J-7SYSTEM WORKS LIMITED.  All rights Reserved.
+
+-- The MIT License (MIT)
+-- Copyright (c) 2008,2018 J-7SYSTEM WORKS LIMITED.
 --
--- * This module is a free sourcecode and there is NO WARRANTY.
--- * No restriction on use. You can use, modify and redistribute it
---   for personal, non-profit or commercial products UNDER YOUR
---   RESPONSIBILITY.
--- * Redistributions of source code must retain the above copyright
---   notice.
--- *******************************************************************
+-- Permission is hereby granted, free of charge, to any person obtaining a copy of
+-- this software and associated documentation files (the "Software"), to deal in
+-- the Software without restriction, including without limitation the rights to
+-- use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+-- of the Software, and to permit persons to whom the Software is furnished to do
+-- so, subject to the following conditions:
+--
+-- The above copyright notice and this permission notice shall be included in all
+-- copies or substantial portions of the Software.
+--
+-- THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+-- IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+-- FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+-- AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+-- LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+-- OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+-- SOFTWARE.
+
 
 --	0	: PCMCH0 FSDIVレジスタ 
 --	1	: PCMCH0 FIFOレジスタ(WO) / STATUSレジスタ(RO)
@@ -61,7 +73,7 @@ use IEEE.std_logic_1164.all;
 use IEEE.std_logic_arith.all;
 use IEEE.std_logic_unsigned.all;
 
-entity wsg_extmodule is
+entity peridot_wsg_extmodule is
 	generic(
 		PCM_CHANNEL_GENNUM	: integer := 4			-- PCM音源実装数(0～8) 
 	);
@@ -85,9 +97,9 @@ entity wsg_extmodule is
 		extpcm_ch		: in  std_logic_vector(3 downto 0);
 		extpcm_data		: out std_logic_vector(7 downto 0)
 	);
-end wsg_extmodule;
+end peridot_wsg_extmodule;
 
-architecture RTL of wsg_extmodule is
+architecture RTL of peridot_wsg_extmodule is
 
 	-- 拡張音源生成パラメータ 
 	constant PCM_CHANNEL_MAXNUM		: integer := 8;			-- PCM音源最大数 
@@ -117,7 +129,7 @@ architecture RTL of wsg_extmodule is
 	signal extpcmout_reg		: std_logic_vector(7 downto 0);
 
 
-	component wsg_pcm8
+	component peridot_wsg_pcm8
 	port(
 		clk				: in  std_logic;		-- system clock
 		reset			: in  std_logic;		-- async reset
@@ -229,7 +241,7 @@ GEN_PCM : if PCM_CHANNEL_GENNUM > 0 generate
 		pcm_irq_sig(i)   <= pcm_fifoirqena_reg(i) and pcm_fifoirq_sig(i);
 		pcm_irqena_sig(i)<= pcm_fifoirqena_reg(i);
 
-		U_PCM8 : wsg_pcm8
+		u_pcm8 : peridot_wsg_pcm8
 		port map (
 			clk			=> clk,
 			reset		=> reset,

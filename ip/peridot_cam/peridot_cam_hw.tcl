@@ -3,19 +3,31 @@
 #
 #   DEGISN : S.OSAFUNE (J-7SYSTEM WORKS LIMITED)
 #   DATE   : 2017/04/05 -> 2017/04/06
-#   MODIFY : 2017/05/13 17.0 beta
+#   MODIFY : 2018/11/26 17.1 beta
 #
 # ===================================================================
-# *******************************************************************
-#        (C)2017 J-7SYSTEM WORKS LIMITED.  All rights Reserved.
 #
-# * This module is a free sourcecode and there is NO WARRANTY.
-# * No restriction on use. You can use, modify and redistribute it
-#   for personal, non-profit or commercial products UNDER YOUR
-#   RESPONSIBILITY.
-# * Redistributions of source code must retain the above copyright
-#   notice.
-# *******************************************************************
+# The MIT License (MIT)
+# Copyright (c) 2017,2018 J-7SYSTEM WORKS LIMITED.
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy of
+# this software and associated documentation files (the "Software"), to deal in
+# the Software without restriction, including without limitation the rights to
+# use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+# of the Software, and to permit persons to whom the Software is furnished to do
+# so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+#
 
 # 
 # request TCL package from ACDS 16.1
@@ -24,20 +36,20 @@ package require -exact qsys 16.1
 
 
 # 
-# module peridot_hostbridge
+# module peridot_cam
 # 
 set_module_property NAME peridot_cam
-set_module_property DISPLAY_NAME "PERIDOT CAM interface (Alpha test version)"
+set_module_property DISPLAY_NAME "PERIDOT CAM interface (Beta test version)"
 set_module_property DESCRIPTION "PERIDOT Camera input interface"
 set_module_property GROUP "PERIDOT Peripherals"
 set_module_property AUTHOR "J-7SYSTEM WORKS LIMITED"
-set_module_property VERSION 17.0
+set_module_property VERSION 17.1
 set_module_property INTERNAL false
 set_module_property OPAQUE_ADDRESS_MAP true
 set_module_property INSTANTIATE_IN_SYSTEM_MODULE true
 set_module_property HIDE_FROM_SOPC true
 set_module_property HIDE_FROM_QUARTUS true
-set_module_property EDITABLE false
+set_module_property EDITABLE true
 
 
 # 
@@ -50,7 +62,7 @@ set_fileset_property QUARTUS_SYNTH ENABLE_FILE_OVERWRITE_MODE false
 add_fileset_file peridot_cam.v		VERILOG PATH hdl/peridot_cam.v TOP_LEVEL_FILE
 add_fileset_file paridot_cam_avm.v	VERILOG PATH hdl/paridot_cam_avm.v
 add_fileset_file peridot_cam_avs.v	VERILOG PATH hdl/peridot_cam_avs.v
-add_fileset_file peridot_i2c.v		VERILOG PATH ../peridot_i2c/hdl/peridot_i2c.v
+add_fileset_file peridot_i2c.v		VERILOG PATH hdl/peridot_cam_sccb.v
 add_fileset_file peridot_cam.sdc	SDC PATH hdl/peridot_cam.sdc
 
 
@@ -107,6 +119,7 @@ add_interface_port s1 avs_s1_write write Input 1
 add_interface_port s1 avs_s1_writedata writedata Input 32
 add_interface_port s1 avs_s1_read read Input 1
 add_interface_port s1 avs_s1_readdata readdata Output 32
+add_interface_port s1 avs_s1_waitrequest waitrequest Output 1
 set_interface_assignment s1 embeddedsw.configuration.isFlash 0
 set_interface_assignment s1 embeddedsw.configuration.isMemoryDevice 0
 set_interface_assignment s1 embeddedsw.configuration.isNonVolatileStorage 0
@@ -174,4 +187,4 @@ add_interface_port extcam cam_href href Input 1
 add_interface_port extcam cam_vsync vsync Input 1
 add_interface_port extcam cam_reset_n reseto_n Output 1
 add_interface_port extcam sccb_sck sccb_c Output 1
-add_interface_port extcam sccb_data sccb_d Bidir 1
+add_interface_port extcam sccb_data sccb_d Output 1

@@ -3,22 +3,38 @@
 //
 //   DEGISN : S.OSAFUNE (J-7SYSTEM WORKS LIMITED)
 //   DATE   : 2017/04/04 -> 2017/04/06
-//   UPDATE : 
+//   MODIFY : 2018/01/22
 //
 // ===================================================================
-// *******************************************************************
-//        (C)2017 J-7SYSTEM WORKS LIMITED.  All rights Reserved.
 //
-// * This module is a free sourcecode and there is NO WARRANTY.
-// * No restriction on use. You can use, modify and redistribute it
-//   for personal, non-profit or commercial products UNDER YOUR
-//   RESPONSIBILITY.
-// * Redistributions of source code must retain the above copyright
-//   notice.
-// *******************************************************************
+// The MIT License (MIT)
+// Copyright (c) 2017,2018 J-7SYSTEM WORKS LIMITED.
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy of
+// this software and associated documentation files (the "Software"), to deal in
+// the Software without restriction, including without limitation the rights to
+// use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+// of the Software, and to permit persons to whom the Software is furnished to do
+// so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+//
 
 
-module peridot_cam(
+module peridot_cam #(
+	parameter AVM_CLOCKFREQ			= 100000000,		// AVM drive clock freq(Hz)
+	parameter AVS_CLOCKFREQ			= 25000000,			// AVS drive clock freq(Hz) - up to 100MHz
+	parameter SCCB_CLOCKFREQ		= 200000			// SCCB clock freq(Hz) - 200kHz typ
+) (
 	// Interface: clk
 	input wire			csi_global_reset,
 	input wire			csi_global_clk,
@@ -29,6 +45,7 @@ module peridot_cam(
 	input wire  [31:0]	avs_s1_writedata,
 	input wire			avs_s1_read,
 	output wire [31:0]	avs_s1_readdata,
+	output wire			avs_s1_waitrequest,
 	output wire			avs_s1_irq,
 
 	// Interface: Avalon-MM master
@@ -41,10 +58,13 @@ module peridot_cam(
 	input wire			avm_m1_waitrequest,
 
 	// External Interface
-	input			cam_clk,					// カメラクロック(48MHz)
-	input  [9:2]	cam_data,
-	input			cam_href,
-	input			cam_vsync
+	input wire			cam_clk,				// カメラクロック(48MHz)
+	input wire  [9:2]	cam_data,
+	input wire			cam_href,
+	input wire			cam_vsync,
+	output wire			cam_reset_n,
+	output wire			sccb_sck,
+	output wire			sccb_data
 );
 
 
@@ -97,7 +117,10 @@ module peridot_cam(
 
 	// AvalonMM-スレーブモジュール 
 
-	peridot_cam_avs
+	peridot_cam_avs #(
+		.AVS_CLOCKFREQ		(AVS_CLOCKFREQ),
+		.SCCB_CLOCKFREQ		(SCCB_CLOCKFREQ)
+	)
 	u0 (
 		.csi_global_reset	(reset_sig),
 		.avs_s1_clk			(clock_sig),
@@ -106,6 +129,7 @@ module peridot_cam(
 		.avs_s1_writedata	(avs_s1_writedata),
 		.avs_s1_read		(avs_s1_read),
 		.avs_s1_readdata	(avs_s1_readdata),
+		.avs_s1_waitrequest	(avs_s1_waitrequest),
 		.avs_s1_irq			(avs_s1_irq),
 
 		.start				(start_sig),		// '1'パルスでフレーム処理開始 
@@ -113,7 +137,11 @@ module peridot_cam(
 		.framesync			(framesync_sig),	// フレーム開始信号 
 		.infiforeset		(infiforeset_sig),	// 入力FIFO非同期リセット出力 
 		.capaddress_top		(capaddress_sig),
-		.capcycle_num		(capcyclenum_sig)
+		.capcycle_num		(capcyclenum_sig),
+
+		.cam_reset_n		(cam_reset_n),
+		.sccb_sck			(sccb_sck),
+		.sccb_data			(sccb_data)
 	);
 
 
@@ -121,25 +149,11 @@ module peridot_cam(
 	// OV9655入力FIFO 
 
 	always @(posedge camclk_sig) begin
-		camdata_reg  <= cam_data;
-		camhref_reg  <= cam_href;
+		camdata_reg <= cam_data;
+		camhref_reg <= cam_href;
 		camvsync_reg <= cam_vsync;
 	end
-/*
-	cam_infifo
-	u1 (
-		.aclr		(infiforeset_sig),
 
-		.wrclk		(camclk_sig),
-		.wrreq		(camhref_reg),
-		.data		(camdata_reg),
-
-		.rdclk		(avmclk_sig),
-		.rdreq		(writedatardack_sig),
-		.q			(writedata_sig),
-		.rdusedw	(rdusedw_sig)
-	);
-*/
 	dcfifo_mixed_widths #(
 		.add_usedw_msb_bit	("ON"),
 		.lpm_numwords		(1024),
@@ -170,7 +184,7 @@ module peridot_cam(
 	);
 
 	assign writedataready_sig = (rdusedw_sig > 9'd15)? 1'b1 : 1'b0;		// 16ワード以上FIFOに入っている 
-	assign framesync_sig      = camvsync_reg;
+	assign framesync_sig = camvsync_reg;
 
 
 

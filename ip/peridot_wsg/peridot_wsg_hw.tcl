@@ -3,19 +3,31 @@
 #
 #   DEGISN : S.OSAFUNE (J-7SYSTEM WORKS LIMITED)
 #   DATE   : 2016/10/25 -> 2017/05/08
-#   MODIFY : 2017/05/13 17.0 beta
+#   MODIFY : 2018/11/26 17.1 beta
 #
 # ===================================================================
-# *******************************************************************
-#  (C)2009,2016,2017 J-7SYSTEM WORKS LIMITED.  All rights Reserved.
 #
-# * This module is a free sourcecode and there is NO WARRANTY.
-# * No restriction on use. You can use, modify and redistribute it
-#   for personal, non-profit or commercial products UNDER YOUR
-#   RESPONSIBILITY.
-# * Redistributions of source code must retain the above copyright
-#   notice.
-# *******************************************************************
+# The MIT License (MIT)
+# Copyright (c) 2016,2018 J-7SYSTEM WORKS LIMITED.
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy of
+# this software and associated documentation files (the "Software"), to deal in
+# the Software without restriction, including without limitation the rights to
+# use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+# of the Software, and to permit persons to whom the Software is furnished to do
+# so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+#
 
 # 
 # request TCL package from ACDS 16.1
@@ -31,7 +43,7 @@ set_module_property DISPLAY_NAME "PERIDOT WSG Sound Generator (beta test version
 set_module_property DESCRIPTION "PERIDOT WSG Sound Generator"
 set_module_property GROUP "PERIDOT Peripherals"
 set_module_property AUTHOR "J-7SYSTEM WORKS LIMITED"
-set_module_property VERSION 17.0
+set_module_property VERSION 17.1
 set_module_property INTERNAL false
 set_module_property OPAQUE_ADDRESS_MAP true
 set_module_property INSTANTIATE_IN_SYSTEM_MODULE true
@@ -44,18 +56,18 @@ set_module_property EDITABLE false
 # file sets
 # 
 add_fileset QUARTUS_SYNTH QUARTUS_SYNTH "" ""
-set_fileset_property QUARTUS_SYNTH TOP_LEVEL wsg_component
+set_fileset_property QUARTUS_SYNTH TOP_LEVEL peridot_wsg
 set_fileset_property QUARTUS_SYNTH ENABLE_RELATIVE_INCLUDE_PATHS false
 set_fileset_property QUARTUS_SYNTH ENABLE_FILE_OVERWRITE_MODE false
-add_fileset_file wsg_component.vhd		VHDL PATH hdl/wsg_component.vhd TOP_LEVEL_FILE
-add_fileset_file wsg_businterface.vhd	VHDL PATH hdl/wsg_businterface.vhd
-add_fileset_file wsg_slotengine.vhd		VHDL PATH hdl/wsg_slotengine.vhd
-add_fileset_file wsg_extmodule.vhd		VHDL PATH hdl/wsg_extmodule.vhd
-add_fileset_file wsg_pcm8.vhd			VHDL PATH hdl/wsg_pcm8.vhd
-add_fileset_file wsg_audout.vhd			VHDL PATH hdl/wsg_audout.vhd
-add_fileset_file wsg_dsdac8.vhd			VHDL PATH hdl/wsg_dsdac8.vhd
-#add_fileset_file wsg_wavetable.mif		MIF PATH hdl/wsg_wavetable.mif
-#add_fileset_file wsg_component.sdc		SDC PATH hdl/wsg_component.sdc
+add_fileset_file peridot_wsg.vhd				VHDL PATH hdl/peridot_wsg.vhd TOP_LEVEL_FILE
+add_fileset_file peridot_wsg_businterface.vhd	VHDL PATH hdl/peridot_wsg_businterface.vhd
+add_fileset_file peridot_wsg_slotengine.vhd		VHDL PATH hdl/peridot_wsg_slotengine.vhd
+add_fileset_file peridot_wsg_extmodule.vhd		VHDL PATH hdl/peridot_wsg_extmodule.vhd
+add_fileset_file peridot_wsg_pcm8.vhd			VHDL PATH hdl/peridot_wsg_pcm8.vhd
+add_fileset_file peridot_wsg_audout.vhd			VHDL PATH hdl/peridot_wsg_audout.vhd
+add_fileset_file peridot_wsg_dsdac8.vhd			VHDL PATH hdl/peridot_wsg_dsdac8.vhd
+add_fileset_file peridot_wsg.sdc				SDC PATH hdl/peridot_wsg.sdc
+#add_fileset_file peridot_wsg_wavetable.mif		MIF PATH hdl/peridot_wsg_wavetable.mif
 
 
 # 

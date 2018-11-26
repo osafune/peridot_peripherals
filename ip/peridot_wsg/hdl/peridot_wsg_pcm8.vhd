@@ -8,16 +8,28 @@
 --				2017/04/06 LPM FIFOのインスタンス変更 
 --
 -- ===================================================================
--- *******************************************************************
---    (C) 2011-2017, J-7SYSTEM WORKS LIMITED.  All rights Reserved.
+
+-- The MIT License (MIT)
+-- Copyright (c) 2008,2018 J-7SYSTEM WORKS LIMITED.
 --
--- * This module is a free sourcecode and there is NO WARRANTY.
--- * No restriction on use. You can use, modify and redistribute it
---   for personal, non-profit or commercial products UNDER YOUR
---   RESPONSIBILITY.
--- * Redistributions of source code must retain the above copyright
---   notice.
--- *******************************************************************
+-- Permission is hereby granted, free of charge, to any person obtaining a copy of
+-- this software and associated documentation files (the "Software"), to deal in
+-- the Software without restriction, including without limitation the rights to
+-- use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+-- of the Software, and to permit persons to whom the Software is furnished to do
+-- so, subject to the following conditions:
+--
+-- The above copyright notice and this permission notice shall be included in all
+-- copies or substantial portions of the Software.
+--
+-- THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+-- IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+-- FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+-- AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+-- LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+-- OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+-- SOFTWARE.
+
 
 --	0	: PCMCH FSDIVレジスタ(WO)
 --	1	: PCMCH FIFOレジスタ(WO)
@@ -40,7 +52,7 @@ use IEEE.std_logic_unsigned.all;
 library altera_mf;
 use altera_mf.altera_mf_components.all;
 
-entity wsg_pcm8 is
+entity peridot_wsg_pcm8 is
 	port(
 		reset			: in  std_logic;		-- async reset
 		clk				: in  std_logic;		-- system clock
@@ -56,9 +68,9 @@ entity wsg_pcm8 is
 
 		pcm_out			: out std_logic_vector(7 downto 0)
 	);
-end wsg_pcm8;
+end peridot_wsg_pcm8;
 
-architecture RTL of wsg_pcm8 is
+architecture RTL of peridot_wsg_pcm8 is
 	signal pcm_speed_reg		: std_logic_vector(7 downto 0);	-- need cut timing path (to pcm_playstep_reg)
 	signal irq_sig				: std_logic;
 	signal play_sig				: std_logic;
@@ -126,7 +138,7 @@ begin
 	pcm_fifowrite_sig <= '1' when(address = "1" and write = '1') else '0';
 	pcm_fiforead_sig  <= '1' when(start_sync = '1' and pcm_playcount_reg(8) = '1') else '0';
 
-	U_PCMFIFO : dcfifo
+	wsg_pcmfifo_inst : dcfifo
 	GENERIC MAP (
 		lpm_type			=> "dcfifo",
 		lpm_showahead		=> "ON",

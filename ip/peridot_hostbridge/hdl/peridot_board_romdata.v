@@ -4,19 +4,31 @@
 //   DEGISN : S.OSAFUNE (J-7SYSTEM WORKS LIMITED)
 //   DATE   : 2017/01/20 -> 2017/01/25
 //   MODIFY : 2017/03/01
-//          : 2017/05/11 EPCQ-UIDの読み出しに対応 
+//          : 2017/05/17 EPCQ-UIDの読み出しに対応、Arria10のUIDに対応 
 //
 // ===================================================================
-// *******************************************************************
-//    (C)2016-2017, J-7SYSTEM WORKS LIMITED.  All rights Reserved.
 //
-// * This module is a free sourcecode and there is NO WARRANTY.
-// * No restriction on use. You can use, modify and redistribute it
-//   for personal, non-profit or commercial products UNDER YOUR
-//   RESPONSIBILITY.
-// * Redistributions of source code must retain the above copyright
-//   notice.
-// *******************************************************************
+// The MIT License (MIT)
+// Copyright (c) 2017,2018 J-7SYSTEM WORKS LIMITED.
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy of
+// this software and associated documentation files (the "Software"), to deal in
+// the Software without restriction, including without limitation the rights to
+// use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+// of the Software, and to permit persons to whom the Software is furnished to do
+// so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+//
 
 // sdcに追加 
 // set_false_path -from [get_registers \{*\|altchip_id:*\|regout_wire\}] -to [get_registers \{*\|altchip_id:*\|lpm_shiftreg:shift_reg\|dffs\[63\]\}]
@@ -64,6 +76,7 @@ module peridot_board_romdata #(
 	wire			clock_sig = clk;				// モジュール内部駆動クロック 
 
 	reg  [4:0]		resetcount_reg;
+	reg  [1:0]		clockdiv4_reg;
 	reg				romready_reg;
 	wire			uid_enable_sig;
 	wire [63:0]		uid_data_sig;
@@ -89,6 +102,7 @@ module peridot_board_romdata #(
 	always @(posedge clock_sig or posedge reset_sig) begin
 		if (reset_sig) begin
 			resetcount_reg <= 1'b0;
+			clockdiv4_reg <= 2'b0;
 			romready_reg <= 1'b0;
 		end
 		else begin
@@ -98,6 +112,8 @@ module peridot_board_romdata #(
 			else begin
 				resetcount_reg <= resetcount_reg - 1'd1;
 			end
+
+			clockdiv4_reg <= clockdiv4_reg + 1'd1;
 		end
 	end
 
@@ -115,7 +131,7 @@ generate
 			.ID_VALUE		(64'hffffffffffffffff),
 			.ID_VALUE_STR	("00000000ffffffff")
 		)
-		u1_max10_uid (
+		u1_uid_max10 (
 			.clkin			(clock_sig),
 			.reset			(~resetcount_reg[3]),
 			.data_valid		(uid_valid_sig),
@@ -129,11 +145,22 @@ generate
 			.DEVICE_FAMILY	(DEVICE_FAMILY),
 			.ID_VALUE		(64'hffffffffffffffff)
 		)
-		u1_cyclone5_uid (
+		u1_uid_gen5 (
 			.clkin			(clock_sig),
 			.reset			(~resetcount_reg[3]),
 			.data_valid		(uid_valid_sig),
 			.chip_id		(uid_data_sig)
+		);
+	end
+	else if (CHIPUID_FEATURE == "ENABLE" && DEVICE_FAMILY == "Arria 10") begin
+		assign uid_enable_sig = 1'b1;
+
+		altera_chip_id_a10
+		u1_uid_a10 (
+			.clkin 			(clockdiv4_reg[1]),
+			.reset			(~resetcount_reg[3]),
+			.data_valid 	(uid_valid_sig),
+			.chip_id 		(uid_data_sig)
 		);
 	end
 	else if (EPCQUID_FEATURE == "ENABLE") begin

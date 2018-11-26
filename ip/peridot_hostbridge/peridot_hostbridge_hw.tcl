@@ -3,19 +3,31 @@
 #
 #   DEGISN : S.OSAFUNE (J-7SYSTEM WORKS LIMITED)
 #   DATE   : 2017/01/24 -> 2017/03/09
-#   MODIFY : 2017/05/13 17.0 beta
+#   MODIFY : 2018/11/26 17.1 beta
 #
 # ===================================================================
-# *******************************************************************
-#    (C)2016-2017, J-7SYSTEM WORKS LIMITED.  All rights Reserved.
 #
-# * This module is a free sourcecode and there is NO WARRANTY.
-# * No restriction on use. You can use, modify and redistribute it
-#   for personal, non-profit or commercial products UNDER YOUR
-#   RESPONSIBILITY.
-# * Redistributions of source code must retain the above copyright
-#   notice.
-# *******************************************************************
+# The MIT License (MIT)
+# Copyright (c) 2017,2018 J-7SYSTEM WORKS LIMITED.
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy of
+# this software and associated documentation files (the "Software"), to deal in
+# the Software without restriction, including without limitation the rights to
+# use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+# of the Software, and to permit persons to whom the Software is furnished to do
+# so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+#
 
 # 
 # request TCL package from ACDS 16.1
@@ -31,7 +43,7 @@ set_module_property DISPLAY_NAME "PERIDOT Host Bridge (beta test version)"
 set_module_property DESCRIPTION "PERIDOT Host to Avalon-MM bridge"
 set_module_property GROUP "PERIDOT Peripherals"
 set_module_property AUTHOR "J-7SYSTEM WORKS LIMITED"
-set_module_property VERSION 17.0
+set_module_property VERSION 17.1
 set_module_property INTERNAL false
 set_module_property OPAQUE_ADDRESS_MAP true
 set_module_property INSTANTIATE_IN_SYSTEM_MODULE true
@@ -39,7 +51,7 @@ set_module_property ELABORATION_CALLBACK elaboration_callback
 set_module_property EDITABLE false
 set_module_property HIDE_FROM_SOPC true
 set_module_property HIDE_FROM_QUARTUS true
-set_module_property SUPPORTED_DEVICE_FAMILIES {"MAX 10" "Cyclone IV E" "Cyclone IV GX" "Cyclone 10 LP" "Cyclone V" "Arria II" "Arria V" "Arria V GZ" "Arria 10" "Stratix V"}
+set_module_property SUPPORTED_DEVICE_FAMILIES {"MAX 10" "Cyclone IV E" "Cyclone IV GX" "Cyclone 10 LP" "Cyclone V" "Arria II GX" "Arria II GZ" "Arria V" "Arria V GZ" "Arria 10" "Stratix IV" "Stratix V"}
 
 
 # 
@@ -52,7 +64,8 @@ set_fileset_property quartus_synth TOP_LEVEL peridot_hostbridge
 # 
 # parameters
 # 
-set debugview false
+#set debugview false
+set debugview true
 
 add_parameter DEVICE_FAMILY string
 set_parameter_property DEVICE_FAMILY SYSTEM_INFO {DEVICE_FAMILY}
@@ -541,7 +554,7 @@ proc elaboration_callback {} {
 		set_parameter_property USE_EPCSDUALBOOT ENABLED false
 	}
 
-	if {$devfamily == "MAX 10" || $devfamily == "Cyclone V" || $devfamily == "Arria V" || $devfamily == "Arria V GZ" || $devfamily == "Stratix V"} {
+	if {$devfamily == "MAX 10" || $devfamily == "Cyclone V" || $devfamily == "Arria V" || $devfamily == "Arria V GZ" || $devfamily == "Arria 10" ||$devfamily == "Stratix V"} {
 		set_parameter_property USE_CHIPUID ENABLED true
 	} elseif {$devfamily == "Cyclone IV E" || $devfamily == "Cyclone IV GX" || $devfamily == "Cyclone 10 LP"} {
 		set_parameter_property USE_CHIPUID ENABLED true
@@ -686,7 +699,7 @@ proc elaboration_callback {} {
 	set_module_assignment embeddedsw.CMacro.USE_DUALEPCS	$value_use_dualepcs
 	set_module_assignment embeddedsw.CMacro.USE_MESSAGE		$value_use_message
 
-#	send_message info "USE_UIDREAD = $value_use_uidread, USE_EPCSBOOT = $value_use_epcsboot, USE_DUALEPCS = $value_use_dualepcs, USE_MESSAGE = $value_use_message"
+	send_message info "USE_UIDREAD = $value_use_uidread, USE_EPCSBOOT = $value_use_epcsboot, USE_DUALEPCS = $value_use_dualepcs, USE_MESSAGE = $value_use_message"
 
 	# Explain that timestamp will only be known during generation thus will not be shown
 	send_message info "Time code and clock rate will be automatically updated when this component is generated."

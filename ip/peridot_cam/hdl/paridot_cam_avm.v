@@ -6,19 +6,31 @@
 //   UPDATE : 
 //
 // ===================================================================
-// *******************************************************************
-//        (C)2017 J-7SYSTEM WORKS LIMITED.  All rights Reserved.
 //
-// * This module is a free sourcecode and there is NO WARRANTY.
-// * No restriction on use. You can use, modify and redistribute it
-//   for personal, non-profit or commercial products UNDER YOUR
-//   RESPONSIBILITY.
-// * Redistributions of source code must retain the above copyright
-//   notice.
-// *******************************************************************
+// The MIT License (MIT)
+// Copyright (c) 2017,2018 J-7SYSTEM WORKS LIMITED.
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy of
+// this software and associated documentation files (the "Software"), to deal in
+// the Software without restriction, including without limitation the rights to
+// use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+// of the Software, and to permit persons to whom the Software is furnished to do
+// so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+//
 
 
-module peridot_cam_avm(
+module peridot_cam_avm (
 	// Interface: clk
 	input wire			csi_global_reset,
 	input wire			avm_m1_clk,
@@ -49,11 +61,11 @@ module peridot_cam_avm(
 
 /* ----- 内部パラメータ ------------------ */
 
-	localparam STATE_IDLE         = 5'd0;
-	localparam STATE_SETUP        = 5'd1;
-	localparam STATE_BURSTWRITE   = 5'd2;
-	localparam STATE_LOOP         = 5'd30;
-	localparam STATE_DONE         = 5'd31;
+	localparam STATE_IDLE		= 5'd0;
+	localparam STATE_SETUP		= 5'd1;
+	localparam STATE_BURSTWRITE	= 5'd2;
+	localparam STATE_LOOP		= 5'd30;
+	localparam STATE_DONE		= 5'd31;
 
 
 /* ※以降のパラメータ宣言は禁止※ */
@@ -88,16 +100,16 @@ module peridot_cam_avm(
 	assign done = done_reg;
 
 	assign avm_writedata_sig = writedata;
-	assign writedata_rdack   = avm_wriredataack_sig;
+	assign writedata_rdack = avm_wriredataack_sig;
 
 
 	///// AvalonMMトランザクション処理 /////
 
 	assign avm_wriredataack_sig = (write_reg && !avm_m1_waitrequest)? 1'b1 : 1'b0;	// データ要求 
 
-	assign avm_m1_address    = {address_reg[31:6], 6'b000000};
-	assign avm_m1_write      = write_reg;
-	assign avm_m1_writedata  = avm_writedata_sig;
+	assign avm_m1_address = {address_reg[31:6], 6'b0};
+	assign avm_m1_write = write_reg;
+	assign avm_m1_writedata = avm_writedata_sig;
 	assign avm_m1_byteenable = 4'b1111;				// 4バイトライト固定 
 	assign avm_m1_burstcount = 5'd16;				// 16ポイントバースト固定 
 
@@ -105,38 +117,38 @@ module peridot_cam_avm(
 	always @(posedge avm_clk_sig or posedge reset_sig) begin
 		if (reset_sig) begin
 			avmstate_reg <= STATE_IDLE;
-			done_reg     <= 1'b1;
-			write_reg    <= 1'b0;
+			done_reg <= 1'b1;
+			write_reg <= 1'b0;
 
 			chunkcount_reg <= 16'd0;
-			datacount_reg  <= 5'd0;
+			datacount_reg <= 5'd0;
 		end
 		else begin
 
 			case (avmstate_reg)
 				STATE_IDLE : begin					// IDLE 
 					if ( start ) begin
-						avmstate_reg   <= STATE_SETUP;
-						done_reg       <= 1'b0;
+						avmstate_reg <= STATE_SETUP;
+						done_reg <= 1'b0;
 						chunkcount_reg <= transcycle_num;
-						address_reg    <= address_top;
+						address_reg <= address_top;
 					end
 				end
 
 				STATE_SETUP : begin					// バーストセットアップ 
 					if ( writedata_ready ) begin
-						avmstate_reg   <= STATE_BURSTWRITE;
-						write_reg      <= 1'b1;
-						datacount_reg  <= 5'd15;
+						avmstate_reg <= STATE_BURSTWRITE;
+						write_reg <= 1'b1;
+						datacount_reg <= 5'd15;
 					end
 				end
 
 				STATE_BURSTWRITE : begin			// データバーストライト 
 					if ( !avm_m1_waitrequest ) begin
 						if (datacount_reg == 1'd0) begin
-							avmstate_reg  <= STATE_LOOP;
-							write_reg     <= 1'b0;
-							chunkcount_reg<= chunkcount_reg - 1'd1;
+							avmstate_reg <= STATE_LOOP;
+							write_reg <= 1'b0;
+							chunkcount_reg <= chunkcount_reg - 1'd1;
 						end
 						else begin
 							datacount_reg <= datacount_reg - 1'd1;
@@ -150,14 +162,14 @@ module peridot_cam_avm(
 					end
 					else begin
 						avmstate_reg <= STATE_SETUP;
-						address_reg  <= address_reg + 32'd64;
+						address_reg <= address_reg + 32'd64;
 					end
 
 				end
 
 				STATE_DONE : begin					// ステート終了 
 					avmstate_reg <= STATE_IDLE;
-					done_reg     <= 1'b1;
+					done_reg <= 1'b1;
 				end
 
 			endcase

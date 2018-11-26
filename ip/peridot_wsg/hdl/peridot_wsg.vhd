@@ -10,16 +10,27 @@
 --            : 2017/05/08 アドレス修正、キー入力対応 
 --
 -- ===================================================================
--- *******************************************************************
---    (C) 2009-2017, J-7SYSTEM WORKS LIMITED.  All rights Reserved.
+
+-- The MIT License (MIT)
+-- Copyright (c) 2008,2018 J-7SYSTEM WORKS LIMITED.
 --
--- * This module is a free sourcecode and there is NO WARRANTY.
--- * No restriction on use. You can use, modify and redistribute it
---   for personal, non-profit or commercial products UNDER YOUR
---   RESPONSIBILITY.
--- * Redistributions of source code must retain the above copyright
---   notice.
--- *******************************************************************
+-- Permission is hereby granted, free of charge, to any person obtaining a copy of
+-- this software and associated documentation files (the "Software"), to deal in
+-- the Software without restriction, including without limitation the rights to
+-- use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+-- of the Software, and to permit persons to whom the Software is furnished to do
+-- so, subject to the following conditions:
+--
+-- The above copyright notice and this permission notice shall be included in all
+-- copies or substantial portions of the Software.
+--
+-- THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+-- IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+-- FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+-- AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+-- LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+-- OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+-- SOFTWARE.
 
 
 library IEEE;
@@ -27,7 +38,7 @@ use IEEE.std_logic_1164.all;
 use IEEE.std_logic_arith.all;
 use IEEE.std_logic_unsigned.all;
 
-entity wsg_component is
+entity peridot_wsg is
 	generic(
 		AUDIOCLOCKFREQ		: integer := 24576000;	-- input audio_clk freq
 		SAMPLINGFREQ		: integer := 32000;		-- output sampleing freq
@@ -65,9 +76,9 @@ entity wsg_component is
 		kb_load_n			: out std_logic;
 		kb_sdin				: in  std_logic
 	);
-end wsg_component;
+end peridot_wsg;
 
-architecture RTL of wsg_component is
+architecture RTL of peridot_wsg is
 	constant FS128FREQ		: integer := SAMPLINGFREQ * 128;
 	constant CLOCKDIV		: integer := (AUDIOCLOCKFREQ / FS128FREQ) - 1;
 --	constant CLOCKDIV		: integer := 1;				-- test
@@ -81,7 +92,7 @@ architecture RTL of wsg_component is
 	signal audio_mute_reg	: std_logic;
 
 
-	component wsg_businterface
+	component peridot_wsg_businterface
 	generic(
 		WAVETABLE_INIT_FILE	: string
 	);
@@ -141,7 +152,7 @@ architecture RTL of wsg_component is
 	signal wav_rddata_sig	: std_logic_vector(7 downto 0);
 
 
-	component wsg_extmodule
+	component peridot_wsg_extmodule
 	generic(
 		PCM_CHANNEL_GENNUM	: integer			-- PCM音源実装数(0～8) 
 	);
@@ -164,7 +175,7 @@ architecture RTL of wsg_component is
 	signal start_sync_sig	: std_logic;
 
 
-	component wsg_slotengine
+	component peridot_wsg_slotengine
 	generic(
 		MAXSLOTNUM		: integer			-- max slot(polyphonic) number
 	);
@@ -194,7 +205,7 @@ architecture RTL of wsg_component is
 	signal pcmdata_r_sig	: std_logic_vector(15 downto 0);
 
 
-	component wsg_audout
+	component peridot_wsg_audout
 	generic(
 		DSDAC_PCMBITWIDTH	: integer := 12		-- 1bitDSDAC valid bit width
 	);
@@ -255,7 +266,7 @@ begin
 
 --==== レジスタおよびバスインターフェース ===========================
 
-	U_BUSIF : wsg_businterface
+	u_busif : peridot_wsg_businterface
 	generic map (
 		WAVETABLE_INIT_FILE	=> WAVETABLE_INIT_FILE
 	)
@@ -300,7 +311,7 @@ begin
 
 --==== 拡張音源ユニット（オプション）================================
 
-	U_EXT : wsg_extmodule
+	u_ext : peridot_wsg_extmodule
 	generic map (
 		PCM_CHANNEL_GENNUM	=> PCM_CHANNEL_GENNUM
 	)
@@ -323,7 +334,7 @@ begin
 
 --==== 波形合成エンジン =============================================
 
-	U_SLOT : wsg_slotengine
+	u_slot : peridot_wsg_slotengine
 	generic map (
 		MAXSLOTNUM		=> MAXSLOTNUM
 	)
@@ -353,7 +364,7 @@ begin
 
 --==== オーディオ出力部 =============================================
 
-	U_AUD : wsg_audout
+	u_aud : peridot_wsg_audout
 	generic map (
 		DSDAC_PCMBITWIDTH	=> 12
 	)

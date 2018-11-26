@@ -15,16 +15,28 @@
 --            : 2017/05/08 システムレジスタアドレス変更、アクセス不具合を修正、キー入力追加 
 --
 -- ===================================================================
--- *******************************************************************
---    (C) 2009-2017, J-7SYSTEM WORKS LIMITED.  All rights Reserved.
+
+-- The MIT License (MIT)
+-- Copyright (c) 2008,2018 J-7SYSTEM WORKS LIMITED.
 --
--- * This module is a free sourcecode and there is NO WARRANTY.
--- * No restriction on use. You can use, modify and redistribute it
---   for personal, non-profit or commercial products UNDER YOUR
---   RESPONSIBILITY.
--- * Redistributions of source code must retain the above copyright
---   notice.
--- *******************************************************************
+-- Permission is hereby granted, free of charge, to any person obtaining a copy of
+-- this software and associated documentation files (the "Software"), to deal in
+-- the Software without restriction, including without limitation the rights to
+-- use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+-- of the Software, and to permit persons to whom the Software is furnished to do
+-- so, subject to the following conditions:
+--
+-- The above copyright notice and this permission notice shall be included in all
+-- copies or substantial portions of the Software.
+--
+-- THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+-- IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+-- FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+-- AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+-- LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+-- OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+-- SOFTWARE.
+
 
 -- リードは３クロック幅（アドレス確定後２クロックwait）以上 
 -- ライトは１クロック幅 
@@ -40,10 +52,10 @@ use IEEE.std_logic_arith.all;
 library altera_mf;
 use altera_mf.altera_mf_components.all;
 
-entity wsg_businterface is
+entity peridot_wsg_businterface is
 	generic(
 		WAVETABLE_INIT_FILE	: string := "UNUSED"
---		WAVETABLE_INIT_FILE	: string := "wsg_wavetable.mif"
+--		WAVETABLE_INIT_FILE	: string := "peridot_wsg_wavetable.mif"
 	);
 	port(
 		clk				: in  std_logic;	-- system clock
@@ -91,9 +103,9 @@ entity wsg_businterface is
 		wav_address		: in  std_logic_vector(8 downto 0);
 		wav_readdata	: out std_logic_vector(7 downto 0)
 	);
-end wsg_businterface;
+end peridot_wsg_businterface;
 
-architecture RTL of wsg_businterface is
+architecture RTL of peridot_wsg_businterface is
 	signal extfs0_reg		: std_logic;
 	signal extfs1_reg		: std_logic;
 	signal extfs_in_reg		: std_logic;

@@ -1,9 +1,8 @@
 # ===================================================================
-# TITLE : PERIDOT-NGS / Host bridge sdc
+# TITLE : PERIDOT-NGS / OV9655 I/F Register
 #
 #   DEGISN : S.OSAFUNE (J-7SYSTEM WORKS LIMITED)
-#   DATE   : 2017/01/23 -> 2017/01/30
-#   MODIFY : 2017/04/07
+#   DATE   : 2017/04/04 -> 2017/04/06
 #
 # ===================================================================
 #
@@ -29,13 +28,6 @@
 # SOFTWARE.
 #
 
-set_false_path -from [get_registers {*|peridot_hostbridge:*|altchip_id:*|regout_wire}] -to [get_registers {*|peridot_hostbridge:*|altchip_id:*|dffs[63]}]
-set_false_path -to [get_registers {*|peridot_hostbridge:*|peridot_board_i2c:*|scl_in_reg[0]}]
-set_false_path -to [get_registers {*|peridot_hostbridge:*|peridot_board_i2c:*|sda_in_reg[0]}]
-set_false_path -to [get_registers {*|peridot_hostbridge:*|peridot_config:*|streset_reg[0]}]
-set_false_path -to [get_registers {*|peridot_hostbridge:*|peridot_config:*|perireset_reg[0]}]
-set_false_path -to [get_registers {*|peridot_hostbridge:*|peridot_config_proc:*|scl_in_reg}]
-set_false_path -to [get_registers {*|peridot_hostbridge:*|peridot_config_proc:*|sda_in_reg}]
-set_false_path -to [get_registers {*|peridot_hostbridge:*|peridot_config_proc:*|bootsel_reg}]
-set_false_path -to [get_registers {*|peridot_hostbridge:*|peridot_config_proc:*|nstatus_reg}]
-set_false_path -to [get_registers {*|peridot_hostbridge:*|peridot_config_ru:*|nconfig_in_reg[0]}]
+set_false_path -to [get_keepers {*|peridot_cam:*|peridot_cam_avs:*|fsync_in_reg[0]}]
+set_false_path -to [get_keepers {*|peridot_cam:*|peridot_cam_avs:*|done_in_reg[0]}]
+set_false_path -from [get_keepers {*|peridot_cam:*|peridot_cam_avs:*|fiforeset_reg}]

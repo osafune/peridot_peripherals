@@ -1,5 +1,5 @@
 The MIT License (MIT)
-Copyright (c) 2017,2018 J-7SYSTEM WORKS LIMITED.
+Copyright (c) 2014,2018 J-7SYSTEM WORKS LIMITED.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of 
 this software and associated documentation files (the "Software"), to deal in the 
@@ -17,20 +17,6 @@ FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER 
 IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION 
 WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-
-* HDL source
-
-*******************************************************************
-   (C)2016-2018, J-7SYSTEM WORKS LIMITED.  All rights Reserved.
-
-* This module is a free sourcecode and there is NO WARRANTY.
-* No restriction on use. You can use, modify and redistribute it
-  for personal, non-profit or commercial products UNDER YOUR
-  RESPONSIBILITY.
-* Redistributions of source code must retain the above copyright
-  notice.
-*******************************************************************
 
 
 * Canarium
@@ -76,9 +62,3 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //                                                                               //
 //         PERIDOT Project - https://github.com/osafune/peridot                  //
 // ***************************************************************************** //
-
-
-* Altera Legal Notice
-
-https://www.altera.co.jp/about/legal.html
-
