@@ -4,11 +4,12 @@
 #   DEGISN : S.OSAFUNE (J-7SYSTEM WORKS LIMITED)
 #   DATE   : 2018/10/21 -> 2018/11/24
 #   MODIFY : 2018/11/25 17.1 beta
+#            2019/01/14 17.1 beta update1
 #
 # ===================================================================
 #
 # The MIT License (MIT)
-# Copyright (c) 2018 J-7SYSTEM WORKS LIMITED.
+# Copyright (c) 2018-2019 J-7SYSTEM WORKS LIMITED.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy of
 # this software and associated documentation files (the "Software"), to deal in
@@ -261,6 +262,7 @@ add_interface ext_trig conduit end
 set_interface_property ext_trig associatedClock clock
 set_interface_property ext_trig associatedReset reset
 add_interface_port ext_trig coe_ext_trig trig Input 1
+add_interface_port ext_trig coe_ext_sel sel Output 4
 
 
 # 

@@ -4,10 +4,12 @@
 --     DESIGN : s.osafune@j7system.jp (J-7SYSTEM WORKS LIMITED)
 --     DATE   : 2018/10/21 -> 2018/11/24
 --
+--     MODITY : 2019/01/14 added EXTSEL register
+--
 -- ===================================================================
 
 -- The MIT License (MIT)
--- Copyright (c) 2018 J-7SYSTEM WORKS LIMITED.
+-- Copyright (c) 2018-2019 J-7SYSTEM WORKS LIMITED.
 --
 -- Permission is hereby granted, free of charge, to any person obtaining a copy of
 -- this software and associated documentation files (the "Software"), to deal in
@@ -31,7 +33,7 @@
 --
 -- CSR
 -- reg0 status  : bit4-3:mode, bit2:done, bit1:start, bit0:ready
--- reg1 control : bit15:init, bit14:trigedge, bit8-0:scannum
+-- reg1 control : bit15:init, bit14:trigedge, bit13-10:extsel, bit8-0:scannum
 -- reg2 scroll  : bit31-16:speed, bit8-0:vrampos
 -- reg3 bright  : bit23-16:red, bit15-8:green, bit7-0:blue
 --
@@ -58,8 +60,8 @@ entity peridot_led is
 		BIT_TOTAL_NUNBER		: integer := 63;	-- 1ビットのクロックカウント数 
 		BIT_SYMBOL0_WIDTH		: integer := 18;	-- シンボル0のパルス幅(BIT_SYMBOL1_WIDTH-1以下であること) 
 		BIT_SYMBOL1_WIDTH		: integer := 45;	-- シンボル1のパルス幅(BIT_TOTAL_NUNBER-4以下であること) 
---		RES_COUNT_NUMBER		: integer := 28		-- リセット期間のバイトカウント数 
-		RES_COUNT_NUMBER		: integer := 2		-- TEST
+		RES_COUNT_NUMBER		: integer := 28		-- リセット期間のバイトカウント数 
+--		RES_COUNT_NUMBER		: integer := 2		-- TEST
 	);
 	port(
 		csi_reset			: in  std_logic;
@@ -85,6 +87,7 @@ entity peridot_led is
 		-- External I/F
 
 		coe_ext_trig		: in  std_logic;
+		coe_ext_sel			: out std_logic_vector(3 downto 0);
 		coe_led				: out std_logic_vector(LED_CHANNEL_NUMBER-1 downto 0)
 	);
 end peridot_led;
@@ -104,6 +107,7 @@ architecture RTL of peridot_led is
 	signal mode_reg			: std_logic_vector(1 downto 0);
 	signal init_reg			: std_logic;
 	signal trigedge_reg		: std_logic;
+	signal extsel_reg		: std_logic_vector(3 downto 0);
 	signal scan_num_reg		: std_logic_vector(8 downto 0);
 	signal offset_reg		: std_logic_vector(18 downto 0);
 	signal scroll_reg		: std_logic_vector(15 downto 0);
@@ -160,9 +164,9 @@ begin
 	clock_sig <= csi_clk;
 
 	with (avs_csr_address) select avs_csr_readdata <=
-		X"0000" & init_reg & trigedge_reg & "00000" & scan_num_reg	when "01",
-		scroll_reg & "0000000" & offset_reg(18 downto 10)			when "10",
-		X"00" & br_red_reg & br_green_reg & br_blue_reg				when "11",
+		X"0000" & init_reg & trigedge_reg & extsel_reg & "0" & scan_num_reg	when "01",
+		scroll_reg & "0000000" & offset_reg(18 downto 10)					when "10",
+		X"00" & br_red_reg & br_green_reg & br_blue_reg						when "11",
 		X"000000" & "000" & mode_reg & donereq_reg & startreq_reg(0) & ready_sig when others;
 
 
@@ -208,6 +212,7 @@ begin
 			if (avs_csr_address = 1 and avs_csr_write = '1') then
 				init_reg <= avs_csr_writedata(15);
 				trigedge_reg <= avs_csr_writedata(14);
+				extsel_reg <= avs_csr_writedata(13 downto 10);
 				scan_num_reg <= avs_csr_writedata(8 downto 0);
 			end if;
 
@@ -236,6 +241,7 @@ begin
 							(continue_reg = '1')
 						) else '0';
 
+	coe_ext_sel <= extsel_reg;
 
 
 	----------------------------------------------------------------------
