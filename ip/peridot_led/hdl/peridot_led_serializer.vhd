@@ -3,6 +3,7 @@
 --
 --     DESIGN : s.osafune@j7system.jp (J-7SYSTEM WORKS LIMITED)
 --     DATE   : 2018/10/21 -> 2018/10/25
+--     MODIFY : 2019/06/01 s.osafune@j7system.jp
 --
 -- ===================================================================
 
@@ -28,17 +29,13 @@
 -- SOFTWARE.
 
 library ieee;
-library lpm;
-library altera_mf;
 use ieee.std_logic_1164.all;
 use ieee.std_logic_unsigned.all;
-use ieee.std_logic_arith.all;
-use ieee.std_logic_misc.all;
-use lpm.lpm_components.all;
-use altera_mf.altera_mf_components.all;
-
 
 entity peridot_led_serializer is
+	generic(
+		PROPAGATION_DELAY	: integer := 2	-- 次のチャネルへ伝搬するタイミング信号の遅延量
+	);
 	port(
 		clk			: in  std_logic;
 		init		: in  std_logic := '0';
@@ -59,8 +56,8 @@ architecture RTL of peridot_led_serializer is
 
 	signal data_reg			: std_logic_vector(7 downto 0);
 	signal led_reg			: std_logic := '0';
-	signal timing_reg		: std_logic;
-	signal load_reg			: std_logic;
+	signal timing_reg		: std_logic_vector(PROPAGATION_DELAY-1 downto 0);
+	signal load_reg			: std_logic_vector(PROPAGATION_DELAY-1 downto 0);
 
 begin
 
@@ -69,13 +66,18 @@ begin
 	process (clk) begin
 		if rising_edge(clk) then
 			if (init = '1') then
-				timing_reg <= '0';
-				load_reg <= '0';
+				timing_reg <= (others=>'0');
+				load_reg <= (others=>'0');
 				led_reg <= '0';
 
 			else
-				timing_reg <= timing;
-				load_reg <= load;
+				if (PROPAGATION_DELAY > 1) then
+					timing_reg <= timing_reg(timing_reg'left-1 downto 0) & timing;
+					load_reg <= load_reg(load_reg'left-1 downto 0) & load;
+				else
+					timing_reg(0) <= timing;
+					load_reg(0) <= load;
+				end if;
 
 				if (timing = '1') then
 					if (load = '1') then
@@ -112,8 +114,8 @@ begin
 		end if;
 	end process;
 
-	timing_next <= timing_reg;
-	load_next <= load_reg;
+	timing_next <= timing_reg(timing_reg'left);
+	load_next <= load_reg(load_reg'left);
 
 	led_out <= led_reg;
 
