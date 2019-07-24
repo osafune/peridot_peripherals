@@ -9,6 +9,7 @@ PERIDOTの標準ペリフェラル集です。
 
 - QsysまたはPlatform Designer 17.1以降
 - MAX10、CycloneIV、CycloneVを搭載し、UARTまたはFT245/FT240X/FT232Hが接続されたボード
+- スレーブペリフェラルのみ使う場合は、NiosII等の32bitのバスアクセスが可能なAvalon-MMマスタがあるシステム
 
 
 使い方
@@ -72,8 +73,9 @@ Qsysのメモリアドレス上に設定したVRAM領域からビットマップ
 
 PERIDOT LED
 -----------
-NeoPixelのシリアルLED(WS2812B等)を使用したLEDテープやマトリックスモジュール用のコントローラです。
-最大16チャネルの同時出力を行い、8192個までのシリアルLEDを制御することができます。
+WorldSemiのシリアルLED(WS2812B等)を使用したLEDテープやマトリックスモジュール用のコントローラです。
+最大16チャネルの同時出力を行い、最大65536個までのシリアルLEDを制御することができます。  
+ピクセルデータメモリ、レイヤー合成・エフェクト、外部トリガなど電飾衣装やPOVに適した機能を持ちます。
 
 
 PERIDOT Melody Chime
@@ -88,4 +90,4 @@ PERIDOT Melody Chime
 [The MIT License (MIT)](https://opensource.org/licenses/MIT)  
 詳細は[license.txt](https://raw.githubusercontent.com/osafune/peridot_newgen/master/license.txt)を参照ください。  
 
-Copyright (c) 2017,2018 J-7SYSTEM WORKS LIMITED.
+(C) 2017-2019 J-7SYSTEM WORKS LIMITED.
