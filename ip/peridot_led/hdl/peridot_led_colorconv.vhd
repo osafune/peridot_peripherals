@@ -3,7 +3,7 @@
 --
 --     DESIGN : s.osafune@j7system.jp (J-7SYSTEM WORKS LIMITED)
 --     DATE   : 2018/11/24 -> 2018/11/25
---     MODIFY : 2019/06/08 s.osafune@j7system.jp
+--     MODIFY : 2019/08/05 s.osafune@j7system.jp
 --
 -- ===================================================================
 
@@ -259,16 +259,16 @@ begin
 			end if;
 		end process;
 
-		-- MODE=00 : キー合成(RGB=000のピクセルは透明と見なす)
-		blend0_sig <= base_res_sig when(ov_zero_reg = '1') else layer_res_sig;
-
-		-- MODE=01 : 加算合成 
+		-- MODE=00 : 加算合成 
 		blend_add_sig <= ('0' & base_res_sig) + ('0' & layer_res_sig);
-		blend1_sig <= blend_add_sig(9 downto 0) when(blend_add_sig(10) = '0') else (others=>'1');
+		blend0_sig <= blend_add_sig(9 downto 0) when(blend_add_sig(10) = '0') else (others=>'1');
 
-		-- MODE=10 : 減算合成 
+		-- MODE=01 : 減算合成 
 		blend_sub_sig <= ('1' & base_res_sig) - ('0' & layer_res_sig);
-		blend2_sig <= blend_sub_sig(9 downto 0) when(blend_sub_sig(10) = '1') else (others=>'0');
+		blend1_sig <= blend_sub_sig(9 downto 0) when(blend_sub_sig(10) = '1') else (others=>'0');
+
+		-- MODE=10 : キー合成(RGB=000のピクセルは透明と見なす)
+		blend2_sig <= base_res_sig when(ov_zero_reg = '1') else layer_res_sig;
 
 		-- MODE=11 : 比較(明)
 		blend3_sig <= base_res_sig when(blend_sub_sig(10) = '1') else layer_res_sig;
