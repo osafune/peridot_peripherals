@@ -7,16 +7,16 @@ PERIDOTの標準ペリフェラル集です。
 対象となるツール
 ----------------
 
-- QsysまたはPlatform Designer 17.1以降
-- MAX10、CycloneIV、CycloneVを搭載し、UARTまたはFT245/FT240X/FT232Hが接続されたボード
+- QsysまたはPlatform Designer 17.1以降、およびNiosII SBT 17.0以降
+- MAX10、CycloneIV、CycloneVを搭載し、UARTまたはFT245/FT240X/FT232Hが接続されたボード（PERIDOT Hostbridgeを使う場合）
 - スレーブペリフェラルのみ使う場合は、NiosII等の32bitのバスアクセスが可能なAvalon-MMマスタがあるシステム
-
 
 使い方
 ------
 
 - ip以下のフォルダをcloneして、プロジェクトのローカルに保存するか、保存場所にライブラリパスを通します。
 - Qsys/Platform Designerでコンポーンネントをaddして適宜操作します。
+- NiosII SBT用のドライバ、ソフトウェアパッケージを使う場合は、必ずプロジェクトローカルのipフォルダ以下に保存してください。
 
 ペリフェラルのレジスタについてはdoc以下のpdfを参照してください。
 
@@ -57,6 +57,12 @@ PERIDOT SERVO
 -------------
 PERIDOT標準ペリフェラルで使用されるRCサーボ用コントローラです。  
 周期20ms、パルス幅0.5～2.5msのPWM波形を256段階で出力します。また、設定値をアナログ出力するための1bitΔΣ変調出力を持ちます。  
+
+
+PERIDOT SDIF
+------------
+SPI接続のSDカードI/FペリフェラルおよびNiosII SBT用のドライバ・ソフトウェアパッケージです。  
+elfファイルを実行するブートローダーや、NiosII HAL上で動作する標準POSIX形式のファイルシステムを提供します。  
 
 
 PERIDOT WSG
