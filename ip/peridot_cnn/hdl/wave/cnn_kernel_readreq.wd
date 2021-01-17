@@ -1,0 +1,10 @@
+{head: {text:"カーネルモジュールのメモリ読み込み要求 (バースト5の例)"},
+signal: [
+	{name:'clk'				,wave:"P.............."},
+	{name:'read_address'	,wave:"x.=.|x.........", data:"addr"},
+	{name:'read_burstcount'	,wave:"x.=.|x.........", data:"5"},
+	{name:'read_request'	,wave:"0.1.|x......0.x"},
+	{name:'read_complete'	,wave:"0...........10."},
+	{name:'read_data'		,wave:"x....===x|==x..", data:"d0 d1 d2 d3 d4"},
+	{name:'read_datavalid'	,wave:"0....1..0.1.0.."},
+]}

@@ -1,0 +1,8 @@
+{head: {text:"書き戻しモジュールのアボート処理"},
+signal: [
+	{name:'clk'			,wave:"P..........."},
+
+	{name:'init'		,wave:"0.1|..x|.0.."},
+	{name:'start'		,wave:"0.x|.0......"},
+	{name:'ready'		,wave:"0..|.1......"},
+]}

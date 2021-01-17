@@ -1,0 +1,11 @@
+{head: {text:"カーネルモジュールの演算データ出力"},
+signal: [
+	{name:'clk'				,wave:"P........................."},
+	{name:'ready'			,wave:"10|.....................1."},
+
+	{name:'sto_ready'		,wave:"x.|.0.1..|.x1..|.x1.|01x.."},
+	{name:'sto_valid'		,wave:"0...1......01....01....0.."},
+	{name:'sto_data'		,wave:"x.|.5..55|5x333|3x44|4.x..", data:"p00 p01 ... p0n p10 p11 ... p1n p2n ... pmn"},
+	{name:'sto_endofline'	,wave:"x.|.0....|10...|10..|1.x.."},
+	{name:'sto_endofframe'	,wave:"x.|.0....|.....|....|1.x.."},
+]}

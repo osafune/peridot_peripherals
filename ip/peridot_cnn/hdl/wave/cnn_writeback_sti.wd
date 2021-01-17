@@ -1,0 +1,11 @@
+{head: {text:"書き戻しモジュールの演算データ入力"},
+signal: [
+	{name:'clk'				,wave:"P............................."},
+	{name:'ready'			,wave:"10|........................|1."},
+
+	{name:'sti_ready'		,wave:"01.....0.1.0.1..........010..."},
+	{name:'sti_valid'		,wave:"x0..1.01...0.1|....|...|..x|.."},
+	{name:'sti_data'		,wave:"x.|.55x5..5x.5|5333|344|4.x|..", data:"p00 p01 p02 p03 ... p0n p10 p11 ... p1n p2n ... pmn"},
+	{name:'sti_endofline'	,wave:"x.|.0.x0...x.0|10..|10.|1.x|.."},
+	{name:'sti_endofframe'	,wave:"x.|.0.x0...x.0|....|...|1.x|.."},
+]}

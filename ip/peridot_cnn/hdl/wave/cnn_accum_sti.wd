@@ -1,0 +1,18 @@
+{head: {text:"累算モジュールの演算データ入力 (カーネル数4の場合)"},
+signal: [
+	{name:'clk'					,wave:"P.........................."},
+	{name:'ready'				,wave:"10|.....................|1."},
+
+	{name:'kernel_ena[3..0]'	,wave:"x=......................|x.", data:"0111b"},
+	{name:'sti_ready'			,wave:"01..0.1.0.10.1.......010..."},
+	{name:'sti_valid[0]'		,wave:"x0..1...01.....|....|..x|.."},
+	{name:'sti_data[31..0]'		,wave:"x.|.5..5x5.5..5|5333|3.x|..", data:"p00 p01 p02 p03 ... p0n p10 p11 ... pmn"},
+	{name:'sti_valid[1]'		,wave:"x0...1..01.0.1.|....|..x|.."},
+	{name:'sti_data[63..32]'	,wave:"x.|..6.6x6.x.66|6444|4.x|..", data:"p00 p01 p02 p03 ... p0n p10 p11 ... pmn"},
+	{name:'sti_valid[2]'		,wave:"x0....1.01.....|....|..x|.."},
+	{name:'sti_data[95..64]'	,wave:"x.|...77x7.7..7|7888|8.x|..", data:"p00 p01 p02 p03 ... p0n p10 p11 ... pmn"},
+	{name:'sti_valid[3]'		,wave:"x.|............|....|...|.."},
+	{name:'sti_data[127..96]'	,wave:"x.|............|....|...|.."},
+	{name:'sti_endofline'		,wave:"x.|.0...x0.....|10..|1.x|.."},
+	{name:'sti_endofframe'		,wave:"x.|.0...x0.....|....|1.x|.."},
+]}

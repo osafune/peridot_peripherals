@@ -1,0 +1,10 @@
+{head: {text:"書き戻しモジュールの開始処理"},
+signal: [
+	{name:'clk'			,wave:"P............"},
+
+	{name:'init'		,wave:"0............"},
+	{name:'start'		,wave:"0..1x...|.0.."},
+	{name:'ready'		,wave:"1...0...|..1."},
+	{name:'<PARAM>'		,wave:"=..=....|..x.", data:"changeable hold"},
+]}
+

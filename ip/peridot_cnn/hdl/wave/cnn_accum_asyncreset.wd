@@ -1,0 +1,14 @@
+{head: {text:"累算モジュールの非同期リセット処理"},
+signal: [
+	{name:'reset'		,wave:"1..0......"},
+	{name:'clk'			,wave:"x..P......"},
+
+	{name:'init'		,wave:"x..0......"},
+	{name:'start'		,wave:"x..0......"},
+	{name:'ready'		,wave:"x..1......"},
+	{name:'error'		,wave:"x..0......"},
+	{name:'status'		,wave:"x..=......", data:["no error"]},
+	{},
+	{name:'sti_ready'	,wave:"x..0......"},
+	{name:'read_request',wave:"x..0......"},
+]}

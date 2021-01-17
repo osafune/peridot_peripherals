@@ -1,0 +1,11 @@
+{head: {text:"書き戻しモジュールのメモリ書き込み要求 (バースト5の例)"},
+signal: [
+	{name:'clk'				,wave:"P.............."},
+	{name:'write_address'	,wave:"x.=.|x.........", data:"addr"},
+	{name:'write_burstcount',wave:"x.=.|x.........", data:"5"},
+	{name:'write_request'	,wave:"0.1.|x......0.x"},
+	{name:'write_burstend'	,wave:"0..........10.."},
+	{name:'write_data'		,wave:"x.=...===..=x..", data:"d0 d1 d2 d3 d4"},
+	{name:'write_byteenable',wave:"x.=...===..=x..", data:"be0 be1 be2 be3 be4"},
+	{name:'write_dataack'	,wave:"0....1..0.1.0.."},
+]}

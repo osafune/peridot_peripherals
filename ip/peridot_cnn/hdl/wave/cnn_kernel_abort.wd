@@ -1,0 +1,10 @@
+{head: {text:"カーネルモジュールのアボート処理"},
+signal: [
+	{name:'clk'			,wave:"P..........."},
+
+	{name:'init'		,wave:"0.1|..x|.0.."},
+	{name:'ready'		,wave:"0..|.1......"},
+	{name:'error'		,wave:"=..|........", data:"valid"},
+	{name:'status'		,wave:"=..|........", data:"valid"},
+	{name:'param_done'	,wave:"1..|.0......"},
+]}
