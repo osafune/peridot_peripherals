@@ -4,6 +4,7 @@
 //   DEGISN : S.OSAFUNE (J-7SYSTEM WORKS LIMITED)
 //   DATE   : 2015/05/21 -> 2015/05/22
 //   MODIFY : 2017/05/13 17.0対応 
+//          : 2022/01/11 i2crst,divrefの初期値設定追加 
 //
 // ===================================================================
 //
@@ -30,9 +31,16 @@
 //
 
 // reg00(+0)  bit15:irqena(RW), bit12:sta(WO), bit11:stp(WO), bit10:rd_nwr(WO), bit9:start(W)/ready(R), bit8:nack(RW), bit7-0:txdata(W)/rxdata(R)
-// reg01(+4)  bit15:devrst(RW), bit9-0:clkdiv(RW)
+// reg01(+4)  bit15:devrst(RW), bit14:initfaile(RO), bit9-0:clkdiv(RW)
 
-module peridot_i2c (
+// Verilog-2001 / IEEE 1364-2001
+`default_nettype none
+
+module peridot_i2c #(
+	parameter AVS_CLOCKFREQ			= 25000000,		// peripheral drive clock freq(Hz) - up to 100MHz
+	parameter REG_INIT_I2CRST		= 1,			// i2crst initialize value : 0 or 1
+	parameter REG_INIT_DIVREFREG	= 1023			// divref initialize value : 0-1023 (BitRate[bps] = <csi_clk>[Hz] / ((clkdiv + 4) * 4) )
+) (
 	// Interface: clk
 	input wire			csi_clk,
 	input wire			rsi_reset,
@@ -63,20 +71,24 @@ module peridot_i2c (
 /* ----- 内部パラメータ ------------------ */
 
 	localparam	STATE_IDLE		= 5'd0,
-				STATE_INIT		= 5'd1,
-				STATE_SC_1		= 5'd2,
-				STATE_SC_2		= 5'd3,
-				STATE_SC_3		= 5'd4,
-				STATE_SC_4		= 5'd5,
-				STATE_SC_5		= 5'd6,
-				STATE_BIT_ENTRY	= 5'd7,
-				STATE_BIT_1		= 5'd8,
-				STATE_BIT_2		= 5'd9,
-				STATE_BIT_3		= 5'd10,
-				STATE_BIT_4		= 5'd11,
-				STATE_PC_1		= 5'd13,
-				STATE_PC_2		= 5'd14,
-				STATE_PC_3		= 5'd15,
+				STATE_INIT_ENTRY= 5'd1,
+				STATE_INIT_1	= 5'd2,
+				STATE_INIT_2	= 5'd3,
+				STATE_INIT_3	= 5'd4,
+				STATE_INIT_4	= 5'd5,
+				STATE_SC_1		= 5'd6,
+				STATE_SC_2		= 5'd7,
+				STATE_SC_3		= 5'd8,
+				STATE_SC_4		= 5'd9,
+				STATE_SC_5		= 5'd10,
+				STATE_BIT_ENTRY	= 5'd11,
+				STATE_BIT_1		= 5'd12,
+				STATE_BIT_2		= 5'd13,
+				STATE_BIT_3		= 5'd14,
+				STATE_BIT_4		= 5'd15,
+				STATE_PC_1		= 5'd16,
+				STATE_PC_2		= 5'd17,
+				STATE_PC_3		= 5'd18,
 				STATE_DONE		= 5'd31;
 
 	localparam	STATE_IO_IDLE	= 5'd0,
@@ -100,6 +112,7 @@ module peridot_i2c (
 	reg				sendstp_reg;
 	reg				i2crst_reg;
 	reg  [9:0]		divref_reg;
+	reg				initfaile_reg;
 
 	reg  [4:0]		state_reg;
 	reg				ready_reg;
@@ -129,38 +142,32 @@ module peridot_i2c (
 
 	assign avs_readdata =
 			(avs_address == 1'd0)? {16'b0, irqena_reg, 5'b0, ready_reg, rxbyte_reg[0], rxbyte_reg[8:1]}:
-			(avs_address == 1'd1)? {16'b0, i2crst_reg, 5'b0, divref_reg} :
+			(avs_address == 1'd1)? {16'b0, i2crst_reg, initfaile_reg, 4'b0, divref_reg} :
 			{32{1'bx}};
 
 	assign begintransaction_sig = (avs_write && avs_address == 1'd0 && avs_writedata[9]);
 
 	always @(posedge clock_sig or posedge reset_sig) begin
 		if (reset_sig) begin
-			i2crst_reg <= 1'b1;
+			i2crst_reg <= REG_INIT_I2CRST[0];
 			irqena_reg <= 1'b0;
-			divref_reg <= 10'h3ff;
+			divref_reg <= REG_INIT_DIVREFREG[9:0];
 		end
 		else begin
 
-			// リセットレジスタの読み書き 
+			// リセットレジスタおよび分周レジスタの読み書き 
 			if (avs_write && avs_address == 1'd1) begin
 				i2crst_reg <= avs_writedata[15];
+				divref_reg <= avs_writedata[9:0];
 			end
 
-			// ステータスレジスタの読み書き 
+			// 割り込みレジスタの読み書き 
 			if (i2crst_reg) begin
 				irqena_reg <= 1'b0;
 			end
 			else begin
-				if (avs_write && ready_reg) begin
-					case (avs_address)
-					1'd0 : begin
-						irqena_reg  <= avs_writedata[15];
-					end
-					1'd1 : begin
-						divref_reg  <= avs_writedata[9:0];
-					end
-					endcase
+				if (avs_write && avs_address == 1'd0 && ready_reg) begin
+					irqena_reg <= avs_writedata[15];
 				end
 			end
 
@@ -173,17 +180,19 @@ module peridot_i2c (
 
 	always @(posedge clock_sig or posedge reset_sig) begin
 		if (reset_sig) begin
-			state_reg  <= STATE_INIT;
-			ready_reg  <= 1'b0;
+			state_reg <= STATE_INIT_ENTRY;
+			ready_reg <= 1'b0;
 			setsclreq_reg <= 1'b0;
 			setsdareq_reg <= 1'b0;
+			initfaile_reg <= 1'b0;
 		end
 		else begin
 			if (i2crst_reg) begin
-				state_reg  <= STATE_INIT;
-				ready_reg  <= 1'b0;
+				state_reg <= STATE_INIT_ENTRY;
+				ready_reg <= 1'b0;
 				setsclreq_reg <= 1'b0;
 				setsdareq_reg <= 1'b0;
+				initfaile_reg <= 1'b0;
 			end
 			else begin
 
@@ -191,10 +200,54 @@ module peridot_i2c (
 
 				// 初期化 
 
-				STATE_INIT : begin
-					if (sda_sig == 1'b1 && scl_sig == 1'b1) begin
-						state_reg <= STATE_IDLE;
-						ready_reg <= 1'b1;
+				STATE_INIT_ENTRY : begin
+					state_reg <= STATE_INIT_1;
+					setsdareq_reg <= 1'b1;
+					pindata_reg <= 1'b1;
+					bitcount <= 1'd0;
+				end
+				STATE_INIT_1 : begin				// SCL = 'L'
+					if (stateio_ack_sig) begin
+						state_reg <= STATE_INIT_2;
+						setsclreq_reg <= 1'b1;
+						setsdareq_reg <= 1'b0;
+						pindata_reg <= 1'b0;
+					end
+				end
+				STATE_INIT_2 : begin				// SDA check
+					if (stateio_ack_sig) begin
+						setsclreq_reg <= 1'b0;
+						setsdareq_reg <= 1'b1;
+
+						if (sda_sig) begin				// SDA = 'L' (STOP condition)
+							state_reg <= STATE_PC_1;
+							pindata_reg <= 1'b0;
+						end
+						else begin
+							state_reg <= STATE_INIT_3;
+							pindata_reg <= 1'b1;
+						end
+					end
+				end
+				STATE_INIT_3 : begin				// SCL = 'H'
+					if (stateio_ack_sig) begin
+						state_reg <= STATE_INIT_4;
+						setsclreq_reg <= 1'b1;
+						setsdareq_reg <= 1'b0;
+						pindata_reg <= 1'b1;
+					end
+				end
+				STATE_INIT_4 : begin				// next bit
+					if (stateio_ack_sig) begin
+						bitcount <= bitcount + 1'd1;
+
+						if (bitcount == 4'd8) begin
+							state_reg <= STATE_DONE;
+							initfaile_reg <= 1'b1;
+						end
+						else begin
+							state_reg <= STATE_INIT_1;
+						end
 					end
 				end
 
@@ -229,14 +282,14 @@ module peridot_i2c (
 				STATE_SC_1 : begin				// SCL = 'H'
 					state_reg <= STATE_SC_2;
 					setsclreq_reg <= 1'b1;
-					pindata_reg   <= 1'b1;
+					pindata_reg <= 1'b1;
 				end
 				STATE_SC_2 : begin				// SDA = 'L'
 					if (stateio_ack_sig) begin
 						state_reg <= STATE_SC_3;
 						setsclreq_reg <= 1'b0;
 						setsdareq_reg <= 1'b1;
-						pindata_reg   <= 1'b0;
+						pindata_reg <= 1'b0;
 					end
 				end
 				STATE_SC_3 : begin				// tSU(STA) wait
@@ -249,7 +302,7 @@ module peridot_i2c (
 						state_reg <= STATE_SC_5;
 						setsclreq_reg <= 1'b1;
 						setsdareq_reg <= 1'b0;
-						pindata_reg   <= 1'b0;
+						pindata_reg <= 1'b0;
 					end
 				end
 				STATE_SC_5 : begin
@@ -265,7 +318,7 @@ module peridot_i2c (
 				STATE_BIT_ENTRY : begin				// data set 
 					state_reg <= STATE_BIT_1;
 					setsdareq_reg <= 1'b1;
-					pindata_reg   <= txbyte_reg[8];
+					pindata_reg <= txbyte_reg[8];
 
 					bitcount <= 1'd0;
 				end
@@ -274,7 +327,7 @@ module peridot_i2c (
 						state_reg <= STATE_BIT_2;
 						setsclreq_reg <= 1'b1;
 						setsdareq_reg <= 1'b0;
-						pindata_reg   <= 1'b1;
+						pindata_reg <= 1'b1;
 					end
 				end
 				STATE_BIT_2 : begin					// data latch & shift
@@ -296,7 +349,7 @@ module peridot_i2c (
 						setsclreq_reg <= 1'b0;
 						setsdareq_reg <= 1'b1;
 
-						if (bitcount == 8) begin
+						if (bitcount == 4'd8) begin
 							if (sendstp_reg) begin		// SDA = 'L' (STOP condition)
 								state_reg <= STATE_PC_1;
 								pindata_reg <= 1'b0;
@@ -323,7 +376,7 @@ module peridot_i2c (
 						state_reg <= STATE_PC_2;
 						setsclreq_reg <= 1'b1;
 						setsdareq_reg <= 1'b0;
-						pindata_reg   <= 1'b1;
+						pindata_reg <= 1'b1;
 					end
 				end
 				STATE_PC_2 : begin					// tH(STO) wait
@@ -336,7 +389,7 @@ module peridot_i2c (
 						state_reg <= STATE_DONE;
 						setsclreq_reg <= 1'b0;
 						setsdareq_reg <= 1'b1;
-						pindata_reg   <= 1'b1;
+						pindata_reg <= 1'b1;
 					end
 				end
 
@@ -375,8 +428,8 @@ module peridot_i2c (
 			i2c_sda_in_reg <= 2'b00;
 
 			state_io_reg <= STATE_IO_IDLE;
-			scl_oe_reg   <= 1'b0;
-			sda_oe_reg   <= 1'b0;
+			scl_oe_reg <= 1'b0;
+			sda_oe_reg <= 1'b0;
 		end
 		else begin
 			i2c_scl_in_reg <= {i2c_scl_in_reg[0], i2c_scl};
@@ -384,8 +437,8 @@ module peridot_i2c (
 
 			if (i2crst_reg) begin
 				state_io_reg <= STATE_IO_IDLE;
-				scl_oe_reg   <= 1'b0;
-				sda_oe_reg   <= 1'b0;
+				scl_oe_reg <= 1'b0;
+				sda_oe_reg <= 1'b0;
 			end
 			else begin
 				case (state_io_reg)
@@ -393,32 +446,35 @@ module peridot_i2c (
 				STATE_IO_IDLE : begin
 					if (setsclreq_reg) begin
 						state_io_reg <= STATE_IO_SETSCL;
-						scl_oe_reg   <= ~pindata_reg;
+						scl_oe_reg <= ~pindata_reg;
 					end
 					else if (setsdareq_reg) begin
 						state_io_reg <= STATE_IO_SETSDA;
-						sda_oe_reg   <= ~pindata_reg;
+						sda_oe_reg <= ~pindata_reg;
 					end
 				end
 
 				// SCL set
 				STATE_IO_SETSCL : begin
-					if (scl_sig != scl_oe_reg) begin
-						state_io_reg <= STATE_IO_WAIT;
-						divcount     <= divref_reg;
-					end
+					state_io_reg <= STATE_IO_WAIT;
+					divcount <= divref_reg;
 				end
 
 				// SDA set
 				STATE_IO_SETSDA : begin
 					state_io_reg <= STATE_IO_WAIT;
-					divcount     <= divref_reg;
+					divcount <= divref_reg;
 				end
 
 				// wait
 				STATE_IO_WAIT : begin
 					if (divcount == 0) begin
-						state_io_reg <= STATE_IO_DONE;
+						if (setsclreq_reg && scl_oe_reg == 1'b0 && scl_sig == 1'b0) begin	// SCLストレッチ 
+							state_io_reg <= STATE_IO_WAIT;
+						end
+						else begin
+							state_io_reg <= STATE_IO_DONE;
+						end
 					end
 					else begin
 						divcount <= divcount - 1'd1;

@@ -4,6 +4,7 @@
 //   DEGISN : S.OSAFUNE (J-7SYSTEM WORKS LIMITED)
 //   DATE   : 2017/04/04 -> 2017/04/07
 //   MODIFY : 2018/01/22 SCCB追加、レジスタマップ変更 
+//            2021/12/31 SCCBインスタンスオプション,連続キャプチャモード追加 
 //
 // ===================================================================
 //
@@ -30,14 +31,16 @@
 //
 
 // レジスタマップ 
-// reg00 : bit31:irqena  bit30:irqreq  bit1:ready  bit0:start
-// reg01 : bit15-0:Transfer Cycle
+// reg00 : bit31:irqena  bit30:irqreq  bit2:continuous  bit1:ready  bit0:start
+// reg01 : bit31:camreset  bit15-0:Transfer Cycle (64 Bytes/cycle)
 // reg02 : bit31-6:Destination Address
-// reg03 : SCCB register
+// reg03 : SCCB/I2C register
 
 module peridot_cam_avs #(
 	parameter AVS_CLOCKFREQ			= 25000000,			// peripheral drive clock freq(Hz) - up to 100MHz
-	parameter SCCB_CLOCKFREQ		= 200000			// SCCB clock freq(Hz) - 200kHz typ
+	parameter USE_SCCBINTERFACE		= "ON",				// Use internal sccb module
+	parameter USE_PERIDOT_I2C		= "OFF",			// Instance PERIDOT_I2C as an sccb module
+	parameter SCCB_CLOCKFREQ		= 400000			// SCCB clock freq(Hz) - 400kHz typ
 ) (
 	// Interface: clk
 	input wire			csi_global_reset,
@@ -53,7 +56,7 @@ module peridot_cam_avs #(
 	output wire			avs_s1_irq,
 
 	// External Interface
-	output wire			start,						// '1'パルスでフレーム処理開始 
+	output wire			execution,					// '1'でフレーム処理をリクエスト 
 	input wire			done,
 	input wire			framesync,					// フレーム開始信号 '0'→'1'の立ち上がりでフレーム同期 
 	output wire			infiforeset,				// 入力FIFO非同期リセット出力 
@@ -62,8 +65,8 @@ module peridot_cam_avs #(
 	output wire [15:0]	capcycle_num,
 
 	output wire			cam_reset_n,
-	output wire			sccb_sck,
-	output wire			sccb_data
+	inout wire			sccb_sck,
+	inout wire			sccb_data
 );
 
 
@@ -73,6 +76,7 @@ module peridot_cam_avs #(
 
 /* ----- 内部パラメータ ------------------ */
 
+	localparam I2C_DIVREF_VALUE = ((AVS_CLOCKFREQ / SCCB_CLOCKFREQ) + 3) / 4 - 4;
 
 
 /* ※以降のパラメータ宣言は禁止※ */
@@ -86,15 +90,16 @@ module peridot_cam_avs #(
 
 	reg  [2:0]		fsync_in_reg;
 	wire			fsync_rise_sig;
-	wire			fsync_fall_sig;
 	reg  [2:0]		done_in_reg;
 	wire			done_rise_sig;
 	wire			done_fall_sig;
 
 	reg				execution_reg;
 	reg				fiforeset_reg;
+	reg				continuous_reg;
 	reg				irqena_reg;
 	reg				irqreq_reg;
+	reg				camreset_reg;
 	reg  [31:6]		capaddress_reg;
 	reg  [15:0]		capcyclenum_reg;
 
@@ -102,8 +107,7 @@ module peridot_cam_avs #(
 	wire			sccb_irq_sig;
 	wire			sccb_waitrequest_sig;
 	wire [31:0]		sccb_readdata_sig;
-	wire			camreset_sig;
-	wire			sccb_clk_oe_sig, sccb_data_oe_sig;
+	wire			sccb_clk_oe_sig, sccb_data_oe_sig, sccb_clk_sig, sccb_data_sig;
 
 
 /* ※以降のwire、reg宣言は禁止※ */
@@ -128,22 +132,18 @@ module peridot_cam_avs #(
 	end
 
 	assign fsync_rise_sig = (!fsync_in_reg[2] && fsync_in_reg[1])? 1'b1 : 1'b0;
-//	assign fsync_fall_sig = (fsync_in_reg[2] && !fsync_in_reg[1])? 1'b1 : 1'b0;
-
 	assign done_rise_sig = (!done_in_reg[2] && done_in_reg[1])? 1'b1 : 1'b0;
-//	assign done_fall_sig = (done_in_reg[2] && !done_in_reg[1])? 1'b1 : 1'b0;
-
 
 
 	///// Avalon-MMインターフェース /////
 
-	assign start = (execution_reg && fsync_rise_sig);
+	assign execution = execution_reg;
 	assign infiforeset = fiforeset_reg;
 
 	assign capaddress_top = {capaddress_reg, 6'b0};
 	assign capcycle_num = capcyclenum_reg;
 
-	assign avs_s1_readdata = (avs_s1_address == 2'h0)? {irqena_reg, irqreq_reg, 28'b0, ~execution_reg, 1'b0} :
+	assign avs_s1_readdata = (avs_s1_address == 2'h0)? {irqena_reg, irqreq_reg, 27'b0, continuous_reg, ~execution_reg, 1'b0} :
 							 (avs_s1_address == 2'h1)? {16'b0, capcyclenum_reg} :
 							 (avs_s1_address == 2'h2)? {capaddress_reg, 6'b0} :
 							 (avs_s1_address == 2'h3)? sccb_readdata_sig :
@@ -160,8 +160,10 @@ module peridot_cam_avs #(
 		if (reset_sig) begin
 			execution_reg <= 1'b0;
 			fiforeset_reg <= 1'b1;
+			continuous_reg <= 1'b0;
 			irqena_reg <= 1'b0;
 			irqreq_reg <= 1'b0;
+			camreset_reg <= 1'b1;
 		end
 		else begin
 			if (fsync_rise_sig && execution_reg) begin
@@ -177,7 +179,7 @@ module peridot_cam_avs #(
 				end
 			end
 			else if (done_rise_sig) begin
-				execution_reg <= 1'b0;
+				execution_reg <= continuous_reg;
 			end
 
 			if (done_rise_sig) begin
@@ -190,10 +192,12 @@ module peridot_cam_avs #(
 			if (avs_s1_write) begin
 				case (avs_s1_address)
 					2'h0 : begin
+						continuous_reg <= avs_s1_writedata[2];
 						irqena_reg <= avs_s1_writedata[31];
 					end
 					2'h1 : begin
 						capcyclenum_reg <= avs_s1_writedata[15:0];
+						camreset_reg <= avs_s1_writedata[31];
 					end
 					2'h2 : begin
 						capaddress_reg <= avs_s1_writedata[31:6];
@@ -205,29 +209,68 @@ module peridot_cam_avs #(
 	end
 
 
-	peridot_cam_sccb #(
-		.AVS_CLOCKFREQ	(AVS_CLOCKFREQ),
-		.SCCB_CLOCKFREQ	(SCCB_CLOCKFREQ)
-	)
-	u_sccb (
-		.csi_clk		(avs_clk_sig),
-		.rsi_reset		(reset_sig),
-		.avs_read		(avs_s1_read),
-		.avs_readdata	(sccb_readdata_sig),
-		.avs_write		(sccb_write_sig),
-		.avs_writedata	(avs_s1_writedata),
-		.avs_waitrequest(sccb_waitrequest_sig),
-		.ins_irq		(sccb_irq_sig),
+generate
+	if (USE_SCCBINTERFACE == "ON" && USE_PERIDOT_I2C == "OFF") begin
+		peridot_cam_sccb #(
+			.AVS_CLOCKFREQ	(AVS_CLOCKFREQ),
+			.SCCB_CLOCKFREQ	(SCCB_CLOCKFREQ)
+		)
+		u_sccb (
+			.csi_clk		(avs_clk_sig),
+			.rsi_reset		(reset_sig),
+			.avs_read		(avs_s1_read),
+			.avs_readdata	(sccb_readdata_sig),
+			.avs_write		(sccb_write_sig),
+			.avs_writedata	(avs_s1_writedata),
+			.avs_waitrequest(sccb_waitrequest_sig),
+			.ins_irq		(sccb_irq_sig),
 
-		.cam_reset_out	(camreset_sig),
-		.sccb_clk_oe	(sccb_clk_oe_sig),
-		.sccb_data_oe	(sccb_data_oe_sig)
-	);
+			.sccb_clk_oe	(sccb_clk_oe_sig),
+			.sccb_data_oe	(sccb_data_oe_sig)
+		);
+	end
+	else if (USE_SCCBINTERFACE == "ON" && USE_PERIDOT_I2C == "ON") begin
+		peridot_i2c #(
+			.AVS_CLOCKFREQ		(AVS_CLOCKFREQ),
+			.REG_INIT_I2CRST	(0),
+			.REG_INIT_DIVREFREG	(I2C_DIVREF_VALUE)
+		)
+		u_i2c (
+			.csi_clk		(avs_clk_sig),
+			.rsi_reset		(reset_sig),
+			.avs_address	(1'd0),
+			.avs_read		(avs_s1_read),
+			.avs_readdata	(sccb_readdata_sig),
+			.avs_write		(sccb_write_sig),
+			.avs_writedata	(avs_s1_writedata),
+			.ins_irq		(sccb_irq_sig),
 
-	assign cam_reset_n = ~camreset_sig;
+			.i2c_reset_out	(),
+			.i2c_scl_oe		(sccb_clk_oe_sig),
+			.i2c_sda_oe		(sccb_data_oe_sig),
+			.i2c_scl		(sccb_clk_sig),
+			.i2c_sda		(sccb_data_sig)
+		);
+
+		assign sccb_waitrequest_sig = 1'b0;
+	end
+	else begin
+		assign sccb_readdata_sig = {32{1'bx}};
+		assign sccb_waitrequest_sig = 1'b0;
+		assign sccb_irq_sig = 1'b0;
+
+		assign sccb_clk_oe_sig = 1'b0;
+		assign sccb_data_oe_sig = 1'b0;
+	end
+endgenerate
+
+
+	assign cam_reset_n = ~camreset_reg;
 
 	assign sccb_sck = (sccb_clk_oe_sig)? 1'b0 : 1'bz;
+	assign sccb_clk_sig = sccb_sck;
 	assign sccb_data = (sccb_data_oe_sig)? 1'b0 : 1'bz;
+	assign sccb_data_sig = sccb_data;
 
 
 

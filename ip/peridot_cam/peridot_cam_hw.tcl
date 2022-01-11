@@ -4,6 +4,8 @@
 #   DEGISN : S.OSAFUNE (J-7SYSTEM WORKS LIMITED)
 #   DATE   : 2017/04/05 -> 2017/04/06
 #   MODIFY : 2018/11/26 17.1 beta
+#            2021/12/28 17.2 beta
+#            2022/01/10 17.3 beta
 #
 # ===================================================================
 #
@@ -40,35 +42,74 @@ package require -exact qsys 16.1
 # 
 set_module_property NAME peridot_cam
 set_module_property DISPLAY_NAME "PERIDOT CAM interface (Beta test version)"
-set_module_property DESCRIPTION "PERIDOT Camera input interface"
+set_module_property DESCRIPTION "PERIDOT OmniVision DVP capture interface"
 set_module_property GROUP "PERIDOT Peripherals"
 set_module_property AUTHOR "J-7SYSTEM WORKS LIMITED"
-set_module_property VERSION 17.1
+set_module_property VERSION 17.3
 set_module_property INTERNAL false
 set_module_property OPAQUE_ADDRESS_MAP true
 set_module_property INSTANTIATE_IN_SYSTEM_MODULE true
 set_module_property HIDE_FROM_SOPC true
 set_module_property HIDE_FROM_QUARTUS true
-set_module_property EDITABLE true
+set_module_property EDITABLE false
+set_module_property ELABORATION_CALLBACK elaboration_callback
 
 
 # 
 # file sets
 # 
-add_fileset QUARTUS_SYNTH QUARTUS_SYNTH "" ""
-set_fileset_property QUARTUS_SYNTH TOP_LEVEL peridot_cam
-set_fileset_property QUARTUS_SYNTH ENABLE_RELATIVE_INCLUDE_PATHS false
-set_fileset_property QUARTUS_SYNTH ENABLE_FILE_OVERWRITE_MODE false
-add_fileset_file peridot_cam.v		VERILOG PATH hdl/peridot_cam.v TOP_LEVEL_FILE
-add_fileset_file paridot_cam_avm.v	VERILOG PATH hdl/paridot_cam_avm.v
-add_fileset_file peridot_cam_avs.v	VERILOG PATH hdl/peridot_cam_avs.v
-add_fileset_file peridot_i2c.v		VERILOG PATH hdl/peridot_cam_sccb.v
-add_fileset_file peridot_cam.sdc	SDC PATH hdl/peridot_cam.sdc
+add_fileset quartus_synth QUARTUS_SYNTH generate_synth
+set_fileset_property quartus_synth TOP_LEVEL peridot_cam
 
 
 # 
 # parameters
 # 
+set debugview false
+#set debugview true
+add_parameter HW_TCL_DEBUG boolean true
+set_parameter_property HW_TCL_DEBUG ENABLED false
+set_parameter_property HW_TCL_DEBUG VISIBLE $debugview
+
+
+add_parameter AVM_CLOCKFREQ integer
+set_parameter_property AVM_CLOCKFREQ UNITS hertz
+set_parameter_property AVM_CLOCKFREQ SYSTEM_INFO {CLOCK_RATE m1_clock}
+set_parameter_property AVM_CLOCKFREQ HDL_PARAMETER true
+set_parameter_property AVM_CLOCKFREQ ENABLED false
+set_parameter_property AVM_CLOCKFREQ VISIBLE $debugview
+
+add_parameter AVS_CLOCKFREQ integer
+set_parameter_property AVS_CLOCKFREQ UNITS hertz
+set_parameter_property AVS_CLOCKFREQ SYSTEM_INFO {CLOCK_RATE s1_clock}
+set_parameter_property AVS_CLOCKFREQ HDL_PARAMETER true
+set_parameter_property AVS_CLOCKFREQ ENABLED false
+set_parameter_property AVS_CLOCKFREQ VISIBLE $debugview
+
+add_parameter USE_SCCBINTERFACE string "ON"
+set_parameter_property USE_SCCBINTERFACE HDL_PARAMETER true
+set_parameter_property USE_SCCBINTERFACE DERIVED true
+set_parameter_property USE_SCCBINTERFACE VISIBLE $debugview
+add_parameter USE_SCCB boolean true
+set_parameter_property USE_SCCB DISPLAY_NAME "Use the built-in SCCB interface"
+set_parameter_property USE_SCCB DISPLAY_HINT boolean
+
+add_parameter USE_PERIDOT_I2C string "OFF"
+set_parameter_property USE_PERIDOT_I2C HDL_PARAMETER true
+set_parameter_property USE_PERIDOT_I2C DISPLAY_NAME "SCCB interface module to include"
+set_parameter_property USE_PERIDOT_I2C ALLOWED_RANGES {"OFF:Simple SCCB" "ON:PERIDOT I2C"}
+set_parameter_property USE_PERIDOT_I2C DISPLAY_HINT radio
+
+add_parameter SCCB_CLOCKFREQ integer 400000
+set_parameter_property SCCB_CLOCKFREQ HDL_PARAMETER true
+set_parameter_property SCCB_CLOCKFREQ DISPLAY_NAME "SCCB bit rate"
+set_parameter_property SCCB_CLOCKFREQ ALLOWED_RANGES {"100000:100kbps" "400000:400kbps"}
+
+add_parameter DVP_BYTESWAP string "ON"
+set_parameter_property DVP_BYTESWAP HDL_PARAMETER true
+set_parameter_property DVP_BYTESWAP DISPLAY_NAME "Alignment unit of DVP data"
+set_parameter_property DVP_BYTESWAP ALLOWED_RANGES {"OFF:Byte(8bit)" "ON:Word(16bit)"}
+set_parameter_property DVP_BYTESWAP DISPLAY_HINT radio
 
 
 # 
@@ -175,16 +216,105 @@ add_interface_port m1 avm_m1_waitrequest waitrequest Input 1
 
 
 # 
-# connection point extcam
+# connection point dvp
 # 
-add_interface extcam conduit end
-set_interface_property extcam associatedClock ""
-set_interface_property extcam associatedReset ""
+add_interface dvp conduit end
 
-add_interface_port extcam cam_clk pclk Input 1
-add_interface_port extcam cam_data data Input 8
-add_interface_port extcam cam_href href Input 1
-add_interface_port extcam cam_vsync vsync Input 1
-add_interface_port extcam cam_reset_n reseto_n Output 1
-add_interface_port extcam sccb_sck sccb_c Output 1
-add_interface_port extcam sccb_data sccb_d Output 1
+add_interface_port dvp cam_clk pclk Input 1
+add_interface_port dvp cam_data data Input 8
+add_interface_port dvp cam_href href Input 1
+add_interface_port dvp cam_vsync vsync Input 1
+add_interface_port dvp cam_reset_n reseto_n Output 1
+
+# 
+# connection point sccb
+# 
+add_interface sccb conduit end
+
+add_interface_port sccb sccb_sck sck bidir 1
+add_interface_port sccb sccb_data data bidir 1
+
+
+
+# *******************************************************************
+#
+#  File generate callback
+#
+# *******************************************************************
+
+proc generate_synth {entityname} {
+	send_message info "generating top-level entity ${entityname}"
+
+	add_fileset_file peridot_cam.v		VERILOG PATH hdl/peridot_cam.v TOP_LEVEL_FILE
+	add_fileset_file paridot_cam_avm.v	VERILOG PATH hdl/paridot_cam_avm.v
+	add_fileset_file peridot_cam_avs.v	VERILOG PATH hdl/peridot_cam_avs.v
+	add_fileset_file peridot_cam.sdc	SDC PATH hdl/peridot_cam.sdc
+
+	if {[get_parameter_value USE_SCCBINTERFACE] == "ON"} {
+		if {[get_parameter_value USE_PERIDOT_I2C] == "ON"} {
+			add_fileset_file peridot_i2c.v		VERILOG PATH ../peridot_i2c/hdl/peridot_i2c.v
+		} else {
+			add_fileset_file peridot_cam_sccb.v	VERILOG PATH hdl/peridot_cam_sccb.v
+		}
+	}
+}
+
+
+
+# *******************************************************************
+#
+#  Elaboration callback
+#
+# *******************************************************************
+
+proc elaboration_callback {} {
+
+	#-----------------------------------
+	# setup SCCB interface type
+	#-----------------------------------
+
+	if {[get_parameter_value USE_SCCB]} {
+		set_parameter_value USE_SCCBINTERFACE "ON"
+		set_interface_property sccb ENABLED true
+		set_parameter_property SCCB_CLOCKFREQ ENABLED true
+
+		if {[file exists "../peridot_i2c/hdl/peridot_i2c.v"]} {
+			set_parameter_property USE_PERIDOT_I2C ENABLED true
+		} else {
+			set_parameter_property USE_PERIDOT_I2C ENABLED false
+		}
+	} else {
+		set_parameter_value USE_SCCBINTERFACE "OFF"
+		set_interface_property sccb ENABLED false
+		set_parameter_property SCCB_CLOCKFREQ ENABLED false
+		set_parameter_property USE_PERIDOT_I2C ENABLED false
+	}
+
+
+	#-----------------------------------
+	# SWI Validation
+	#-----------------------------------
+
+	# Software assignments for system.h
+	set value_use_sccb		[expr [get_parameter_value USE_SCCBINTERFACE] == "ON" ? 1 : 0]
+	set value_use_i2c		[expr [get_parameter_value USE_PERIDOT_I2C] == "ON" ? 1 : 0]
+
+	set_module_assignment embeddedsw.CMacro.USE_BUILTIN_SCCB	$value_use_sccb
+	set_module_assignment embeddedsw.CMacro.USE_PERIDOT_I2C		$value_use_i2c
+	set_module_assignment embeddedsw.CMacro.SCCB_BITRATE		[get_parameter_value SCCB_CLOCKFREQ]
+
+
+	#-----------------------------------
+	# Debug view
+	#-----------------------------------
+
+	if {[get_parameter_property HW_TCL_DEBUG VISIBLE]} {
+		set sccbinterface_value [get_parameter_value USE_SCCBINTERFACE]
+		set peridot_i2c_valie [get_parameter_value USE_PERIDOT_I2C]
+		set sccb_bitrate_value [get_parameter_value SCCB_CLOCKFREQ]
+		set dvp_byteswap_value [get_parameter_value DVP_BYTESWAP]
+
+		send_message info "USE_SCCBINTERFACE = $sccbinterface_value, USE_PERIDOT_I2C = $peridot_i2c_valie, SCCB_CLOCKFREQ = $sccb_bitrate_value, DVP_BYTESWAP = $dvp_byteswap_value"
+		send_message info "value_use_sccb = $value_use_sccb, value_use_i2c = $value_use_i2c"
+	}
+}

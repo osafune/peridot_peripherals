@@ -7,11 +7,12 @@
 //
 //     UPDATE : 2013/04/03 NiosII SBT用に変更、内蔵メモリマクロ化 
 //              2019/08/29 PERIDOT-Air改, PERIDOT_SDIFペリフェラル専用 
+//              2020/10/01 usage修正 
 //
 // ************************************************************************
 //
 // The MIT License (MIT)
-// Copyright (c) 2011-2019 J-7SYSTEM WORKS LIMITED.
+// Copyright (c) 2011-2020 J-7SYSTEM WORKS LIMITED.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy of
 // this software and associated documentation files (the "Software"), to deal in
@@ -40,20 +41,20 @@
 	・NiosIIのリセットベクタとして8kバイトの内蔵メモリマクロまたはUFM
 		UFMの場合は別途rwdata,bss,heap,stack領域用に2kバイトのメモリ
 	・プログラムを外部RAMに展開して実行できるバス構成 
-	・PERIDOT_SDIFペリフェラル
+	・PERIDOT_SDIFペリフェラル 
 	・１灯以上のLED(PIOペリフェラルを想定)
 
 【ペリフェラル名】
 	・内蔵メモリマクロ : SBTでリセットベクタに指定した8kバイト以上のエリア
 	・SDカードI/F      : PERIDOT_SDIFクラスのペリフェラル (名称はBSPでperidot_sdif_pffに設定)
-	・LEDペリフェラル  : ALTERA_AVALON_PIOクラスの led ('1'で点灯)
-	・DE等の7セグLED   : ALTERA_AVALON_PIOクラスの led_7seg（'0'で点灯）
+	・LEDペリフェラル  : led またはALTERA_AVALON_PIOクラスのペリフェラル 
+	・DE等の7セグLED   : led_7seg (オプション)
 
 
 【アプリケーション設定】
 ◆プロジェクトテンプレート
 	・Hello World Smallでプロジェクトを生成 
-		main()の中に pf_boot(<ブートするelfファイル名>) を記入
+		生成されたhelloworld.cを削除して elfboot.c をコピー
 	・NiosII->Propertiesの"NiosII Application Properties"のOptimization levelを"Size"に設定
 
 
@@ -99,7 +100,7 @@
 ◆Software Packagesタブ
 　● peridot_sdif_pff にチェック
   	・instance_name に PERIDOT_SDIFペリフェラルのインスタンス名を記入 (小文字)
-	・■ enable_elfboot_function（チェック）
+	・■ enable_elfboot_function (チェック)
 	・■ use_read_function (チェック)
 	・□ use_dir_function
 	・■ use_lseek_function (チェック)
@@ -225,7 +226,7 @@ typedef struct {
 static ELF32_HEADER eh;		// elfファイルヘッダ	(※メモリ使用領域確認のためstackから外している) 
 static ELF32_PHEADER ph;	// elfセクションヘッダ	(※メモリ使用領域確認のためstackから外している) 
 
-static int nd_elfload(alt_u32 *entry_addr)
+static inline int nd_elfload(alt_u32 *entry_addr)
 {
 	int phnum;
 	alt_u32 phy_addr,sec_size;
@@ -293,7 +294,7 @@ static int nd_elfload(alt_u32 *entry_addr)
 extern peridot_sdif_dev PERIDOT_SDIF_INST_NAME;		// peridot_sdifハンドラ 
 extern peridot_sdif_pff_dev peridot_sdif_pff;		// pffハンドラ 
 
-void pf_boot(const char *boot_filename)
+inline void pf_boot(const char *boot_filename)
 {
 	FRESULT res;
 	void (*pProc)();

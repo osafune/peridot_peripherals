@@ -31,3 +31,10 @@
 set_false_path -to [get_keepers {*|peridot_cam:*|peridot_cam_avs:*|fsync_in_reg[0]}]
 set_false_path -to [get_keepers {*|peridot_cam:*|peridot_cam_avs:*|done_in_reg[0]}]
 set_false_path -from [get_keepers {*|peridot_cam:*|peridot_cam_avs:*|fiforeset_reg}]
+
+set_false_path -to [get_keepers {*|peridot_cam:*|fsync_in_reg[0]}]
+set_false_path -to [get_keepers {*|peridot_cam:*|exec_in_reg[0]}]
+set_false_path -from [get_keepers {*|peridot_cam:*|peridot_cam_avs:*|capaddress_reg[*]}] -to  [get_keepers {*|peridot_cam:*|peridot_cam_avm:*|address_reg[*]}]
+set_false_path -from [get_keepers {*|peridot_cam:*|peridot_cam_avs:*|capcyclenum_reg[*]}] -to  [get_keepers {*|peridot_cam:*|peridot_cam_avm:*|chunkcount_reg[*]}]
+
+

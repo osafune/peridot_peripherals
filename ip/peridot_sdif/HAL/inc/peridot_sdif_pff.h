@@ -5,12 +5,12 @@
 // TITLE : PERIDOT SDIF Petit FatFs Software package
 //
 //     DESIGN : s.osafune@j7system.jp (J-7SYSTEM WORKS LIMITED)
-//     DATE   : 2019/08/28
+//     DATE   : 2020/10/01
 //
 // ************************************************************************
 //
 // The MIT License (MIT)
-// Copyright (c) 2019 J-7SYSTEM WORKS LIMITED.
+// Copyright (c) 2019,2020 J-7SYSTEM WORKS LIMITED.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy of
 // this software and associated documentation files (the "Software"), to deal in

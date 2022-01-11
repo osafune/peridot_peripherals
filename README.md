@@ -7,7 +7,7 @@ PERIDOTの標準ペリフェラル集です。
 対象となるツール
 ----------------
 
-- QsysまたはPlatform Designer 17.1以降、およびNiosII SBT 17.0以降
+- Platform Designer 18.0以降、およびNiosII SBT 18.0以降
 - MAX10、CycloneIV、CycloneVを搭載し、UARTまたはFT245/FT240X/FT232Hが接続されたボード（PERIDOT Hostbridgeを使う場合）
 - スレーブペリフェラルのみ使う場合は、NiosII等の32bitのバスアクセスが可能なAvalon-MMマスタがあるシステム
 
@@ -15,7 +15,7 @@ PERIDOTの標準ペリフェラル集です。
 ------
 
 - ip以下のフォルダをcloneして、プロジェクトのローカルに保存するか、保存場所にライブラリパスを通します。
-- Qsys/Platform Designerでコンポーンネントをaddして適宜操作します。
+- Platform Designerでコンポーンネントをaddして適宜操作します。
 - NiosII SBT用のドライバ、ソフトウェアパッケージを使う場合は、必ずプロジェクトローカルのipフォルダ以下に保存してください。
 
 ペリフェラルのレジスタについてはdoc以下のpdfを参照してください。
@@ -26,8 +26,8 @@ PERIDOTの標準ペリフェラル集です。
 
 PERIDOT Host Bridge
 -------------------
-ホストからQsys内部へアクセスするブリッジを提供します。  
-[Canarium](https://github.com/kimushu/canarium)パッケージを利用することで、クライアント側のJavaScriptからQsys内部のAvalon-MMスレーブペリフェラルへアクセスすることができます。  
+ホストからPlatform Designerモジュール内部へアクセスするブリッジを提供します。  
+[Canarium](https://github.com/kimushu/canarium)パッケージを利用することで、クライアント側のJavaScriptからPlatform Designerモジュール内部のAvalon-MMスレーブペリフェラルへアクセスすることができます。  
 MAX10ではデュアルコンフィグレーションスキームを利用したリコンフィグレーション機能を提供します。  
 
 また、NiosIIを併用する場合はクライアント側との排他制御、通知、ブートシーケンス制御の機能を提供します。[PERIDOTソフトウェアパッケージ](https://github.com/kimushu/peridot_sw_packages)を利用することで、RPCサーバー側の機能を提供します。  
@@ -74,7 +74,13 @@ PERIDOT WSG
 PERIDOT GLCD
 ------------
 CPUバス接続(8bit-i80タイプ)のグラフィックLCDモジュール用コントローラです。  
-Qsysのメモリアドレス上に設定したVRAM領域からビットマップデータを自動転送し、高速な描画処理を行う事ができます。
+PlatformDesignerモジュールのメモリアドレス上に設定したVRAM領域からビットマップデータを自動転送し、高速な描画処理を行う事ができます。
+
+
+PERIDOT CAM
+------------
+OmniVisionのカメラを接続するキャプチャコントローラです。
+PlatformDesignerモジュールのメモリアドレス上にイメージデータを取り込みます。
 
 
 PERIDOT LED

@@ -1,9 +1,11 @@
 // ===================================================================
-// TITLE : PERIDOT-NGS / OV9655 I/F
+// TITLE : PERIDOT-NGS / OmniVision DVP I/F
 //
 //   DEGISN : S.OSAFUNE (J-7SYSTEM WORKS LIMITED)
 //   DATE   : 2017/04/04 -> 2017/04/06
 //   MODIFY : 2018/01/22
+//            2021/12/30 Byte swapオプション追加 
+//            2021/12/31 開始信号の同期化を修正 
 //
 // ===================================================================
 //
@@ -33,6 +35,9 @@
 module peridot_cam #(
 	parameter AVM_CLOCKFREQ			= 100000000,		// AVM drive clock freq(Hz)
 	parameter AVS_CLOCKFREQ			= 25000000,			// AVS drive clock freq(Hz) - up to 100MHz
+	parameter DVP_BYTESWAP			= "ON",				// Upper byte and lower byte are exchanged and stored.
+	parameter USE_SCCBINTERFACE		= "OFF",			// Use internal sccb module
+	parameter USE_PERIDOT_I2C		= "OFF",			// Instance PERIDOT_I2C as an sccb module
 	parameter SCCB_CLOCKFREQ		= 200000			// SCCB clock freq(Hz) - 200kHz typ
 ) (
 	// Interface: clk
@@ -63,8 +68,8 @@ module peridot_cam #(
 	input wire			cam_href,
 	input wire			cam_vsync,
 	output wire			cam_reset_n,
-	output wire			sccb_sck,
-	output wire			sccb_data
+	inout wire			sccb_sck,
+	inout wire			sccb_data
 );
 
 
@@ -86,7 +91,7 @@ module peridot_cam #(
 	wire			avmclk_sig = avm_m1_clk;		// AvalonMMマスタクロック 
 	wire			camclk_sig = cam_clk;			// カメラデータクロック 
 
-	wire			start_sig;
+	wire			execution_sig;
 	wire			done_sig;
 	wire			framesync_sig;
 	wire			infiforeset_sig;
@@ -97,6 +102,11 @@ module peridot_cam #(
 	reg				camhref_reg;
 	reg				camvsync_reg;
 	wire [8:0]		rdusedw_sig;
+	wire [31:0]		dcfifo_q_sig;
+
+	reg  [2:0]		fsync_in_reg;
+	reg  [1:0]		exec_in_reg;
+	wire			start_sig;
 
 	wire			writedataready_sig;
 	wire [31:0]		writedata_sig;
@@ -114,11 +124,12 @@ module peridot_cam #(
 
 /* ===== モジュール構造記述 ============== */
 
-
 	// AvalonMM-スレーブモジュール 
 
 	peridot_cam_avs #(
 		.AVS_CLOCKFREQ		(AVS_CLOCKFREQ),
+		.USE_SCCBINTERFACE	(USE_SCCBINTERFACE),
+		.USE_PERIDOT_I2C	(USE_PERIDOT_I2C),
 		.SCCB_CLOCKFREQ		(SCCB_CLOCKFREQ)
 	)
 	u0 (
@@ -132,7 +143,7 @@ module peridot_cam #(
 		.avs_s1_waitrequest	(avs_s1_waitrequest),
 		.avs_s1_irq			(avs_s1_irq),
 
-		.start				(start_sig),		// '1'パルスでフレーム処理開始 
+		.execution			(execution_sig),	// '1'でフレーム処理をリクエスト 
 		.done				(done_sig),
 		.framesync			(framesync_sig),	// フレーム開始信号 
 		.infiforeset		(infiforeset_sig),	// 入力FIFO非同期リセット出力 
@@ -146,7 +157,7 @@ module peridot_cam #(
 
 
 
-	// OV9655入力FIFO 
+	// DVP入力FIFO 
 
 	always @(posedge camclk_sig) begin
 		camdata_reg <= cam_data;
@@ -179,16 +190,39 @@ module peridot_cam #(
 
 		.rdclk		(avmclk_sig),
 		.rdreq		(writedatardack_sig),
-		.q			(writedata_sig),
+		.q			(dcfifo_q_sig),
 		.rdusedw	(rdusedw_sig)
 	);
 
 	assign writedataready_sig = (rdusedw_sig > 9'd15)? 1'b1 : 1'b0;		// 16ワード以上FIFOに入っている 
 	assign framesync_sig = camvsync_reg;
 
+generate
+	if (DVP_BYTESWAP == "ON") begin
+		assign writedata_sig = {dcfifo_q_sig[23:16], dcfifo_q_sig[31:24], dcfifo_q_sig[7:0], dcfifo_q_sig[15:8]};
+	end
+	else begin
+		assign writedata_sig = dcfifo_q_sig;
+	end
+endgenerate
+
 
 
 	// AvalonMM-マスタモジュール 
+
+	always @(posedge avmclk_sig or posedge reset_sig) begin
+		if (reset_sig) begin
+			fsync_in_reg <= 3'b000;
+			exec_in_reg <= 2'b00;
+		end
+		else begin
+			fsync_in_reg <= {fsync_in_reg[1:0], framesync_sig};
+			exec_in_reg <= {exec_in_reg[0], execution_sig};
+		end
+	end
+
+	assign start_sig = (!fsync_in_reg[2] && fsync_in_reg[1])? exec_in_reg[1] : 1'b0;
+
 
 	peridot_cam_avm
 	u2 (

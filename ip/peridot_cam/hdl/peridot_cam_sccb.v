@@ -3,7 +3,7 @@
 //
 //   DEGISN : S.OSAFUNE (J-7SYSTEM WORKS LIMITED)
 //   DATE   : 2018/01/22 -> 2018/01/22
-//   MODIFY : 
+//   MODIFY : 2022/01/11
 //
 // ===================================================================
 //
@@ -29,7 +29,7 @@
 // SOFTWARE.
 //
 
-// reg00(+0)  bit31:irqena(RW), bit30:waitena(RW), bit24:camreset(RW), bit23:busy(R)/start(W)
+// reg00(+0)  bit31:irqena(RW), bit30:waitena(RW), bit23:busy(R)/start(W)
 //            bit22-16:devaddr(W), bit15-8:subaddr(W), bit7-0:data(W)
 
 module peridot_cam_sccb #(
@@ -51,7 +51,6 @@ module peridot_cam_sccb #(
 	output wire			ins_irq,
 
 	// External Interface
-	output wire			cam_reset_out,
 	output wire			sccb_clk_oe,
 	output wire			sccb_data_oe
 );
@@ -88,7 +87,6 @@ module peridot_cam_sccb #(
 	wire			clock_sig = csi_clk;			// モジュール内部駆動クロック 
 
 	reg  [4:0]		state_reg;
-	reg				camreset_reg;
 	reg				ready_reg;
 	reg				irqena_reg;
 	reg				waitreq_reg;
@@ -116,11 +114,9 @@ module peridot_cam_sccb #(
 
 	///// Avalon-MMインターフェース /////
 
-	assign avs_readdata = {irqena_reg, waitreq_reg, 5'b0, camreset_reg, ready_reg, {23{1'bx}}};
+	assign avs_readdata = {irqena_reg, waitreq_reg, 6'b0, ready_reg, {23{1'bx}}};
 	assign avs_waitrequest = (avs_write && waitreq_reg)? ~ready_reg : 1'b0;
 	assign ins_irq = (irqena_reg)? ready_reg : 1'b0;
-
-	assign cam_reset_out = camreset_reg;
 
 
 	///// SCCBの3-writeトランザクションを発行する /////
@@ -143,7 +139,6 @@ module peridot_cam_sccb #(
 			ready_reg <= 1'b1;
 			irqena_reg <= 1'b0;
 			waitreq_reg <= 1'b0;
-			camreset_reg <= 1'b1;
 			iostart_req_reg <= 1'b0;
 		end
 		else begin
@@ -160,7 +155,6 @@ module peridot_cam_sccb #(
 				if (avs_write) begin
 					irqena_reg   <= avs_writedata[31];
 					waitreq_reg  <= avs_writedata[30];
-					camreset_reg <= avs_writedata[24];
 					txdara_reg[26:18] <= {avs_writedata[22:16], 2'b01};
 					txdara_reg[17: 9] <= {avs_writedata[15: 8], 1'b1};
 					txdara_reg[ 8: 0] <= {avs_writedata[ 7: 0], 1'b1};
