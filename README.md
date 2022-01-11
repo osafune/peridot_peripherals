@@ -102,4 +102,4 @@ PERIDOT Melody Chime
 [The MIT License (MIT)](https://opensource.org/licenses/MIT)  
 詳細は[license.txt](license.txt)を参照ください。  
 
-(C) 2017-2019 J-7SYSTEM WORKS LIMITED.
+(C) 2014-2022 J-7SYSTEM WORKS LIMITED.
