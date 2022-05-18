@@ -7,6 +7,7 @@
 //
 //     DESIGN : s.osafune@j7system.jp (J-7SYSTEM WORKS LIMITED)
 //     DATE   : 2019/09/01
+//            : 2022/02/07
 //
 // ************************************************************************
 //
@@ -34,6 +35,7 @@
 
 #include <stddef.h>
 #include <alt_types.h>
+#include "peridot_sdif_regs.h"
 
 #ifdef __cplusplus
 extern "C"

@@ -3,7 +3,7 @@
 #
 #   DEGISN : S.OSAFUNE (J-7SYSTEM WORKS LIMITED)
 #   DATE   : 2019/08/27 -> 2019/08/27
-#   MODIFY : 
+#   MODIFY : 2022/02/07 add enhanced_interrupt_api property
 #
 # ===================================================================
 #
@@ -39,7 +39,7 @@ create_driver peridot_sdif_driver
 set_sw_property hw_class_name peridot_sdif
 
 # The version of this driver
-set_sw_property version 17.1
+set_sw_property version 17.3
 set_sw_property min_compatible_hw_version 17.0
 
 # Initialize the driver in alt_sys_init()
@@ -47,6 +47,11 @@ set_sw_property auto_initialize true
 
 # Location in generated BSP that above sources will be copied into
 set_sw_property bsp_subdirectory drivers
+
+# Interrupt properties: This driver supports enhanced
+set_sw_property isr_preemption_supported true
+set_sw_property supported_interrupt_apis "legacy_interrupt_api enhanced_interrupt_api"
+
 
 #
 # Source file listings...

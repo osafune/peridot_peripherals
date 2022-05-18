@@ -3,7 +3,7 @@
 #
 #   DEGISN : S.OSAFUNE (J-7SYSTEM WORKS LIMITED)
 #   DATE   : 2019/08/27 -> 2019/09/01
-#   MODIFY : 
+#   MODIFY : 2022/02/07 add enhanced_interrupt_api property
 #
 # ===================================================================
 #
@@ -39,7 +39,7 @@ create_sw_package peridot_sdif_pff
 set_sw_property hw_class_name peridot_sdif
 
 # The version of this driver
-set_sw_property version 17.1
+set_sw_property version 17.3
 set_sw_property min_compatible_hw_version 17.0
 
 # Initialize the driver in alt_sys_init()

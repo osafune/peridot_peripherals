@@ -3,7 +3,7 @@
 #
 #   DEGISN : S.OSAFUNE (J-7SYSTEM WORKS LIMITED)
 #   DATE   : 2019/08/27 -> 2019/08/27
-#   MODIFY : 
+#   MODIFY : 2022/02/07 add enhanced_interrupt_api property
 #
 # ===================================================================
 #
@@ -43,7 +43,7 @@ set_module_property DISPLAY_NAME "PERIDOT SD Filesystem interface"
 set_module_property DESCRIPTION "PERIDOT SD Filesystem interface"
 set_module_property GROUP "PERIDOT Peripherals"
 set_module_property AUTHOR "J-7SYSTEM WORKS LIMITED"
-set_module_property VERSION 17.1
+set_module_property VERSION 17.3
 set_module_property INTERNAL false
 set_module_property OPAQUE_ADDRESS_MAP true
 set_module_property INSTANTIATE_IN_SYSTEM_MODULE true

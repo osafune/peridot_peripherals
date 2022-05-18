@@ -6,6 +6,7 @@
 //
 //     DESIGN : s.osafune@j7system.jp (J-7SYSTEM WORKS LIMITED)
 //     DATE   : 2019/08/30
+//            : 2022/02/07
 //
 // ************************************************************************
 //
@@ -35,14 +36,12 @@
 #include <alt_types.h>
 #include <sys/alt_dev.h>
 #include "system.h"
+#include "../src/ff13c/ff.h"
 
 #ifdef __cplusplus
 extern "C"
 {
 #endif /* __cplusplus */
-
-
-#include "../src/ff13c/ff.h"
 
 typedef struct {
 	alt_dev hal_dev;

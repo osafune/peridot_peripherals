@@ -6,6 +6,7 @@
 //
 //     DESIGN : s.osafune@j7system.jp (J-7SYSTEM WORKS LIMITED)
 //     DATE   : 2020/10/01
+//            : 2022/02/07
 //
 // ************************************************************************
 //
@@ -33,14 +34,12 @@
 
 #include <stddef.h>
 #include <alt_types.h>
+#include "../src/pff3a/pff.h"
 
 #ifdef __cplusplus
 extern "C"
 {
 #endif /* __cplusplus */
-
-#include "../src/pff3a/pff.h"
-
 
 typedef struct {
 	FATFS work;
