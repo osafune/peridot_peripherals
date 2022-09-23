@@ -7,7 +7,7 @@ PERIDOTの標準ペリフェラル集です。
 対象となるツール
 ----------------
 
-- Platform Designer 18.0以降、およびNiosII SBT 18.0以降
+- Platform Designer 19.1以降、およびNiosII SBT 19.1以降
 - MAX10、CycloneIV、CycloneV、Cyclone10LPを搭載し、UARTまたはFT245/FT240X/FT232Hが接続されたボード（PERIDOT Hostbridgeを使う場合）
 - スレーブペリフェラルのみ使う場合は、NiosII等の32bitのバスアクセスが可能なAvalon-MMマスタがあるシステム
 
