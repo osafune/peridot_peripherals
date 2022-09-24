@@ -5,7 +5,7 @@
 #   DATE   : 2017/04/05 -> 2017/04/06
 #   MODIFY : 2018/11/26 17.1 beta
 #            2021/12/28 17.2 beta
-#            2022/01/10 17.3 beta
+#            2022/09/25 19.1 beta
 #
 # ===================================================================
 #
@@ -45,7 +45,7 @@ set_module_property DISPLAY_NAME "PERIDOT CAM interface (Beta test version)"
 set_module_property DESCRIPTION "PERIDOT OmniVision DVP capture interface"
 set_module_property GROUP "PERIDOT Peripherals"
 set_module_property AUTHOR "J-7SYSTEM WORKS LIMITED"
-set_module_property VERSION 17.3
+set_module_property VERSION 19.1
 set_module_property INTERNAL false
 set_module_property OPAQUE_ADDRESS_MAP true
 set_module_property INSTANTIATE_IN_SYSTEM_MODULE true
@@ -65,8 +65,8 @@ set_fileset_property quartus_synth TOP_LEVEL peridot_cam
 # 
 # parameters
 # 
-set debugview false
-#set debugview true
+#set debugview false
+set debugview true
 add_parameter HW_TCL_DEBUG boolean true
 set_parameter_property HW_TCL_DEBUG ENABLED false
 set_parameter_property HW_TCL_DEBUG VISIBLE $debugview

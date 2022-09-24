@@ -6,6 +6,7 @@
 #   MODIFY : 2018/11/25 17.1 beta
 #            2019/01/14 17.1 beta update1
 #            2019/06/22 17.1 rev2
+#            2022/09/25 19.1 release
 #
 # ===================================================================
 #
@@ -41,11 +42,11 @@ package require -exact qsys 16.1
 # module peridot_led_controller
 # 
 set_module_property NAME peridot_wsled_controller
-set_module_property DISPLAY_NAME "PERIDOT Serial LED controller (beta test version)"
+set_module_property DISPLAY_NAME "PERIDOT Serial LED controller"
 set_module_property DESCRIPTION "PERIDOT Serial LED controller"
 set_module_property GROUP "PERIDOT Peripherals"
 set_module_property AUTHOR "J-7SYSTEM WORKS LIMITED"
-set_module_property VERSION 17.1
+set_module_property VERSION 19.1
 set_module_property INTERNAL false
 set_module_property OPAQUE_ADDRESS_MAP true
 set_module_property INSTANTIATE_IN_SYSTEM_MODULE true

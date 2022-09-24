@@ -4,6 +4,7 @@
 #   DEGISN : S.OSAFUNE (J-7SYSTEM WORKS LIMITED)
 #   DATE   : 2017/03/12 -> 2017/03/12
 #   MODIFY : 2018/11/26 17.1 beta
+#            2022/09/25 19.1 beta
 #
 # ===================================================================
 #
@@ -43,7 +44,7 @@ set_module_property DISPLAY_NAME "PERIDOT GLCD controller"
 set_module_property DESCRIPTION "PERIDOT GLCD controller"
 set_module_property GROUP "PERIDOT Peripherals"
 set_module_property AUTHOR "J-7SYSTEM WORKS LIMITED"
-set_module_property VERSION 17.1
+set_module_property VERSION 19.1
 set_module_property INTERNAL false
 set_module_property OPAQUE_ADDRESS_MAP true
 set_module_property INSTANTIATE_IN_SYSTEM_MODULE true

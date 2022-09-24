@@ -42,7 +42,7 @@ set_module_property DISPLAY_NAME "PERIDOT Compact CNN Accelerator (beta test ver
 set_module_property DESCRIPTION "PERIDOT Compact CNN Accelerator"
 set_module_property GROUP "PERIDOT Peripherals"
 set_module_property AUTHOR "J-7SYSTEM WORKS LIMITED"
-set_module_property VERSION 17.1
+set_module_property VERSION 19.1
 set_module_property INTERNAL false
 set_module_property OPAQUE_ADDRESS_MAP true
 set_module_property INSTANTIATE_IN_SYSTEM_MODULE true

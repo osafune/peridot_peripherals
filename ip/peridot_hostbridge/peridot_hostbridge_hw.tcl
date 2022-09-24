@@ -4,6 +4,7 @@
 #   DEGISN : S.OSAFUNE (J-7SYSTEM WORKS LIMITED)
 #   DATE   : 2017/01/24 -> 2017/03/09
 #   MODIFY : 2018/11/26 17.1 beta
+#            2022/09/25 It will no longer be maintained.
 #
 # ===================================================================
 #
@@ -39,7 +40,7 @@ package require -exact qsys 16.1
 # module peridot_hostbridge
 # 
 set_module_property NAME peridot_hostbridge
-set_module_property DISPLAY_NAME "PERIDOT Host Bridge (beta test version)"
+set_module_property DISPLAY_NAME "PERIDOT Host Bridge (No longer maintained)"
 set_module_property DESCRIPTION "PERIDOT Host to Avalon-MM bridge"
 set_module_property GROUP "PERIDOT Peripherals"
 set_module_property AUTHOR "J-7SYSTEM WORKS LIMITED"

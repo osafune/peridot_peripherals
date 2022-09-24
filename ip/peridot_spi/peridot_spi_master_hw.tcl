@@ -4,6 +4,7 @@
 #   DEGISN : S.OSAFUNE (J-7SYSTEM WORKS LIMITED)
 #   DATE   : 2017/02/20 -> 2017/03/01
 #   MODIFY : 2018/11/26 17.1 beta
+#          : 2022/09/25 19.1
 #
 # ===================================================================
 #
@@ -43,7 +44,7 @@ set_module_property DISPLAY_NAME "PERIDOT SPI master"
 set_module_property DESCRIPTION "PERIDOT SPI master"
 set_module_property GROUP "PERIDOT Peripherals"
 set_module_property AUTHOR "J-7SYSTEM WORKS LIMITED"
-set_module_property VERSION 17.1
+set_module_property VERSION 19.1
 set_module_property INTERNAL false
 set_module_property OPAQUE_ADDRESS_MAP true
 set_module_property INSTANTIATE_IN_SYSTEM_MODULE true
@@ -57,10 +58,10 @@ set_module_property VALIDATION_CALLBACK validate
 # file sets
 # 
 add_fileset QUARTUS_SYNTH QUARTUS_SYNTH "" ""
-set_fileset_property QUARTUS_SYNTH TOP_LEVEL peridot_csr_spi
+set_fileset_property QUARTUS_SYNTH TOP_LEVEL peridot_spi
 set_fileset_property QUARTUS_SYNTH ENABLE_RELATIVE_INCLUDE_PATHS false
 set_fileset_property QUARTUS_SYNTH ENABLE_FILE_OVERWRITE_MODE false
-add_fileset_file peridot_csr_spi.v VERILOG PATH ../peridot_hostbridge/hdl/peridot_csr_spi.v TOP_LEVEL_FILE
+add_fileset_file peridot_spi.v VERILOG PATH hdl/peridot_spi.v TOP_LEVEL_FILE
 
 
 # 

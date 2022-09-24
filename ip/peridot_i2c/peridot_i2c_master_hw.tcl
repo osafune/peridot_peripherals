@@ -4,7 +4,7 @@
 #   DEGISN : S.OSAFUNE (J-7SYSTEM WORKS LIMITED)
 #   DATE   : 2017/02/20 -> 2017/03/01
 #   MODIFY : 2017/11/26 17.1 beta
-#          : 2022/01/11 17.2 beta
+#          : 2022/09/25 19.1 beta
 #
 # ===================================================================
 #
@@ -44,7 +44,7 @@ set_module_property DISPLAY_NAME "PERIDOT I2C master"
 set_module_property DESCRIPTION "PERIDOT I2C master"
 set_module_property GROUP "PERIDOT Peripherals"
 set_module_property AUTHOR "J-7SYSTEM WORKS LIMITED"
-set_module_property VERSION 17.2
+set_module_property VERSION 19.1
 set_module_property INTERNAL false
 set_module_property OPAQUE_ADDRESS_MAP true
 set_module_property INSTANTIATE_IN_SYSTEM_MODULE true
