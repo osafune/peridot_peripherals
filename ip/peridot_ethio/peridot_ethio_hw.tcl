@@ -2,7 +2,7 @@
 # TITLE : PERIDOT-NGS / "PERIDOT Ethernet I/O Bridge"
 #
 #   DEGISN : S.OSAFUNE (J-7SYSTEM WORKS LIMITED)
-#   DATE   : 2022/07/01 -> 2022/09/23
+#   DATE   : 2022/07/01 -> 2022/09/29
 #
 # ===================================================================
 #
@@ -110,8 +110,8 @@ set_parameter_property SUPPORT_PAUSEFRAME DISPLAY_HINT boolean
 set_parameter_property SUPPORT_PAUSEFRAME HDL_PARAMETER true
 
 add_parameter MTU_SIZE integer 1500
-set_parameter_property MTU_SIZE DISPLAY_NAME "MTU Size"
-set_parameter_property MTU_SIZE DISPLAY_UNITS "bytes (576-1500)"
+set_parameter_property MTU_SIZE DISPLAY_NAME "MTU Size (576-1500)"
+set_parameter_property MTU_SIZE UNITS bytes
 set_parameter_property MTU_SIZE ALLOWED_RANGES 576:1500
 set_parameter_property MTU_SIZE HDL_PARAMETER true
 
