@@ -3,6 +3,7 @@
 #
 #   DEGISN : S.OSAFUNE (J-7SYSTEM WORKS LIMITED)
 #   DATE   : 2022/07/01 -> 2022/09/29
+#   UPDATE : 2022/11/02 Change IP address input box
 #
 # ===================================================================
 #
@@ -38,7 +39,7 @@ package require -exact qsys 16.1
 # module peridot_ethio
 # 
 set_module_property NAME peridot_ethio
-set_module_property DISPLAY_NAME "PERIDOT Ethernet I/O Bridge (Alpha test version)"
+set_module_property DISPLAY_NAME "PERIDOT Ethernet I/O Bridge (Beta test version)"
 set_module_property DESCRIPTION "PERIDOT Ethernet I/O Bridge"
 set_module_property GROUP "PERIDOT Peripherals"
 set_module_property AUTHOR "J-7SYSTEM WORKS LIMITED"
@@ -243,18 +244,18 @@ set_parameter_property USE_FIXED_MACADDR DISPLAY_NAME "Use fixed MAC address (NI
 set_parameter_property USE_FIXED_MACADDR DISPLAY_HINT boolean
 add_parameter MACADDR_VALUE std_logic_vector 0xfeffff000001
 set_parameter_property MACADDR_VALUE DISPLAY_NAME "MAC address"
-set_parameter_property MACADDR_VALUE DESCRIPTION "If the MAC address to be set is 11-22-33-44-55-66, enter 0x112233445566."
+set_parameter_property MACADDR_VALUE DESCRIPTION "If the MAC address to be set is 11-22-33-44-55-66, enter '0x112233445566'."
+set_parameter_property MACADDR_VALUE DISPLAY_HINT hexadeciaml
 set_parameter_property MACADDR_VALUE WIDTH 48
 set_parameter_property MACADDR_VALUE ALLOWED_RANGES 0x000000000001:0xffffffffffff
 
 add_parameter USE_FIXED_IPADDR boolean false
 set_parameter_property USE_FIXED_IPADDR DISPLAY_NAME "Use fixed IP address."
 set_parameter_property USE_FIXED_IPADDR DISPLAY_HINT boolean
-add_parameter IPADDR_VALUE std_logic_vector 0xc0a80172
+add_parameter IPADDR_VALUE string "192.168.1.114"
 set_parameter_property IPADDR_VALUE DISPLAY_NAME "IP address"
-set_parameter_property IPADDR_VALUE DESCRIPTION "If the IP address to be set is 192.168.0.100, enter 0xc0a80064."
-set_parameter_property IPADDR_VALUE WIDTH 32
-set_parameter_property IPADDR_VALUE ALLOWED_RANGES 0x00000001:0xffffffff
+set_parameter_property IPADDR_VALUE DESCRIPTION "If the IP address to be set is 192.168.0.100, enter '192.168.0.100'"
+set_parameter_property IPADDR_VALUE DISPLAY_HINT "text:0-9."
 
 add_parameter USE_FIXED_UDPPORT boolean true
 set_parameter_property USE_FIXED_UDPPORT DISPLAY_NAME "Use fixed UDP ports number."
@@ -672,18 +673,26 @@ proc elaboration_callback {} {
 
 	set ena_fixed_ipaddr [get_parameter_value USE_FIXED_IPADDR]
 	set_interface_property ipaddr ENABLED [expr !$ena_fixed_ipaddr]
-
 	set_parameter_property IPADDR_VALUE ENABLED $ena_fixed_ipaddr
-	set_parameter_value FIXED_IP_ADDRESS [expr $ena_fixed_ipaddr ? [get_parameter_value IPADDR_VALUE] : 0]
 
+	set fixed_ipaddr 0
 	if {$ena_fixed_ipaddr} {
-		set ipaadr_value [get_parameter_value IPADDR_VALUE]
-		set _dec1 [format %u [expr ($ipaadr_value >> 24) & 255]]
-		set _dec2 [format %u [expr ($ipaadr_value >> 16) & 255]]
-		set _dec3 [format %u [expr ($ipaadr_value >> 8) & 255]]
-		set _dec4 [format %u [expr ($ipaadr_value >> 0) & 255]]
-		send_message info "Set fixed IP address ${_dec1}.${_dec2}.${_dec3}.${_dec4}"
+		set str_ipaddr [get_parameter_value IPADDR_VALUE]
+		if {[scan $str_ipaddr {%u.%u.%u.%u} _dec1 _dec2 _dec3 _dec4] == 4} {
+			if {$_dec1 > 255 || $_dec2 > 255 || $_dec3 > 255 || $_dec4 > 255} {
+				send_message error "Invalid IP Address number."
+			} elseif {$_dec1 == 0 && $_dec2 == 0 && $_dec3 == 0 && $_dec4 == 0} {
+				send_message error "Invalid IP Address number."
+			} else {
+				set fixed_ipaddr [expr ($_dec1 << 24) | ($_dec2 << 16) | ($_dec3 << 8) | $_dec4]
+				send_message info "Set fixed IP address ${_dec1}.${_dec2}.${_dec3}.${_dec4}"
+			}
+		} else {
+			send_message error "Invalid IP Address number."
+		}
 	}
+
+	set_parameter_value FIXED_IP_ADDRESS $fixed_ipaddr
 
 
 	#-----------------------------------

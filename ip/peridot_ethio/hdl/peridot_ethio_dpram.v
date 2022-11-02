@@ -162,7 +162,7 @@ module peridot_ethio_dpram #(
 `endif
 
 
-	// GowinEDA用インスタンス (GW1N)
+	// GowinEDA用インスタンス (GW1N,GW2A)
 
 `ifdef GENERATE_GOWINEDA
 	localparam DPRAM_BITWIDTH =	(RAM_NUMWORD_BITWIDTH >= 14)? 1 :
