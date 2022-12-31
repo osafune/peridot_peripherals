@@ -3,7 +3,7 @@
 #
 #   DEGISN : S.OSAFUNE (J-7SYSTEM WORKS LIMITED)
 #   DATE   : 2022/07/01 -> 2022/09/29
-#   UPDATE : 2022/11/02 Change IP address input box
+#   UPDATE : 2022/12/07 Change IP address input box
 #
 # ===================================================================
 #
@@ -678,7 +678,7 @@ proc elaboration_callback {} {
 	set fixed_ipaddr 0
 	if {$ena_fixed_ipaddr} {
 		set str_ipaddr [get_parameter_value IPADDR_VALUE]
-		if {[scan $str_ipaddr {%u.%u.%u.%u} _dec1 _dec2 _dec3 _dec4] == 4} {
+		if {[regsub -all {\.} $str_ipaddr {} _dummy] == 3 && [scan $str_ipaddr {%u.%u.%u.%u} _dec1 _dec2 _dec3 _dec4] == 4} {
 			if {$_dec1 > 255 || $_dec2 > 255 || $_dec3 > 255 || $_dec4 > 255} {
 				send_message error "Invalid IP Address number."
 			} elseif {$_dec1 == 0 && $_dec2 == 0 && $_dec3 == 0 && $_dec4 == 0} {
