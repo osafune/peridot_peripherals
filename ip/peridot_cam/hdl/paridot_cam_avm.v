@@ -1,9 +1,9 @@
 // ===================================================================
-// TITLE : PERIDOT-NGS / OV9655 AvalonMM burst master(32bit×16burst)
+// TITLE : PERIDOT-NGS / OmniVision DVP Avalon-MM master(32bit×16burst)
 //
 //   DEGISN : S.OSAFUNE (J-7SYSTEM WORKS LIMITED)
 //   DATE   : 2017/04/04 -> 2017/04/06
-//   UPDATE : 
+//   MODIFY : 2022/12/07 微修正
 //
 // ===================================================================
 //
@@ -29,6 +29,9 @@
 // SOFTWARE.
 //
 
+
+// Verilog-2001 / IEEE 1364-2001
+`default_nettype none
 
 module peridot_cam_avm (
 	// Interface: clk

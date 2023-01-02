@@ -1,9 +1,9 @@
 // ===================================================================
-// TITLE : PERIDOT-NGS / SCCB master
+// TITLE : PERIDOT-NGS / Simple SCCB host
 //
 //   DEGISN : S.OSAFUNE (J-7SYSTEM WORKS LIMITED)
 //   DATE   : 2018/01/22 -> 2018/01/22
-//   MODIFY : 2022/01/11
+//   MODIFY : 2022/12/07 レジスタマップ修正(4-phase writeモード対応)
 //
 // ===================================================================
 //
@@ -29,12 +29,17 @@
 // SOFTWARE.
 //
 
-// reg00(+0)  bit31:irqena(RW), bit30:waitena(RW), bit23:busy(R)/start(W)
-//            bit22-16:devaddr(W), bit15-8:subaddr(W), bit7-0:data(W)
+// reg00(+0)  bit31:waitena(W)/busy(R)
+//            bit22-16:devaddr(W), bit15-8:subaddr(W), bit7-0:data(W) : 3-phase write (bit30-24 must be 0)
+//            bit30-24:devaddr(W), bit23-8:subaddr(W), bit7-0:data(W) : 4-phase write
+
+
+// Verilog-2001 / IEEE 1364-2001
+`default_nettype none
 
 module peridot_cam_sccb #(
 	parameter AVS_CLOCKFREQ			= 25000000,			// peripheral drive clock freq(Hz) - up to 100MHz
-	parameter SCCB_CLOCKFREQ		= 200000			// SCCB clock freq(Hz) - 200kHz typ
+	parameter SCCB_CLOCKFREQ		= 400000			// SCCB clock freq(Hz) - 400kHz typ
 ) (
 	// Interface: clk
 	input wire			csi_clk,
@@ -46,9 +51,6 @@ module peridot_cam_sccb #(
 	input wire			avs_write,			// write 0-setup,0-wait,0-hold
 	input wire  [31:0]	avs_writedata,
 	output wire			avs_waitrequest,
-
-	// Interface: Avalon-MM Interrupt sender
-	output wire			ins_irq,
 
 	// External Interface
 	output wire			sccb_clk_oe,
@@ -70,6 +72,7 @@ module peridot_cam_sccb #(
 				STATE_START		= 5'd1,
 				STATE_BIT		= 5'd2,
 				STATE_STOP		= 5'd3,
+				STATE_WAIT		= 5'd4,
 				STATE_DONE		= 5'd31;
 
 	localparam	STATE_IO_HOLD	= 5'd0,
@@ -88,11 +91,10 @@ module peridot_cam_sccb #(
 
 	reg  [4:0]		state_reg;
 	reg				ready_reg;
-	reg				irqena_reg;
 	reg				waitreq_reg;
-	reg  [4:0]		bitcount;
+	reg  [5:0]		bitcount;
 	reg				iostart_req_reg;
-	reg  [26:0]		txdara_reg;
+	reg  [35:0]		txdara_reg;
 	wire			begintransaction_sig;
 	wire [1:0]		txclk_sig, txdata_sig;
 
@@ -114,12 +116,11 @@ module peridot_cam_sccb #(
 
 	///// Avalon-MMインターフェース /////
 
-	assign avs_readdata = {irqena_reg, waitreq_reg, 6'b0, ready_reg, {23{1'bx}}};
-	assign avs_waitrequest = (avs_write && waitreq_reg)? ~ready_reg : 1'b0;
-	assign ins_irq = (irqena_reg)? ready_reg : 1'b0;
+	assign avs_readdata = {~ready_reg, {31{1'bx}}};
+	assign avs_waitrequest = ((avs_write || avs_read) && waitreq_reg)? ~ready_reg : 1'b0;
 
 
-	///// SCCBの3-writeトランザクションを発行する /////
+	///// SCCBのwriteトランザクションを発行する /////
 
 	assign begintransaction_sig = iostart_req_reg;
 
@@ -128,7 +129,7 @@ module peridot_cam_sccb #(
 						(state_reg == STATE_STOP)?	2'b01 :
 						2'b11;
 	assign txdata_sig = (state_reg == STATE_START)?	2'b00 :
-						(state_reg == STATE_BIT)?	{txdara_reg[26], txdara_reg[26]} :
+						(state_reg == STATE_BIT)?	{2{txdara_reg[35]}} :
 						(state_reg == STATE_STOP)?	2'b00 :
 						2'b11;
 
@@ -137,7 +138,6 @@ module peridot_cam_sccb #(
 		if (reset_sig) begin
 			state_reg <= STATE_IDLE;
 			ready_reg <= 1'b1;
-			irqena_reg <= 1'b0;
 			waitreq_reg <= 1'b0;
 			iostart_req_reg <= 1'b0;
 		end
@@ -146,66 +146,65 @@ module peridot_cam_sccb #(
 
 			// Avalon-MMレジスタ書き込みおよびトランザクション開始 
 			STATE_IDLE : begin
-				if (avs_write && avs_writedata[23]) begin
+				if (avs_write) begin
 					state_reg <= STATE_START;
 					ready_reg <= 1'b0;
 					iostart_req_reg <= 1'b1;
-				end
+					waitreq_reg <= avs_writedata[31];
+					txdara_reg[8:0] <= {avs_writedata[7:0], 1'b1};
 
-				if (avs_write) begin
-					irqena_reg   <= avs_writedata[31];
-					waitreq_reg  <= avs_writedata[30];
-					txdara_reg[26:18] <= {avs_writedata[22:16], 2'b01};
-					txdara_reg[17: 9] <= {avs_writedata[15: 8], 1'b1};
-					txdara_reg[ 8: 0] <= {avs_writedata[ 7: 0], 1'b1};
+					if (avs_writedata[30:24]) begin		// 4-phase write
+						txdara_reg[35:27] <= {avs_writedata[30:24], 2'b01};
+						txdara_reg[26:18] <= {avs_writedata[23:16], 1'b1};
+						txdara_reg[17: 9] <= {avs_writedata[15: 8], 1'b1};
+						bitcount <= 6'd35;
+					end
+					else begin							// 3-phase write
+						txdara_reg[35:27] <= {avs_writedata[22:16], 2'b01};
+						txdara_reg[26:18] <= {avs_writedata[15: 8], 1'b1};
+						txdara_reg[17: 9] <= {avs_writedata[ 7: 0], 1'b1};
+						bitcount <= 6'd26;
+					end
 				end
 			end
 
 
 			// スタートコンディション発行 
 			STATE_START : begin
-				if (iostart_req_reg) begin
-					iostart_req_reg <= 1'b0;
-				end
-				else if (stateio_ack_sig) begin
+				if (stateio_ack_sig) begin
 					state_reg <= STATE_BIT;
-					bitcount <= 5'd26;
-					iostart_req_reg <= 1'b1;
 				end
 			end
 
 			// データビット送信 
 			STATE_BIT : begin
-				if (iostart_req_reg) begin
-					iostart_req_reg <= 1'b0;
-				end
-				else if (stateio_ack_sig) begin
-					txdara_reg <= {txdara_reg[25:0], 1'b0};
+				if (stateio_ack_sig) begin
+					txdara_reg <= {txdara_reg[34:0], 1'b0};
 					bitcount <= bitcount - 1'd1;
 
-					iostart_req_reg <= 1'b1;
-
-					if (bitcount == 1'd0) begin
-						state_reg <= STATE_STOP;
+					if (bitcount) begin
+						state_reg <= STATE_BIT;
 					end
 					else begin
-						state_reg <= STATE_BIT;
+						state_reg <= STATE_STOP;
 					end
 				end
 			end
 
 			// ストップコンディション発行 
 			STATE_STOP : begin
-				if (iostart_req_reg) begin
-					iostart_req_reg <= 1'b0;
-				end
-				else if (stateio_ack_sig) begin
-					state_reg <= STATE_DONE;
-					iostart_req_reg <= 1'b1;
+				if (stateio_ack_sig) begin
+					state_reg <= STATE_WAIT;
 				end
 			end
 
 			// ステート終了およびカメラ側レジスタ更新待ち 
+			STATE_WAIT : begin
+				if (stateio_ack_sig) begin
+					state_reg <= STATE_DONE;
+				end
+			end
+
 			STATE_DONE : begin
 				if (iostart_req_reg) begin
 					iostart_req_reg <= 1'b0;
@@ -227,7 +226,7 @@ module peridot_cam_sccb #(
 	assign sccb_clk_oe  = (!cout_reg)? 1'b1 : 1'b0;
 	assign sccb_data_oe = (!dout_reg)? 1'b1 : 1'b0;
 
-	assign stateio_ack_sig = (state_io_reg == STATE_IO_SET1 && divcount == 1'd0);
+	assign stateio_ack_sig = (state_io_reg == STATE_IO_SET1 && !divcount);
 
 	always @(posedge clock_sig or posedge reset_sig) begin
 		if (reset_sig) begin
@@ -249,24 +248,24 @@ module peridot_cam_sccb #(
 
 			// 前半シンボル 
 			STATE_IO_SET0 : begin
-				if (divcount == 1'd0) begin
+				if (divcount) begin
+					divcount <= divcount - 1'd1;
+				end
+				else begin
 					state_io_reg <= STATE_IO_SET1;
 					divcount <= CLOCK_DIVNUM[DIVCOUNT_WIDTH-1:0];
 					cout_reg <= txclk_sig[0];
 					dout_reg <= txdata_sig[0];
 				end
-				else begin
-					divcount <= divcount - 1'd1;
-				end
 			end
 
 			// 後半シンボル 
 			STATE_IO_SET1 : begin
-				if (divcount == 1'd0) begin
-					state_io_reg <= STATE_IO_HOLD;
+				if (divcount) begin
+					divcount <= divcount - 1'd1;
 				end
 				else begin
-					divcount <= divcount - 1'd1;
+					state_io_reg <= STATE_IO_HOLD;
 				end
 			end
 

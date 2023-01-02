@@ -5,6 +5,7 @@
 //   DATE   : 2015/05/17 -> 2015/05/18
 //   MODIFY : 2017/03/01
 //          : 2017/05/13 複数デバイスの接続に対応、CSアサートWAIT挿入 
+//          : 2022/12/07 waitrequestモード追加、デバイス最大数を32→16に変更 
 //
 // ===================================================================
 //
@@ -30,11 +31,12 @@
 // SOFTWARE.
 //
 
-// reg00(+0)  bit15:irqena(RW), bit14-10:devsel(RW), bit9:start(W)/ready(R), bit8:select(RW), bit7-0:txdata(W)/rxdata(R)
+// reg00(+0)  bit15:irqena(RW), bit14:waitreq(RW), bit13-10:devsel(RW), bit9:start(W)/ready(R),
+//             bit8:select(RW), bit7-0:txdata(W)/rxdata(R)
 // reg01(+4)  bit15:bitrvs(RW), bit13-12:mode(RW), bit7-0:clkdiv(RW)
 
 module peridot_spi #(
-	parameter DEVSELECT_NUMBER   = 1,			// Number of devices 1 to 32
+	parameter DEVSELECT_NUMBER   = 2,			// Number of devices 1 to 16
 	parameter DEFAULT_REG_BITRVS = 0,			// init bitrvs value 0 or 1
 	parameter DEFAULT_REG_MODE   = 0,			// init mode value 0-3
 	parameter DEFAULT_REG_CLKDIV = 255			// init clkdiv value 0-255 (BitRate[bps] = <csi_clk>[Hz] / ((clkdiv + 1)*2) )
@@ -45,10 +47,11 @@ module peridot_spi #(
 
 	// Interface: Avalon-MM slave
 	input wire  [0:0]	avs_address,
-	input wire			avs_read,			// read  0-setup,1-wait,0-hold
+	input wire			avs_read,			// read  0-setup,0-wait,0-hold
 	output wire [31:0]	avs_readdata,
 	input wire			avs_write,			// write 0-setup,0-wait,0-hold
 	input wire  [31:0]	avs_writedata,
+	output wire			avs_waitrequest,
 
 	// Interface: Avalon-MM Interrupt sender
 	output wire			ins_irq,
@@ -94,8 +97,9 @@ module peridot_spi #(
 	reg				bitrvs_reg;
 	reg  [1:0]		mode_reg;
 	reg  [7:0]		divref_reg;
-	reg  [4:0]		devsel_reg;
+	reg  [3:0]		devsel_reg;
 	reg				irqena_reg;
+	reg				waitreq_reg;
 	reg				ready_reg;
 	reg				sso_reg;
 	wire [7:0]		txdata_sig, rxdata_sig;
@@ -116,9 +120,11 @@ module peridot_spi #(
 	assign ins_irq = (irqena_reg)? ready_reg : 1'b0;
 
 	assign avs_readdata =
-			(avs_address == 1'd0)? {16'b0, irqena_reg, devsel_reg, ready_reg, sso_reg, rxdata_sig} :
+			(avs_address == 1'd0)? {16'b0, irqena_reg, waitreq_reg, devsel_reg, ready_reg, sso_reg, rxdata_sig} :
 			(avs_address == 1'd1)? {16'b0, bitrvs_reg, 1'b0, mode_reg, 4'b0, divref_reg} :
 			{32{1'bx}};
+
+	assign avs_waitrequest = (avs_address == 1'd0 && (avs_write || avs_read) && waitreq_reg)? ~ready_reg : 1'b0;
 
 	assign txdata_sig = (bitrvs_reg)? {avs_writedata[0], avs_writedata[1], avs_writedata[2], avs_writedata[3], avs_writedata[4], avs_writedata[5], avs_writedata[6], avs_writedata[7]} : avs_writedata[7:0];
 	assign rxdata_sig = (bitrvs_reg)? {rxbyte_reg[0], rxbyte_reg[1], rxbyte_reg[2], rxbyte_reg[3], rxbyte_reg[4], rxbyte_reg[5], rxbyte_reg[6], rxbyte_reg[7]} : rxbyte_reg;
@@ -141,7 +147,8 @@ module peridot_spi #(
 			mode_reg   <= DEFAULT_REG_MODE[1:0];
 			divref_reg <= DEFAULT_REG_CLKDIV[7:0];
 			irqena_reg <= 1'b0;		// irq disable
-			devsel_reg <= 5'd0;		// device no
+			waitreq_reg<= 1'b0;		// waitrequest disable
+			devsel_reg <= 1'd0;		// device no
 			sso_reg    <= 1'b0;		// select disable
 		end
 		else begin
@@ -164,7 +171,8 @@ module peridot_spi #(
 						end
 
 						irqena_reg <= avs_writedata[15];
-						devsel_reg <= avs_writedata[14:10];
+						waitreq_reg<= avs_writedata[14];
+						devsel_reg <= avs_writedata[13:10];
 						sso_reg    <= avs_writedata[8];
 						sclk_reg   <= mode_reg[1];
 						txbyte_reg <= txdata_sig;

@@ -6,6 +6,7 @@
 #   MODIFY : 2018/11/26 17.1 beta
 #            2021/12/28 17.2 beta
 #            2022/09/25 19.1 beta
+#            2022/12/07 20.1 beta
 #
 # ===================================================================
 #
@@ -45,7 +46,7 @@ set_module_property DISPLAY_NAME "PERIDOT CAM interface (Beta test version)"
 set_module_property DESCRIPTION "PERIDOT OmniVision DVP capture interface"
 set_module_property GROUP "PERIDOT Peripherals"
 set_module_property AUTHOR "J-7SYSTEM WORKS LIMITED"
-set_module_property VERSION 19.1
+set_module_property VERSION 20.1
 set_module_property INTERNAL false
 set_module_property OPAQUE_ADDRESS_MAP true
 set_module_property INSTANTIATE_IN_SYSTEM_MODULE true
@@ -65,8 +66,8 @@ set_fileset_property quartus_synth TOP_LEVEL peridot_cam
 # 
 # parameters
 # 
-#set debugview false
-set debugview true
+set debugview false
+#set debugview true
 add_parameter HW_TCL_DEBUG boolean true
 set_parameter_property HW_TCL_DEBUG ENABLED false
 set_parameter_property HW_TCL_DEBUG VISIBLE $debugview
@@ -76,15 +77,24 @@ add_parameter AVM_CLOCKFREQ integer
 set_parameter_property AVM_CLOCKFREQ UNITS hertz
 set_parameter_property AVM_CLOCKFREQ SYSTEM_INFO {CLOCK_RATE m1_clock}
 set_parameter_property AVM_CLOCKFREQ HDL_PARAMETER true
-set_parameter_property AVM_CLOCKFREQ ENABLED false
 set_parameter_property AVM_CLOCKFREQ VISIBLE $debugview
 
 add_parameter AVS_CLOCKFREQ integer
 set_parameter_property AVS_CLOCKFREQ UNITS hertz
 set_parameter_property AVS_CLOCKFREQ SYSTEM_INFO {CLOCK_RATE s1_clock}
 set_parameter_property AVS_CLOCKFREQ HDL_PARAMETER true
-set_parameter_property AVS_CLOCKFREQ ENABLED false
 set_parameter_property AVS_CLOCKFREQ VISIBLE $debugview
+
+add_parameter DVP_FIFO_DEPTH integer 10
+set_parameter_property DVP_FIFO_DEPTH HDL_PARAMETER true
+set_parameter_property DVP_FIFO_DEPTH DISPLAY_NAME "DVP input fifo size"
+set_parameter_property DVP_FIFO_DEPTH ALLOWED_RANGES {"10:1024bytes" "11:2048bytes" "12:4096bytes"}
+
+add_parameter DVP_BYTESWAP string "ON"
+set_parameter_property DVP_BYTESWAP HDL_PARAMETER true
+set_parameter_property DVP_BYTESWAP DISPLAY_NAME "Alignment unit of DVP data"
+set_parameter_property DVP_BYTESWAP ALLOWED_RANGES {"OFF:Byte(8bit)" "ON:Word(16bit)"}
+set_parameter_property DVP_BYTESWAP DISPLAY_HINT radio
 
 add_parameter USE_SCCBINTERFACE string "ON"
 set_parameter_property USE_SCCBINTERFACE HDL_PARAMETER true
@@ -96,7 +106,7 @@ set_parameter_property USE_SCCB DISPLAY_HINT boolean
 
 add_parameter USE_PERIDOT_I2C string "OFF"
 set_parameter_property USE_PERIDOT_I2C HDL_PARAMETER true
-set_parameter_property USE_PERIDOT_I2C DISPLAY_NAME "SCCB interface module to include"
+set_parameter_property USE_PERIDOT_I2C DISPLAY_NAME "SCCB interface module"
 set_parameter_property USE_PERIDOT_I2C ALLOWED_RANGES {"OFF:Simple SCCB" "ON:PERIDOT I2C"}
 set_parameter_property USE_PERIDOT_I2C DISPLAY_HINT radio
 
@@ -105,11 +115,6 @@ set_parameter_property SCCB_CLOCKFREQ HDL_PARAMETER true
 set_parameter_property SCCB_CLOCKFREQ DISPLAY_NAME "SCCB bit rate"
 set_parameter_property SCCB_CLOCKFREQ ALLOWED_RANGES {"100000:100kbps" "400000:400kbps"}
 
-add_parameter DVP_BYTESWAP string "ON"
-set_parameter_property DVP_BYTESWAP HDL_PARAMETER true
-set_parameter_property DVP_BYTESWAP DISPLAY_NAME "Alignment unit of DVP data"
-set_parameter_property DVP_BYTESWAP ALLOWED_RANGES {"OFF:Byte(8bit)" "ON:Word(16bit)"}
-set_parameter_property DVP_BYTESWAP DISPLAY_HINT radio
 
 
 # 
@@ -313,8 +318,9 @@ proc elaboration_callback {} {
 		set peridot_i2c_valie [get_parameter_value USE_PERIDOT_I2C]
 		set sccb_bitrate_value [get_parameter_value SCCB_CLOCKFREQ]
 		set dvp_byteswap_value [get_parameter_value DVP_BYTESWAP]
+		set dvp_fifodepth_value [get_parameter_value DVP_FIFO_DEPTH]
 
-		send_message info "USE_SCCBINTERFACE = $sccbinterface_value, USE_PERIDOT_I2C = $peridot_i2c_valie, SCCB_CLOCKFREQ = $sccb_bitrate_value, DVP_BYTESWAP = $dvp_byteswap_value"
+		send_message info "USE_SCCBINTERFACE = $sccbinterface_value, USE_PERIDOT_I2C = $peridot_i2c_valie, SCCB_CLOCKFREQ = $sccb_bitrate_value, DVP_FIFO_DEPTH = $dvp_fifodepth_value, DVP_BYTESWAP = $dvp_byteswap_value"
 		send_message info "value_use_sccb = $value_use_sccb, value_use_i2c = $value_use_i2c"
 	}
 }

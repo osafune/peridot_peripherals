@@ -1,10 +1,11 @@
 // ===================================================================
-// TITLE : PERIDOT-NGS / I2C master
+// TITLE : PERIDOT-NGS / I2C host
 //
 //   DEGISN : S.OSAFUNE (J-7SYSTEM WORKS LIMITED)
 //   DATE   : 2015/05/21 -> 2015/05/22
 //   MODIFY : 2017/05/13 17.0対応 
 //          : 2022/01/11 i2crst,divrefの初期値設定追加 
+//          : 2022/12/07 waitrequest動作モード追加 
 //
 // ===================================================================
 //
@@ -37,9 +38,10 @@
 `default_nettype none
 
 module peridot_i2c #(
-	parameter AVS_CLOCKFREQ			= 25000000,		// peripheral drive clock freq(Hz) - up to 100MHz
-	parameter REG_INIT_I2CRST		= 1,			// i2crst initialize value : 0 or 1
-	parameter REG_INIT_DIVREFREG	= 1023			// divref initialize value : 0-1023 (BitRate[bps] = <csi_clk>[Hz] / ((clkdiv + 4) * 4) )
+	parameter AVS_CLOCKFREQ		= 25000000,		// peripheral drive clock freq(Hz) - up to 100MHz
+	parameter SKIP_I2C_BUSINIT	= 0,			// 0:Do I2C bus initialize / 1:Skip initialize
+	parameter REG_INIT_DEVRST	= 1,			// devrst initialize value : 0 or 1
+	parameter REG_INIT_CLKDIV	= 1023			// clkdiv initialize value : 1-1023 (BitRate[bps] = <csi_clk>[Hz] / ((clkdiv + 4) * 4) )
 ) (
 	// Interface: clk
 	input wire			csi_clk,
@@ -47,10 +49,11 @@ module peridot_i2c #(
 
 	// Interface: Avalon-MM slave
 	input wire  [0:0]	avs_address,
-	input wire			avs_read,			// read  0-setup,1-wait,0-hold
+	input wire			avs_read,			// read  0-setup,0-wait,0-hold
 	output wire [31:0]	avs_readdata,
 	input wire			avs_write,			// write 0-setup,0-wait,0-hold
 	input wire  [31:0]	avs_writedata,
+	output wire			avs_waitrequest,
 
 	// Interface: Avalon-MM Interrupt sender
 	output wire			ins_irq,
@@ -92,10 +95,12 @@ module peridot_i2c #(
 				STATE_DONE		= 5'd31;
 
 	localparam	STATE_IO_IDLE	= 5'd0,
-				STATE_IO_SETSCL	= 5'd1,
-				STATE_IO_SETSDA	= 5'd2,
-				STATE_IO_WAIT	= 5'd3,
+				STATE_IO_SET	= 5'd1,
+				STATE_IO_WAIT	= 5'd2,
 				STATE_IO_DONE	= 5'd31;
+
+	localparam	REG_INIT_STATE	= (SKIP_I2C_BUSINIT)? STATE_IDLE : STATE_INIT_ENTRY;
+	localparam	REG_INIT_READY	= (SKIP_I2C_BUSINIT)? 1'b1 : 1'b0;
 
 
 /* ※以降のパラメータ宣言は禁止※ */
@@ -109,6 +114,7 @@ module peridot_i2c #(
 
 	wire			begintransaction_sig;
 	reg				irqena_reg;
+	reg				waitreq_reg;
 	reg				sendstp_reg;
 	reg				i2crst_reg;
 	reg  [9:0]		divref_reg;
@@ -141,17 +147,20 @@ module peridot_i2c #(
 	assign ins_irq = (irqena_reg)? ready_reg : 1'b0;
 
 	assign avs_readdata =
-			(avs_address == 1'd0)? {16'b0, irqena_reg, 5'b0, ready_reg, rxbyte_reg[0], rxbyte_reg[8:1]}:
+			(avs_address == 1'd0)? {16'b0, irqena_reg, waitreq_reg, 4'b0, ready_reg, rxbyte_reg[0], rxbyte_reg[8:1]}:
 			(avs_address == 1'd1)? {16'b0, i2crst_reg, initfaile_reg, 4'b0, divref_reg} :
 			{32{1'bx}};
+
+	assign avs_waitrequest = (avs_address == 1'd0 && (avs_write || avs_read) && waitreq_reg)? ~ready_reg : 1'b0;
 
 	assign begintransaction_sig = (avs_write && avs_address == 1'd0 && avs_writedata[9]);
 
 	always @(posedge clock_sig or posedge reset_sig) begin
 		if (reset_sig) begin
-			i2crst_reg <= REG_INIT_I2CRST[0];
 			irqena_reg <= 1'b0;
-			divref_reg <= REG_INIT_DIVREFREG[9:0];
+			waitreq_reg <= 1'b0;
+			i2crst_reg <= REG_INIT_DEVRST[0];
+			divref_reg <= REG_INIT_CLKDIV[9:0];
 		end
 		else begin
 
@@ -161,13 +170,15 @@ module peridot_i2c #(
 				divref_reg <= avs_writedata[9:0];
 			end
 
-			// 割り込みレジスタの読み書き 
+			// 割り込みレジスタ、waitリクエストレジスタの読み書き 
 			if (i2crst_reg) begin
 				irqena_reg <= 1'b0;
+				waitreq_reg <= 1'b0;
 			end
 			else begin
 				if (avs_write && avs_address == 1'd0 && ready_reg) begin
 					irqena_reg <= avs_writedata[15];
+					waitreq_reg <= avs_writedata[14];
 				end
 			end
 
@@ -180,16 +191,16 @@ module peridot_i2c #(
 
 	always @(posedge clock_sig or posedge reset_sig) begin
 		if (reset_sig) begin
-			state_reg <= STATE_INIT_ENTRY;
-			ready_reg <= 1'b0;
+			state_reg <= REG_INIT_STATE;
+			ready_reg <= REG_INIT_READY;
 			setsclreq_reg <= 1'b0;
 			setsdareq_reg <= 1'b0;
 			initfaile_reg <= 1'b0;
 		end
 		else begin
 			if (i2crst_reg) begin
-				state_reg <= STATE_INIT_ENTRY;
-				ready_reg <= 1'b0;
+				state_reg <= REG_INIT_STATE;
+				ready_reg <= REG_INIT_READY;
 				setsclreq_reg <= 1'b0;
 				setsdareq_reg <= 1'b0;
 				initfaile_reg <= 1'b0;
@@ -445,30 +456,22 @@ module peridot_i2c #(
 
 				STATE_IO_IDLE : begin
 					if (setsclreq_reg) begin
-						state_io_reg <= STATE_IO_SETSCL;
+						state_io_reg <= STATE_IO_SET;
 						scl_oe_reg <= ~pindata_reg;
 					end
 					else if (setsdareq_reg) begin
-						state_io_reg <= STATE_IO_SETSDA;
+						state_io_reg <= STATE_IO_SET;
 						sda_oe_reg <= ~pindata_reg;
 					end
 				end
 
-				// SCL set
-				STATE_IO_SETSCL : begin
+				STATE_IO_SET : begin
 					state_io_reg <= STATE_IO_WAIT;
 					divcount <= divref_reg;
 				end
 
-				// SDA set
-				STATE_IO_SETSDA : begin
-					state_io_reg <= STATE_IO_WAIT;
-					divcount <= divref_reg;
-				end
-
-				// wait
 				STATE_IO_WAIT : begin
-					if (divcount == 0) begin
+					if (divcount == 1'd0) begin
 						if (setsclreq_reg && scl_oe_reg == 1'b0 && scl_sig == 1'b0) begin	// SCLストレッチ 
 							state_io_reg <= STATE_IO_WAIT;
 						end

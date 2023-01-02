@@ -4,8 +4,9 @@
 //   DEGISN : S.OSAFUNE (J-7SYSTEM WORKS LIMITED)
 //   DATE   : 2017/04/04 -> 2017/04/06
 //   MODIFY : 2018/01/22
-//            2021/12/30 Byte swapオプション追加 
-//            2021/12/31 開始信号の同期化を修正 
+//            2021/12/30 Byte swapオプション追加、開始信号の同期化を修正 
+//            2022/01/11 SCCB I/Fオプション追加 
+//            2022/12/22 SDC修正, IOEレジスタオプション追加 
 //
 // ===================================================================
 //
@@ -32,13 +33,17 @@
 //
 
 
+// Verilog-2001 / IEEE 1364-2001
+`default_nettype none
+
 module peridot_cam #(
-	parameter AVM_CLOCKFREQ			= 100000000,		// AVM drive clock freq(Hz)
-	parameter AVS_CLOCKFREQ			= 25000000,			// AVS drive clock freq(Hz) - up to 100MHz
-	parameter DVP_BYTESWAP			= "ON",				// Upper byte and lower byte are exchanged and stored.
-	parameter USE_SCCBINTERFACE		= "OFF",			// Use internal sccb module
-	parameter USE_PERIDOT_I2C		= "OFF",			// Instance PERIDOT_I2C as an sccb module
-	parameter SCCB_CLOCKFREQ		= 200000			// SCCB clock freq(Hz) - 200kHz typ
+	parameter AVM_CLOCKFREQ			= 100000000,	// AVM drive clock freq(Hz)
+	parameter AVS_CLOCKFREQ			= 25000000,		// AVS drive clock freq(Hz) - up to 100MHz
+	parameter DVP_FIFO_DEPTH		= 10,			// DVP input fifo 10:1024bytes, 11:2048bytes, 12:4096bytes
+	parameter DVP_BYTESWAP			= "ON",			// Upper byte and lower byte are exchanged and stored.
+	parameter USE_SCCBINTERFACE		= "ON",			// Use internal sccb module
+	parameter USE_PERIDOT_I2C		= "OFF",		// Instance PERIDOT_I2C as an sccb module
+	parameter SCCB_CLOCKFREQ		= 400000		// SCCB clock freq(Hz) - 400kHz typ
 ) (
 	// Interface: clk
 	input wire			csi_global_reset,
@@ -63,7 +68,7 @@ module peridot_cam #(
 	input wire			avm_m1_waitrequest,
 
 	// External Interface
-	input wire			cam_clk,				// カメラクロック(48MHz)
+	input wire			cam_clk,				// カメラクロック(typ 48MHz)
 	input wire  [9:2]	cam_data,
 	input wire			cam_href,
 	input wire			cam_vsync,
@@ -78,6 +83,10 @@ module peridot_cam #(
 
 
 /* ----- 内部パラメータ ------------------ */
+
+	localparam DC_FIFO_NUMWORDS = 2**DVP_FIFO_DEPTH;
+	localparam DC_FIFO_WIDTHU = DVP_FIFO_DEPTH + 1;
+	localparam DC_FIFO_WIDTHU_R = DVP_FIFO_DEPTH - 1;
 
 
 /* ※以降のパラメータ宣言は禁止※ */
@@ -98,10 +107,10 @@ module peridot_cam #(
 	wire [31:0]		capaddress_sig;
 	wire [15:0]		capcyclenum_sig;
 
-	reg  [7:0]		camdata_reg;
-	reg				camhref_reg;
-	reg				camvsync_reg;
-	wire [8:0]		rdusedw_sig;
+	reg  [7:0]		camdata_reg /* synthesis ALTERA_ATTRIBUTE = "FAST_INPUT_REGISTER=ON" */;
+	reg				camhref_reg /* synthesis ALTERA_ATTRIBUTE = "FAST_INPUT_REGISTER=ON" */;
+	reg				camvsync_reg /* synthesis ALTERA_ATTRIBUTE = "FAST_INPUT_REGISTER=ON" */;
+	wire [DC_FIFO_WIDTHU_R-1:0] rdusedw_sig;
 	wire [31:0]		dcfifo_q_sig;
 
 	reg  [2:0]		fsync_in_reg;
@@ -117,9 +126,6 @@ module peridot_cam #(
 
 /* ===== テスト記述 ============== */
 
-//	assign test_rdusedw = rdusedw_sig;
-//	assign test_dataready = writedataready_sig;
-//	assign test_datardack = writedatardack_sig;
 
 
 /* ===== モジュール構造記述 ============== */
@@ -132,7 +138,7 @@ module peridot_cam #(
 		.USE_PERIDOT_I2C	(USE_PERIDOT_I2C),
 		.SCCB_CLOCKFREQ		(SCCB_CLOCKFREQ)
 	)
-	u0 (
+	u_csr (
 		.csi_global_reset	(reset_sig),
 		.avs_s1_clk			(clock_sig),
 		.avs_s1_address		(avs_s1_address),
@@ -167,13 +173,13 @@ module peridot_cam #(
 
 	dcfifo_mixed_widths #(
 		.add_usedw_msb_bit	("ON"),
-		.lpm_numwords		(1024),
+		.lpm_numwords		(DC_FIFO_NUMWORDS),
 		.lpm_showahead		("ON"),
 		.lpm_type			("dcfifo_mixed_widths"),
 		.lpm_width			(8),
-		.lpm_widthu			(11),
+		.lpm_widthu			(DC_FIFO_WIDTHU),
 		.lpm_width_r		(32),
-		.lpm_widthu_r		(9),
+		.lpm_widthu_r		(DC_FIFO_WIDTHU_R),
 		.overflow_checking	("ON"),
 		.rdsync_delaypipe	(4),
 		.read_aclr_synch	("ON"),
@@ -182,7 +188,7 @@ module peridot_cam #(
 		.write_aclr_synch	("ON"),
 		.wrsync_delaypipe	(4)
 	)
-	u1 (
+	u_fifo (
 		.aclr		(infiforeset_sig),
 		.wrclk		(camclk_sig),
 		.wrreq		(camhref_reg),
@@ -194,7 +200,7 @@ module peridot_cam #(
 		.rdusedw	(rdusedw_sig)
 	);
 
-	assign writedataready_sig = (rdusedw_sig > 9'd15)? 1'b1 : 1'b0;		// 16ワード以上FIFOに入っている 
+	assign writedataready_sig = (rdusedw_sig > 15)? 1'b1 : 1'b0;		// 16ワード以上FIFOに入っている 
 	assign framesync_sig = camvsync_reg;
 
 generate
@@ -225,7 +231,7 @@ endgenerate
 
 
 	peridot_cam_avm
-	u2 (
+	u_avm (
 		.csi_global_reset	(reset_sig),
 		.avm_m1_clk			(avmclk_sig),
 		.avm_m1_address		(avm_m1_address),

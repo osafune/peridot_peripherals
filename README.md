@@ -37,8 +37,14 @@ PERIDOT CNN (beta test)
 
 PERIDOT CAM
 -----------
-OmniVisionのカメラを接続するキャプチャコントローラです。
+OmniVision等のDVPインターフェースカメラを接続するキャプチャコントローラです。  
 Platform Designerモジュールのメモリアドレス上にイメージデータを取り込みます。
+
+
+PERIDOT VGA
+-----------
+24bitパラレル出力またはDVI出力に対応したビデオコントローラーです。  
+Platform Designerモジュールのメモリアドレス上に設定したフレームバッファを読み出します。ピクセルフォーマットはRGB565/RGB555/YUV422が選択可能で、RGB888に変換出力します。
 
 
 PERIDOT SDIF
@@ -91,6 +97,7 @@ PERIDOT Melody Chime
 SDRAM
 -----
 PERIDOTボードで使用しているSDRAMのパラメータセットです。
+⚠ SoPC Builder SDRAMコントローラーはQuartus Prime 21.1移行では付属されません。使用する場合は20.1以前のバージョンを使って下さい。
 
 
 PERIDOT Host Bridge
@@ -118,4 +125,4 @@ PERIDOTのピンマトリックスセレクタおよび制御用のインター�
 [The MIT License (MIT)](https://opensource.org/licenses/MIT)  
 詳細は[license.txt](license.txt)を参照ください。  
 
-(C) 2014-2022 J-7SYSTEM WORKS LIMITED.
+(C) 2014-2023 J-7SYSTEM WORKS LIMITED.

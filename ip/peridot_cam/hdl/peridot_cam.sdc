@@ -1,8 +1,9 @@
 # ===================================================================
-# TITLE : PERIDOT-NGS / OV9655 I/F Register
+# TITLE : PERIDOT-NGS / OmniVision DVP I/F SDC
 #
 #   DEGISN : S.OSAFUNE (J-7SYSTEM WORKS LIMITED)
 #   DATE   : 2017/04/04 -> 2017/04/06
+#          : 2022/12/07
 #
 # ===================================================================
 #
@@ -28,13 +29,11 @@
 # SOFTWARE.
 #
 
-set_false_path -to [get_keepers {*|peridot_cam:*|peridot_cam_avs:*|fsync_in_reg[0]}]
-set_false_path -to [get_keepers {*|peridot_cam:*|peridot_cam_avs:*|done_in_reg[0]}]
-set_false_path -from [get_keepers {*|peridot_cam:*|peridot_cam_avs:*|fiforeset_reg}]
+set_false_path -to [get_keepers {*|peridot_cam:*|peridot_cam_avs:u_csr|fsync_in_reg[0]}]
+set_false_path -to [get_keepers {*|peridot_cam:*|peridot_cam_avs:u_csr|done_in_reg[0]}]
+set_false_path -from [get_keepers {*|peridot_cam:*|peridot_cam_avs:u_csr|fiforeset_reg}]
 
-set_false_path -to [get_keepers {*|peridot_cam:*|fsync_in_reg[0]}]
-set_false_path -to [get_keepers {*|peridot_cam:*|exec_in_reg[0]}]
-set_false_path -from [get_keepers {*|peridot_cam:*|peridot_cam_avs:*|capaddress_reg[*]}] -to  [get_keepers {*|peridot_cam:*|peridot_cam_avm:*|address_reg[*]}]
-set_false_path -from [get_keepers {*|peridot_cam:*|peridot_cam_avs:*|capcyclenum_reg[*]}] -to  [get_keepers {*|peridot_cam:*|peridot_cam_avm:*|chunkcount_reg[*]}]
-
-
+set_false_path -from [get_keepers {*|peridot_cam:*|camvsync_reg}] -to [get_keepers {*|peridot_cam:*|fsync_in_reg[0]}]
+set_false_path -from [get_keepers {*|peridot_cam:*|peridot_cam_avs:u_csr|execution_reg}] -to [get_keepers {*|peridot_cam:*|exec_in_reg[0]}]
+set_false_path -from [get_keepers {*|peridot_cam:*|peridot_cam_avs:u_csr|capaddress_reg[*]}] -to  [get_keepers {*|peridot_cam:*|peridot_cam_avm:u_avm|address_reg[*]}]
+set_false_path -from [get_keepers {*|peridot_cam:*|peridot_cam_avs:u_csr|capcyclenum_reg[*]}] -to  [get_keepers {*|peridot_cam:*|peridot_cam_avm:u_avm|chunkcount_reg[*]}]

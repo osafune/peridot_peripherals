@@ -1,10 +1,11 @@
 # ===================================================================
-# TITLE : PERIDOT-NGS / "PERIDOT SPI master"
+# TITLE : PERIDOT-NGS / "PERIDOT SPI host"
 #
 #   DEGISN : S.OSAFUNE (J-7SYSTEM WORKS LIMITED)
 #   DATE   : 2017/02/20 -> 2017/03/01
 #   MODIFY : 2018/11/26 17.1 beta
 #          : 2022/09/25 19.1
+#          : 2022/12/07 20.1
 #
 # ===================================================================
 #
@@ -40,11 +41,11 @@ package require -exact qsys 16.1
 # module peridot_spi_master
 # 
 set_module_property NAME peridot_spi_master
-set_module_property DISPLAY_NAME "PERIDOT SPI master"
-set_module_property DESCRIPTION "PERIDOT SPI master"
+set_module_property DISPLAY_NAME "PERIDOT SPI host"
+set_module_property DESCRIPTION "PERIDOT SPI host"
 set_module_property GROUP "PERIDOT Peripherals"
 set_module_property AUTHOR "J-7SYSTEM WORKS LIMITED"
-set_module_property VERSION 19.1
+set_module_property VERSION 20.1
 set_module_property INTERNAL false
 set_module_property OPAQUE_ADDRESS_MAP true
 set_module_property INSTANTIATE_IN_SYSTEM_MODULE true
@@ -72,13 +73,13 @@ set_parameter_property CLOCKFREQ TYPE INTEGER
 set_parameter_property CLOCKFREQ SYSTEM_INFO {CLOCK_RATE clock}
 set_parameter_property CLOCKFREQ DISPLAY_NAME "Drive clock rate"
 set_parameter_property CLOCKFREQ UNITS Hertz
-set_parameter_property CLOCKFREQ HDL_PARAMETER false
+set_parameter_property CLOCKFREQ VISIBLE false
 
 add_parameter DEVSELECT_NUMBER INTEGER 1
 set_parameter_property DEVSELECT_NUMBER TYPE INTEGER
 set_parameter_property DEVSELECT_NUMBER DISPLAY_NAME "Number of devices(ss_n)"
 set_parameter_property DEVSELECT_NUMBER UNITS None
-set_parameter_property DEVSELECT_NUMBER ALLOWED_RANGES 1:32
+set_parameter_property DEVSELECT_NUMBER ALLOWED_RANGES 1:16
 set_parameter_property DEVSELECT_NUMBER HDL_PARAMETER true
 
 add_parameter DEFAULT_REG_BITRVS INTEGER 0
@@ -153,6 +154,7 @@ add_interface_port s1 avs_read read Input 1
 add_interface_port s1 avs_readdata readdata Output 32
 add_interface_port s1 avs_write write Input 1
 add_interface_port s1 avs_writedata writedata Input 32
+add_interface_port s1 avs_waitrequest waitrequest Output 1
 set_interface_assignment s1 embeddedsw.configuration.isFlash 0
 set_interface_assignment s1 embeddedsw.configuration.isMemoryDevice 0
 set_interface_assignment s1 embeddedsw.configuration.isNonVolatileStorage 0

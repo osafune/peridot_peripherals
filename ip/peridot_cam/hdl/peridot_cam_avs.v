@@ -1,10 +1,11 @@
 // ===================================================================
-// TITLE : PERIDOT-NGS / OV9655 I/F Register
+// TITLE : PERIDOT-NGS / OmniVision DVP I/F Register
 //
 //   DEGISN : S.OSAFUNE (J-7SYSTEM WORKS LIMITED)
 //   DATE   : 2017/04/04 -> 2017/04/07
 //   MODIFY : 2018/01/22 SCCB追加、レジスタマップ変更 
 //            2021/12/31 SCCBインスタンスオプション,連続キャプチャモード追加 
+//            2022/12/07 SCCB/I2Cインターフェース修正 
 //
 // ===================================================================
 //
@@ -35,6 +36,10 @@
 // reg01 : bit31:camreset  bit15-0:Transfer Cycle (64 Bytes/cycle)
 // reg02 : bit31-6:Destination Address
 // reg03 : SCCB/I2C register
+
+
+// Verilog-2001 / IEEE 1364-2001
+`default_nettype none
 
 module peridot_cam_avs #(
 	parameter AVS_CLOCKFREQ			= 25000000,			// peripheral drive clock freq(Hz) - up to 100MHz
@@ -76,7 +81,7 @@ module peridot_cam_avs #(
 
 /* ----- 内部パラメータ ------------------ */
 
-	localparam I2C_DIVREF_VALUE = ((AVS_CLOCKFREQ / SCCB_CLOCKFREQ) + 3) / 4 - 4;
+	localparam I2C_CLKDIV_VALUE = ((AVS_CLOCKFREQ / SCCB_CLOCKFREQ) + 3) / 4 - 4;
 
 
 /* ※以降のパラメータ宣言は禁止※ */
@@ -223,17 +228,19 @@ generate
 			.avs_write		(sccb_write_sig),
 			.avs_writedata	(avs_s1_writedata),
 			.avs_waitrequest(sccb_waitrequest_sig),
-			.ins_irq		(sccb_irq_sig),
 
 			.sccb_clk_oe	(sccb_clk_oe_sig),
 			.sccb_data_oe	(sccb_data_oe_sig)
 		);
+
+		assign sccb_irq_sig = 1'b0;
 	end
 	else if (USE_SCCBINTERFACE == "ON" && USE_PERIDOT_I2C == "ON") begin
 		peridot_i2c #(
 			.AVS_CLOCKFREQ		(AVS_CLOCKFREQ),
-			.REG_INIT_I2CRST	(0),
-			.REG_INIT_DIVREFREG	(I2C_DIVREF_VALUE)
+			.SKIP_I2C_BUSINIT	(1),
+			.REG_INIT_DEVRST	(0),
+			.REG_INIT_CLKDIV	(I2C_CLKDIV_VALUE)
 		)
 		u_i2c (
 			.csi_clk		(avs_clk_sig),
@@ -243,6 +250,7 @@ generate
 			.avs_readdata	(sccb_readdata_sig),
 			.avs_write		(sccb_write_sig),
 			.avs_writedata	(avs_s1_writedata),
+			.avs_waitrequest(sccb_waitrequest_sig),
 			.ins_irq		(sccb_irq_sig),
 
 			.i2c_reset_out	(),
@@ -251,8 +259,6 @@ generate
 			.i2c_scl		(sccb_clk_sig),
 			.i2c_sda		(sccb_data_sig)
 		);
-
-		assign sccb_waitrequest_sig = 1'b0;
 	end
 	else begin
 		assign sccb_readdata_sig = {32{1'bx}};
