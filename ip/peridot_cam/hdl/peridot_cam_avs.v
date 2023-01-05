@@ -1,11 +1,12 @@
 // ===================================================================
-// TITLE : PERIDOT-NGS / OmniVision DVP I/F Register
+// TITLE : PERIDOT-NGS / DVP I/F Register
 //
 //   DEGISN : S.OSAFUNE (J-7SYSTEM WORKS LIMITED)
 //   DATE   : 2017/04/04 -> 2017/04/07
 //   MODIFY : 2018/01/22 SCCB追加、レジスタマップ変更 
 //            2021/12/31 SCCBインスタンスオプション,連続キャプチャモード追加 
 //            2022/12/07 SCCB/I2Cインターフェース修正 
+//            2023/01/04 バーストサイクル修正 
 //
 // ===================================================================
 //
@@ -33,8 +34,8 @@
 
 // レジスタマップ 
 // reg00 : bit31:irqena  bit30:irqreq  bit2:continuous  bit1:ready  bit0:start
-// reg01 : bit31:camreset  bit15-0:Transfer Cycle (64 Bytes/cycle)
-// reg02 : bit31-6:Destination Address
+// reg01 : bit31:camreset  bit23-0:Transfer Cycle (4 Bytes/cycle)
+// reg02 : bit31-2:Store Address top
 // reg03 : SCCB/I2C register
 
 
@@ -52,9 +53,9 @@ module peridot_cam_avs #(
 	input wire			avs_s1_clk,
 
 	// Interface: Avalon-MM Slave
-	input wire [1:0]	avs_s1_address,
+	input wire  [1:0]	avs_s1_address,
 	input wire			avs_s1_write,
-	input wire [31:0]	avs_s1_writedata,
+	input wire  [31:0]	avs_s1_writedata,
 	input wire			avs_s1_read,
 	output wire [31:0]	avs_s1_readdata,
 	output wire			avs_s1_waitrequest,
@@ -67,7 +68,7 @@ module peridot_cam_avs #(
 	output wire			infiforeset,				// 入力FIFO非同期リセット出力 
 
 	output wire [31:0]	capaddress_top,
-	output wire [15:0]	capcycle_num,
+	output wire [23:0]	capcycle_num,
 
 	output wire			cam_reset_n,
 	inout wire			sccb_sck,
@@ -94,10 +95,9 @@ module peridot_cam_avs #(
 	wire			avs_clk_sig = avs_s1_clk;		// モジュール内部駆動クロック 
 
 	reg  [2:0]		fsync_in_reg;
-	wire			fsync_rise_sig;
 	reg  [2:0]		done_in_reg;
+	wire			fsync_fall_sig;
 	wire			done_rise_sig;
-	wire			done_fall_sig;
 
 	reg				execution_reg;
 	reg				fiforeset_reg;
@@ -105,8 +105,8 @@ module peridot_cam_avs #(
 	reg				irqena_reg;
 	reg				irqreq_reg;
 	reg				camreset_reg;
-	reg  [31:6]		capaddress_reg;
-	reg  [15:0]		capcyclenum_reg;
+	reg  [31:2]		capaddress_reg;
+	reg  [23:0]		capcyclenum_reg;
 
 	wire			sccb_write_sig;
 	wire			sccb_irq_sig;
@@ -136,8 +136,8 @@ module peridot_cam_avs #(
 		end
 	end
 
-	assign fsync_rise_sig = (!fsync_in_reg[2] && fsync_in_reg[1])? 1'b1 : 1'b0;
-	assign done_rise_sig = (!done_in_reg[2] && done_in_reg[1])? 1'b1 : 1'b0;
+	assign fsync_fall_sig = (fsync_in_reg[2] && !fsync_in_reg[1]);
+	assign done_rise_sig = (!done_in_reg[2] && done_in_reg[1]);
 
 
 	///// Avalon-MMインターフェース /////
@@ -145,12 +145,12 @@ module peridot_cam_avs #(
 	assign execution = execution_reg;
 	assign infiforeset = fiforeset_reg;
 
-	assign capaddress_top = {capaddress_reg, 6'b0};
+	assign capaddress_top = {capaddress_reg, 2'b0};
 	assign capcycle_num = capcyclenum_reg;
 
 	assign avs_s1_readdata = (avs_s1_address == 2'h0)? {irqena_reg, irqreq_reg, 27'b0, continuous_reg, ~execution_reg, 1'b0} :
-							 (avs_s1_address == 2'h1)? {16'b0, capcyclenum_reg} :
-							 (avs_s1_address == 2'h2)? {capaddress_reg, 6'b0} :
+							 (avs_s1_address == 2'h1)? {camreset_reg, 7'b0, capcyclenum_reg} :
+							 (avs_s1_address == 2'h2)? {capaddress_reg, 2'b0} :
 							 (avs_s1_address == 2'h3)? sccb_readdata_sig :
 							 {32{1'bx}};
 
@@ -171,7 +171,7 @@ module peridot_cam_avs #(
 			camreset_reg <= 1'b1;
 		end
 		else begin
-			if (fsync_rise_sig && execution_reg) begin
+			if (fsync_fall_sig && execution_reg) begin
 				fiforeset_reg <= 1'b0;
 			end
 			else if (done_rise_sig) begin
@@ -201,11 +201,11 @@ module peridot_cam_avs #(
 						irqena_reg <= avs_s1_writedata[31];
 					end
 					2'h1 : begin
-						capcyclenum_reg <= avs_s1_writedata[15:0];
+						capcyclenum_reg <= avs_s1_writedata[23:0];
 						camreset_reg <= avs_s1_writedata[31];
 					end
 					2'h2 : begin
-						capaddress_reg <= avs_s1_writedata[31:6];
+						capaddress_reg <= avs_s1_writedata[31:2];
 					end
 				endcase
 			end

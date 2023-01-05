@@ -1,5 +1,5 @@
 // ===================================================================
-// TITLE : PERIDOT-NGS / OmniVision DVP I/F
+// TITLE : PERIDOT-NGS / OmniVision DVP capture
 //
 //   DEGISN : S.OSAFUNE (J-7SYSTEM WORKS LIMITED)
 //   DATE   : 2017/04/04 -> 2017/04/06
@@ -7,6 +7,7 @@
 //            2021/12/30 Byte swapオプション追加、開始信号の同期化を修正 
 //            2022/01/11 SCCB I/Fオプション追加 
 //            2022/12/22 SDC修正, IOEレジスタオプション追加 
+//            2023/01/04 バースト長可変に変更 
 //
 // ===================================================================
 //
@@ -39,8 +40,10 @@
 module peridot_cam #(
 	parameter AVM_CLOCKFREQ			= 100000000,	// AVM drive clock freq(Hz)
 	parameter AVS_CLOCKFREQ			= 25000000,		// AVS drive clock freq(Hz) - up to 100MHz
+	parameter BURSTCOUNT_WIDTH		= 4,			// Burst count units bitwidth(2^BURSTCOUNT_WIDTH, BURSTCOUNT_WIDTH < DVP_FIFO_DEPTH-2)
+	parameter TRANSCYCLE_WIDTH		= 22,			// Maximum transfer count bitwidth(2^TRANSCYCLE_WIDTH-1)
 	parameter DVP_FIFO_DEPTH		= 10,			// DVP input fifo 10:1024bytes, 11:2048bytes, 12:4096bytes
-	parameter DVP_BYTESWAP			= "ON",			// Upper byte and lower byte are exchanged and stored.
+	parameter DVP_BYTESWAP			= "OFF",		// Upper byte and lower byte are exchanged and stored.
 	parameter USE_SCCBINTERFACE		= "ON",			// Use internal sccb module
 	parameter USE_PERIDOT_I2C		= "OFF",		// Instance PERIDOT_I2C as an sccb module
 	parameter SCCB_CLOCKFREQ		= 400000		// SCCB clock freq(Hz) - 400kHz typ
@@ -49,7 +52,7 @@ module peridot_cam #(
 	input wire			csi_global_reset,
 	input wire			csi_global_clk,
 
-	// Interface: Avalon-MM Slave
+	// Interface: Avalon-MM Agent
 	input wire  [1:0]	avs_s1_address,
 	input wire			avs_s1_write,
 	input wire  [31:0]	avs_s1_writedata,
@@ -58,17 +61,17 @@ module peridot_cam #(
 	output wire			avs_s1_waitrequest,
 	output wire			avs_s1_irq,
 
-	// Interface: Avalon-MM master
-	input wire			avm_m1_clk,				// Avalonマスタ側クロック 
+	// Interface: Avalon-MM Host
+	input wire			avm_m1_clk,				// Avalonホスト側クロック 
 	output wire [31:0]	avm_m1_address,
 	output wire			avm_m1_write,
 	output wire [31:0]	avm_m1_writedata,
 	output wire [3:0]	avm_m1_byteenable,
-	output wire [4:0]	avm_m1_burstcount,
+	output wire [BURSTCOUNT_WIDTH:0] avm_m1_burstcount,
 	input wire			avm_m1_waitrequest,
 
 	// External Interface
-	input wire			cam_clk,				// カメラクロック(typ 48MHz)
+	input wire			cam_clk,				// DVPカメラクロック
 	input wire  [9:2]	cam_data,
 	input wire			cam_href,
 	input wire			cam_vsync,
@@ -84,9 +87,10 @@ module peridot_cam #(
 
 /* ----- 内部パラメータ ------------------ */
 
-	localparam DC_FIFO_NUMWORDS = 2**DVP_FIFO_DEPTH;
-	localparam DC_FIFO_WIDTHU = DVP_FIFO_DEPTH + 1;
-	localparam DC_FIFO_WIDTHU_R = DVP_FIFO_DEPTH - 1;
+	localparam BURSTUNIT		= 2**BURSTCOUNT_WIDTH;
+	localparam DC_FIFO_NUMWORDS	= 2**DVP_FIFO_DEPTH;
+	localparam DC_FIFO_WIDTHU	= DVP_FIFO_DEPTH + 1;
+	localparam DC_FIFO_WIDTHU_R	= DVP_FIFO_DEPTH - 1;
 
 
 /* ※以降のパラメータ宣言は禁止※ */
@@ -105,7 +109,7 @@ module peridot_cam #(
 	wire			framesync_sig;
 	wire			infiforeset_sig;
 	wire [31:0]		capaddress_sig;
-	wire [15:0]		capcyclenum_sig;
+	wire [23:0]		capcyclenum_sig;
 
 	reg  [7:0]		camdata_reg /* synthesis ALTERA_ATTRIBUTE = "FAST_INPUT_REGISTER=ON" */;
 	reg				camhref_reg /* synthesis ALTERA_ATTRIBUTE = "FAST_INPUT_REGISTER=ON" */;
@@ -117,7 +121,7 @@ module peridot_cam #(
 	reg  [1:0]		exec_in_reg;
 	wire			start_sig;
 
-	wire			writedataready_sig;
+	wire [BURSTCOUNT_WIDTH:0] writedatausedw_sig;
 	wire [31:0]		writedata_sig;
 	wire			writedatardack_sig;
 
@@ -130,7 +134,7 @@ module peridot_cam #(
 
 /* ===== モジュール構造記述 ============== */
 
-	// AvalonMM-スレーブモジュール 
+	// レジスタ 
 
 	peridot_cam_avs #(
 		.AVS_CLOCKFREQ		(AVS_CLOCKFREQ),
@@ -172,21 +176,20 @@ module peridot_cam #(
 	end
 
 	dcfifo_mixed_widths #(
-		.add_usedw_msb_bit	("ON"),
+//		.lpm_type			("dcfifo_mixed_widths"),
+		.lpm_type			("dcfifo"),
 		.lpm_numwords		(DC_FIFO_NUMWORDS),
-		.lpm_showahead		("ON"),
-		.lpm_type			("dcfifo_mixed_widths"),
 		.lpm_width			(8),
 		.lpm_widthu			(DC_FIFO_WIDTHU),
 		.lpm_width_r		(32),
 		.lpm_widthu_r		(DC_FIFO_WIDTHU_R),
-		.overflow_checking	("ON"),
-		.rdsync_delaypipe	(4),
-		.read_aclr_synch	("ON"),
-		.underflow_checking	("ON"),
-		.use_eab			("ON"),
+		.lpm_showahead		("ON"),
+		.add_usedw_msb_bit	("ON"),
 		.write_aclr_synch	("ON"),
-		.wrsync_delaypipe	(4)
+		.wrsync_delaypipe	(4),
+		.read_aclr_synch	("ON"),
+		.rdsync_delaypipe	(4),
+		.use_eab			("ON")
 	)
 	u_fifo (
 		.aclr		(infiforeset_sig),
@@ -200,7 +203,7 @@ module peridot_cam #(
 		.rdusedw	(rdusedw_sig)
 	);
 
-	assign writedataready_sig = (rdusedw_sig > 15)? 1'b1 : 1'b0;		// 16ワード以上FIFOに入っている 
+	assign writedatausedw_sig = (rdusedw_sig > BURSTUNIT)? BURSTUNIT[BURSTCOUNT_WIDTH:0] : rdusedw_sig[BURSTCOUNT_WIDTH:0];
 	assign framesync_sig = camvsync_reg;
 
 generate
@@ -214,7 +217,7 @@ endgenerate
 
 
 
-	// AvalonMM-マスタモジュール 
+	// Avalon-MMホスト 
 
 	always @(posedge avmclk_sig or posedge reset_sig) begin
 		if (reset_sig) begin
@@ -230,7 +233,10 @@ endgenerate
 	assign start_sig = (!fsync_in_reg[2] && fsync_in_reg[1])? exec_in_reg[1] : 1'b0;
 
 
-	peridot_cam_avm
+	peridot_cam_avm #(
+		.BURSTCOUNT_WIDTH	(BURSTCOUNT_WIDTH),
+		.TRANSCYCLE_WIDTH	(TRANSCYCLE_WIDTH)
+	)
 	u_avm (
 		.csi_global_reset	(reset_sig),
 		.avm_m1_clk			(avmclk_sig),
@@ -242,11 +248,11 @@ endgenerate
 		.avm_m1_waitrequest	(avm_m1_waitrequest),
 
 		.address_top		(capaddress_sig),
-		.transcycle_num		(capcyclenum_sig),
+		.transcycle_num		(capcyclenum_sig[TRANSCYCLE_WIDTH-1:0]),
 		.start				(start_sig),
 		.done				(done_sig),
 
-		.writedata_ready	(writedataready_sig),
+		.writedata_usedw	(writedatausedw_sig),
 		.writedata			(writedata_sig),
 		.writedata_rdack	(writedatardack_sig)
 	);

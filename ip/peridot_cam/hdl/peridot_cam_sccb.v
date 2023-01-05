@@ -65,7 +65,6 @@ module peridot_cam_sccb #(
 /* ----- 内部パラメータ ------------------ */
 
 	localparam CLOCK_DIVNUM = ((AVS_CLOCKFREQ + (SCCB_CLOCKFREQ * 2) - 1) / (SCCB_CLOCKFREQ * 2)) - 1;
-//	localparam CLOCK_DIVNUM = 3;
 	localparam DIVCOUNT_WIDTH = 9;
 
 	localparam	STATE_IDLE		= 5'd0,

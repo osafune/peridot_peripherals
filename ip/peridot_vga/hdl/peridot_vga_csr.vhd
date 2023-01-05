@@ -1,9 +1,9 @@
 -- ===================================================================
--- TITLE : PERIDOT peripherals / Control register
+-- TITLE : PERIDOT VGA / Control register
 --
 --     DESIGN : s.osafune@j7system.jp (J-7SYSTEM WORKS LIMITED)
---     DATE   : 2023/01/01 -> 2023/01/02
---            : 2023/01/xx (FIXED)
+--     DATE   : 2023/01/01 -> 2023/01/05
+--            : 2023/01/06 (FIXED)
 --
 -- ===================================================================
 --
@@ -37,11 +37,11 @@ use ieee.std_logic_arith.all;
 
 entity peridot_vga_csr is
 	port (
-	--==== Avalon-MM Agent信号線 =====================================
-		csi_csr_reset		: in  std_logic;
+	--==== Avalon-MM Agent信号 =======================================
+		reset				: in  std_logic;
 		csi_csr_clk			: in  std_logic;
 
-		avs_csr_address		: in  std_logic_vector(3 downto 2);
+		avs_csr_address		: in  std_logic_vector(1 downto 0);
 		avs_csr_read		: in  std_logic;
 		avs_csr_readdata	: out std_logic_vector(31 downto 0);
 		avs_csr_write		: in  std_logic;
@@ -49,10 +49,11 @@ entity peridot_vga_csr is
 
 		ins_csr_irq			: out std_logic;
 
-	--==== 外部信号線 ================================================
-		vsync_in			: in  std_logic;	-- async input
-		framebuff_top		: out std_logic_vector(31 downto 0);
-		scan_enable			: out std_logic
+	--==== 外部信号 ==================================================
+		video_vsync			: in  std_logic;	-- async input
+		framestart			: out std_logic;
+		framebuff_top		: out std_logic_vector(31 downto 0);	-- framestart↑エッジで確定 
+		scan_enable			: out std_logic							-- レジスタ書き込みで変化 
 	);
 end peridot_vga_csr;
 
@@ -64,8 +65,9 @@ architecture RTL of peridot_vga_csr is
 	function repbit(S:std_logic; W:integer) return std_logic_vector is variable a:std_logic_vector(W-1 downto 0); begin a:=(others=>S); return a; end;
 
 	-- signal
-	signal cdb_vsyncin_reg	: std_logic_vector(2 downto 0);		-- [0] : input false_path
 	signal framebegin		: boolean;
+	signal cdb_vsyncin_reg	: std_logic_vector(2 downto 0);		-- [0] : input false_path
+	signal topaddr_out_reg	: std_logic_vector(31 downto 0);	-- [*] : output false_path
 
 	signal readdata_0_sig	: std_logic_vector(31 downto 0);
 	signal readdata_1_sig	: std_logic_vector(31 downto 0);
@@ -81,17 +83,24 @@ begin
 
 	-- 非同期信号の同期化 
 
-	process (csi_csr_clk, csi_csr_reset) begin
-		if is_true(csi_csr_reset) then
+	framebegin <= (cdb_vsyncin_reg(2 downto 1) = "01");
+
+	process (csi_csr_clk, reset) begin
+		if is_true(reset) then
 			cdb_vsyncin_reg <= (others=>'0');
 
 		elsif rising_edge(csi_csr_clk) then
-			cdb_vsyncin_reg <= cdb_vsyncin_reg(1 downto 0) & vsync_in;
+			cdb_vsyncin_reg <= cdb_vsyncin_reg(1 downto 0) & video_vsync;
 
+			if framebegin then
+				topaddr_out_reg <= framebuff_top_reg;
+			end if;
 		end if;
 	end process;
 
-	framebegin <= (cdb_vsyncin_reg(2 downto 1) = "01");
+	framestart <= cdb_vsyncin_reg(2) when is_true(scanena_reg) else '0';
+	framebuff_top <= topaddr_out_reg;
+	scan_enable <= scanena_reg;
 
 
 	-- コントロールレジスタ 
@@ -114,13 +123,13 @@ begin
 
 	ins_csr_irq <= vsirq_reg when is_true(vsirqena_reg) else '0';
 
-	process (csi_csr_clk, csi_csr_reset) begin
-		if is_true(csi_csr_reset) then
+	process (csi_csr_clk, reset) begin
+		if is_true(reset) then
 			vsirq_reg    <= '0';
 			vsirqena_reg <= '0';
-			vsflag_reg   <= '0';
+--			vsflag_reg   <= '0';
 			scanena_reg  <= '0';
-			vsynccounter_reg <= (others=>'0');
+--			vsynccounter_reg <= (others=>'0');
 
 		elsif rising_edge(csi_csr_clk) then
 
@@ -160,9 +169,6 @@ begin
 
 		end if;
 	end process;
-
-	framebuff_top <= framebuff_top_reg;
-	scan_enable <= scanena_reg;
 
 
 end RTL;

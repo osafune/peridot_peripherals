@@ -6,7 +6,7 @@
 #   MODIFY : 2018/11/26 17.1 beta
 #            2021/12/28 17.2 beta
 #            2022/09/25 19.1 beta
-#            2022/12/07 20.1 beta
+#            2023/01/04 20.1
 #
 # ===================================================================
 #
@@ -42,7 +42,7 @@ package require -exact qsys 16.1
 # module peridot_cam
 # 
 set_module_property NAME peridot_cam
-set_module_property DISPLAY_NAME "PERIDOT CAM interface (Beta test version)"
+set_module_property DISPLAY_NAME "PERIDOT CAM interface"
 set_module_property DESCRIPTION "PERIDOT OmniVision DVP capture interface"
 set_module_property GROUP "PERIDOT Peripherals"
 set_module_property AUTHOR "J-7SYSTEM WORKS LIMITED"
@@ -85,10 +85,19 @@ set_parameter_property AVS_CLOCKFREQ SYSTEM_INFO {CLOCK_RATE s1_clock}
 set_parameter_property AVS_CLOCKFREQ HDL_PARAMETER true
 set_parameter_property AVS_CLOCKFREQ VISIBLE $debugview
 
+add_parameter BURSTCOUNT_WIDTH integer 4
+set_parameter_property BURSTCOUNT_WIDTH HDL_PARAMETER true
+set_parameter_property BURSTCOUNT_WIDTH DISPLAY_NAME "Burst units"
+set_parameter_property BURSTCOUNT_WIDTH ALLOWED_RANGES {"4:16 bursts" "5:32 bursts" "6:64 bursts" "7:128 bursts" "8:256 bursts"}
+
+add_parameter TRANSCYCLE_WIDTH integer 22
+set_parameter_property TRANSCYCLE_WIDTH HDL_PARAMETER true
+set_parameter_property TRANSCYCLE_WIDTH VISIBLE $debugview
+
 add_parameter DVP_FIFO_DEPTH integer 10
 set_parameter_property DVP_FIFO_DEPTH HDL_PARAMETER true
 set_parameter_property DVP_FIFO_DEPTH DISPLAY_NAME "DVP input fifo size"
-set_parameter_property DVP_FIFO_DEPTH ALLOWED_RANGES {"10:1024bytes" "11:2048bytes" "12:4096bytes"}
+set_parameter_property DVP_FIFO_DEPTH ALLOWED_RANGES {"10:1024 bytes" "11:2048 bytes" "12:4096 bytes"}
 
 add_parameter DVP_BYTESWAP string "ON"
 set_parameter_property DVP_BYTESWAP HDL_PARAMETER true
@@ -113,13 +122,13 @@ set_parameter_property USE_PERIDOT_I2C DISPLAY_HINT radio
 add_parameter SCCB_CLOCKFREQ integer 400000
 set_parameter_property SCCB_CLOCKFREQ HDL_PARAMETER true
 set_parameter_property SCCB_CLOCKFREQ DISPLAY_NAME "SCCB bit rate"
-set_parameter_property SCCB_CLOCKFREQ ALLOWED_RANGES {"100000:100kbps" "400000:400kbps"}
-
+set_parameter_property SCCB_CLOCKFREQ ALLOWED_RANGES {"100000:100 Kbps" "400000:400 Kbps"}
 
 
 # 
 # display items
 # 
+
 
 
 # 
@@ -248,10 +257,8 @@ add_interface_port sccb sccb_data data bidir 1
 # *******************************************************************
 
 proc generate_synth {entityname} {
-	send_message info "generating top-level entity ${entityname}"
-
 	add_fileset_file peridot_cam.v		VERILOG PATH hdl/peridot_cam.v TOP_LEVEL_FILE
-	add_fileset_file paridot_cam_avm.v	VERILOG PATH hdl/paridot_cam_avm.v
+	add_fileset_file peridot_cam_avm.v	VERILOG PATH hdl/peridot_cam_avm.v
 	add_fileset_file peridot_cam_avs.v	VERILOG PATH hdl/peridot_cam_avs.v
 	add_fileset_file peridot_cam.sdc	SDC PATH hdl/peridot_cam.sdc
 
@@ -273,6 +280,20 @@ proc generate_synth {entityname} {
 # *******************************************************************
 
 proc elaboration_callback {} {
+
+	#-----------------------------------
+	# setup Burst size
+	#-----------------------------------
+
+	set bcwidth		[get_parameter_value BURSTCOUNT_WIDTH]
+	set fifodepth	[get_parameter_value DVP_FIFO_DEPTH]
+
+	if {[expr $bcwidth >= ($fifodepth-2)]} {
+		send_message error "Set a fifo size value greater than."
+	}
+
+	add_interface_port m1 avm_m1_burstcount burstcount Output [expr $bcwidth+1]
+
 
 	#-----------------------------------
 	# setup SCCB interface type

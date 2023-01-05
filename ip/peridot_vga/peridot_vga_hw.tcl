@@ -1,8 +1,8 @@
 # ===================================================================
-# TITLE : PERIDOT peripherals / "PERIDOT VGA Controller"
+# TITLE : PERIDOT VGA Controller
 #
 #   DEGISN : S.OSAFUNE (J-7SYSTEM WORKS LIMITED)
-#   DATE   : 2023/01/01 -> 2023/01/02
+#   DATE   : 2023/01/01 -> 2023/01/06
 #   MODIFY : 
 #
 # ===================================================================
@@ -39,11 +39,11 @@ package require -exact qsys 16.1
 # module peridot_vga_controller
 # 
 set_module_property NAME peridot_vga_controller
-set_module_property DISPLAY_NAME "PERIDOT VGA controller"
-set_module_property DESCRIPTION "PERIDOT VGA controller"
+set_module_property DISPLAY_NAME "PERIDOT VGA controller (Beta test version)"
+set_module_property DESCRIPTION "PERIDOT VGA controller (Beta test version)"
 set_module_property GROUP "PERIDOT Peripherals"
 set_module_property AUTHOR "J-7SYSTEM WORKS LIMITED"
-set_module_property VERSION 20.1
+set_module_property VERSION 20.0.99
 set_module_property INTERNAL false
 set_module_property OPAQUE_ADDRESS_MAP true
 set_module_property INSTANTIATE_IN_SYSTEM_MODULE true
@@ -75,11 +75,22 @@ add_parameter PART_NAME string
 set_parameter_property PART_NAME SYSTEM_INFO {DEVICE}
 set_parameter_property PART_NAME ENABLED false
 set_parameter_property PART_NAME VISIBLE $debugview
+add_parameter CSR_CLOCKFREQ integer
+set_parameter_property CSR_CLOCKFREQ SYSTEM_INFO {CLOCK_RATE csr_clk}
+set_parameter_property CSR_CLOCKFREQ VISIBLE $debugview
+add_parameter AVM_CLOCKFREQ integer
+set_parameter_property AVM_CLOCKFREQ SYSTEM_INFO {CLOCK_RATE m1_clk}
+set_parameter_property AVM_CLOCKFREQ VISIBLE $debugview
 
-add_parameter BURSTLENGTH_WIDTH integer
-set_parameter_property BURSTLENGTH_WIDTH HDL_PARAMETER true
-set_parameter_property BURSTLENGTH_WIDTH DERIVED true
-set_parameter_property BURSTLENGTH_WIDTH VISIBLE $debugview
+add_parameter FIFORESETCOUNT integer 4
+set_parameter_property FIFORESETCOUNT HDL_PARAMETER true
+set_parameter_property FIFORESETCOUNT DERIVED true
+set_parameter_property FIFORESETCOUNT VISIBLE $debugview
+add_parameter FIFODEPTH_WIDTH integer 9
+set_parameter_property FIFODEPTH_WIDTH HDL_PARAMETER true
+set_parameter_property FIFODEPTH_WIDTH DERIVED true
+set_parameter_property FIFODEPTH_WIDTH VISIBLE $debugview
+
 add_parameter VGACLOCK_FREQUENCY integer 
 set_parameter_property VGACLOCK_FREQUENCY HDL_PARAMETER true
 set_parameter_property VGACLOCK_FREQUENCY DERIVED true
@@ -121,16 +132,19 @@ set_parameter_property USE_AUDIOSTREAM HDL_PARAMETER true
 set_parameter_property USE_AUDIOSTREAM DERIVED true
 set_parameter_property USE_AUDIOSTREAM VISIBLE $debugview
 
-add_parameter VIDEO_INTERFACE string "PARALLEL"
-set_parameter_property VIDEO_INTERFACE HDL_PARAMETER true
-set_parameter_property VIDEO_INTERFACE DISPLAY_NAME "Video output interface"
-#set_parameter_property VIDEO_INTERFACE ALLOWED_RANGES {"PARALLEL:Parallel" "DVI:DVI" "LITEHDMI:Lite HDMI" "HDMI:HDMI"}
-set_parameter_property VIDEO_INTERFACE ALLOWED_RANGES {"PARALLEL:Parallel" "DVI:DVI"}
+add_parameter PIXEL_QUEUE integer 1
+set_parameter_property PIXEL_QUEUE DISPLAY_NAME "Pixel FIFO size"
+set_parameter_property PIXEL_QUEUE ALLOWED_RANGES {"1:1 line" "2:2 lines" "3:3 lines"}
 
-add_parameter PIXEL_COLORORDER string "RGB565"
-set_parameter_property PIXEL_COLORORDER HDL_PARAMETER true
-set_parameter_property PIXEL_COLORORDER DISPLAY_NAME "Pixel color format"
-set_parameter_property PIXEL_COLORORDER ALLOWED_RANGES {"RGB565" "RGB555" "YUV422"}
+add_parameter BURSTCOUNT_WIDTH integer 7
+set_parameter_property BURSTCOUNT_WIDTH HDL_PARAMETER true
+set_parameter_property BURSTCOUNT_WIDTH DISPLAY_NAME "Burst units"
+set_parameter_property BURSTCOUNT_WIDTH ALLOWED_RANGES {"5:32 bursts" "6:64 bursts" "7:128 bursts" "8:256 bursts" "9:512 bursts"}
+
+add_parameter LINEOFFSETBYTES integer 2048
+set_parameter_property LINEOFFSETBYTES HDL_PARAMETER true
+set_parameter_property LINEOFFSETBYTES DISPLAY_NAME "Data bytes per line"
+set_parameter_property LINEOFFSETBYTES UNITS Bytes
 
 add_parameter PIXEL_DATAORDER string "BYTE"
 set_parameter_property PIXEL_DATAORDER HDL_PARAMETER true
@@ -138,10 +152,16 @@ set_parameter_property PIXEL_DATAORDER DISPLAY_NAME "Alignment unit of pixel dat
 set_parameter_property PIXEL_DATAORDER ALLOWED_RANGES {"BYTE:Byte(8bit)" "WORD:Word(16bit)"}
 set_parameter_property PIXEL_DATAORDER DISPLAY_HINT radio
 
-add_parameter LINEOFFSETBYTES integer 2048
-set_parameter_property LINEOFFSETBYTES HDL_PARAMETER true
-set_parameter_property LINEOFFSETBYTES DISPLAY_NAME "Data bytes per line"
-set_parameter_property LINEOFFSETBYTES UNITS Bytes
+add_parameter PIXEL_COLORORDER string "RGB565"
+set_parameter_property PIXEL_COLORORDER HDL_PARAMETER true
+set_parameter_property PIXEL_COLORORDER DISPLAY_NAME "Pixel color format"
+set_parameter_property PIXEL_COLORORDER ALLOWED_RANGES {"RGB565" "RGB555" "YUV422"}
+
+add_parameter VIDEO_INTERFACE string "PARALLEL"
+set_parameter_property VIDEO_INTERFACE HDL_PARAMETER true
+set_parameter_property VIDEO_INTERFACE DISPLAY_NAME "Video output interface"
+#set_parameter_property VIDEO_INTERFACE ALLOWED_RANGES {"PARALLEL:Parallel" "DVI:DVI" "LITEHDMI:Lite HDMI" "HDMI:HDMI"}
+set_parameter_property VIDEO_INTERFACE ALLOWED_RANGES {"PARALLEL:Parallel" "DVI:DVI"}
 
 add_parameter DOTCLOCK_FREQUENCY float 25.2
 set_parameter_property DOTCLOCK_FREQUENCY DISPLAY_NAME "Video clock frequency"
@@ -302,7 +322,7 @@ set_interface_property m1 writeWaitTime 0
 
 add_interface_port m1 avm_m1_waitrequest waitrequest Input 1
 add_interface_port m1 avm_m1_address address Output 32
-add_interface_port m1 avm_m1_burstcount burstcount Output 10
+add_interface_port m1 avm_m1_burstcount burstcount Output 8
 add_interface_port m1 avm_m1_read read Output 1
 add_interface_port m1 avm_m1_readdata readdata Input 32
 add_interface_port m1 avm_m1_readdatavalid readdatavalid Input 1
@@ -351,6 +371,7 @@ proc generate_synth {entityname} {
 	add_fileset_file peridot_vga_csr.vhd		VHDL PATH "${hdlpath}/peridot_vga_csr.vhd"
 	add_fileset_file peridot_vga_avm.vhd		VHDL PATH "${hdlpath}/peridot_vga_avm.vhd"
 	add_fileset_file peridot_vga_yvu2rgb.vhd	VHDL PATH "${hdlpath}/peridot_vga_yvu2rgb.vhd"
+	add_fileset_file peridot_vga_pixel.vhd		VHDL PATH "${hdlpath}/peridot_vga_pixel.vhd"
 	add_fileset_file video_syncgen.vhd			VHDL PATH "${hdlpath}/video_syncgen.vhd"
 
 	if {[get_parameter_value VIDEO_INTERFACE] != "PARALLEL"} {
@@ -430,14 +451,34 @@ proc elaboration_callback {} {
 
 
 	#-----------------------------------
-	# Burstcount settings
+	# Pixel fifo settings
 	#-----------------------------------
 
-	set burstcount [expr ceil([get_parameter_value H_ACTIVE] / 2.0)]
-	if {$burstcount > 0} {
-		set burstlength [expr int(ceil(log10($burstcount) / log10(2.0)))]
-		set_parameter_value BURSTLENGTH_WIDTH $burstlength
-		add_interface_port m1 avm_m1_burstcount burstcount Output [expr $burstlength + 1]
+	set resetplusecount 6
+	set avm_clkfreq [get_parameter_value AVM_CLOCKFREQ]
+	set avm_pulsetime [expr double($resetplusecount) / $avm_clkfreq]
+	set vga_pulsetime [expr double($resetplusecount) / ([get_parameter_value DOTCLOCK_FREQUENCY] * 1000000.0)]
+
+	#send_message info "avm_fiforeset=${avm_pulsetime}, vga_fiforeset=${vga_pulsetime}"
+
+	if {$avm_pulsetime < $vga_pulsetime} {
+		set resetcount [expr int(ceil($vga_pulsetime * $avm_clkfreq))]
+	} else {
+		set resetcount $resetplusecount	
+	}
+	set_parameter_value FIFORESETCOUNT $resetcount
+
+	set burstwidth [get_parameter_value BURSTCOUNT_WIDTH]
+	set queuesize [expr [get_parameter_value PIXEL_QUEUE] * [get_parameter_value H_ACTIVE]/2]
+	if {$queuesize > 0} {
+		set fifowidth [expr int(ceil(log10($queuesize) / log10(2.0)))]
+
+		if {$fifowidth > $burstwidth} {
+			set_parameter_value FIFODEPTH_WIDTH $fifowidth
+			add_interface_port m1 avm_m1_burstcount burstcount Output [expr $burstwidth+1]
+		} else {
+			send_message error "Too many Burst units value."
+		}
 	} else {
 		send_message error "Specify a value for Horizontal active pixels."
 	}
@@ -477,8 +518,27 @@ proc elaboration_callback {} {
 	# Software assignments
 	#-----------------------------------
 
-	set_module_assignment embeddedsw.CMacro.VRAM_PIXELCOLOR	\"[get_parameter_value PIXEL_COLORORDER]\"
-	set_module_assignment embeddedsw.CMacro.VRAM_DATAORDER	\"[get_parameter_value PIXEL_DATAORDER]\"
+	switch [get_parameter_value PIXEL_COLORORDER] {
+		"RGB565" {
+			set_module_assignment embeddedsw.CMacro.VRAM_PIXELCOLOR	1
+			set_module_assignment embeddedsw.CMacro.VRAM_PIXELCOLOR_RGB565	1
+		}
+		"RGB555" {
+			set_module_assignment embeddedsw.CMacro.VRAM_PIXELCOLOR	2
+			set_module_assignment embeddedsw.CMacro.VRAM_PIXELCOLOR_RGB555	1
+		}
+		"YUV422" {
+			set_module_assignment embeddedsw.CMacro.VRAM_PIXELCOLOR	3
+			set_module_assignment embeddedsw.CMacro.VRAM_PIXELCOLOR_YUV422	1
+		}
+	}
+
+	if {[get_parameter_value PIXEL_DATAORDER] == "BYTE"} {
+		set_module_assignment embeddedsw.CMacro.VRAM_DATAORDER_BYTE	1
+	} else {
+		set_module_assignment embeddedsw.CMacro.VRAM_DATAORDER_WORD	1
+	}
+
 	set_module_assignment embeddedsw.CMacro.VRAM_LINEBYTES	[format %u [get_parameter_value LINEOFFSETBYTES]]
 	set_module_assignment embeddedsw.CMacro.VRAM_VIEWWIDTH	[format %u [get_parameter_value H_ACTIVE]]
 	set_module_assignment embeddedsw.CMacro.VRAM_VIEWHEIGHT	[format %u [get_parameter_value V_ACTIVE]]

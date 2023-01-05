@@ -1,9 +1,9 @@
 // ===================================================================
-// TITLE : PERIDOT-NGS / OmniVision DVP Avalon-MM master(32bit×16burst)
+// TITLE : PERIDOT-NGS / DVP Avalon-MM master(32bit×n-burst)
 //
 //   DEGISN : S.OSAFUNE (J-7SYSTEM WORKS LIMITED)
 //   DATE   : 2017/04/04 -> 2017/04/06
-//   MODIFY : 2022/12/07 微修正
+//   MODIFY : 2023/01/04 バースト長可変に変更 
 //
 // ===================================================================
 //
@@ -33,7 +33,10 @@
 // Verilog-2001 / IEEE 1364-2001
 `default_nettype none
 
-module peridot_cam_avm (
+module peridot_cam_avm #(
+	parameter BURSTCOUNT_WIDTH		= 4,			// バースト長単位(2^BURSTCOUNT_WIDTH)
+	parameter TRANSCYCLE_WIDTH		= 22			// 最大転送回数(2^TRANSCYCLE_WIDTH-1)
+) (
 	// Interface: clk
 	input wire			csi_global_reset,
 	input wire			avm_m1_clk,
@@ -43,16 +46,16 @@ module peridot_cam_avm (
 	output wire			avm_m1_write,
 	output wire [31:0]	avm_m1_writedata,
 	output wire [3:0]	avm_m1_byteenable,
-	output wire [4:0]	avm_m1_burstcount,			// 16バースト固定 
+	output wire [BURSTCOUNT_WIDTH:0] avm_m1_burstcount,
 	input wire			avm_m1_waitrequest,
 
 	// External Interface
-	input wire [31:0]	address_top,				// ストア先頭アドレス(下位6bit無効) 
-	input wire [15:0]	transcycle_num,				// ストア回数(最大65535回=4194240バイト) 
+	input wire [31:0]	address_top,					// ストア先頭アドレス(下位2bit無効) 
+	input wire [TRANSCYCLE_WIDTH-1:0] transcycle_num,	// データ全長(32bitワード単位) 
 	input wire			start,
 	output wire			done,
 
-	input wire			writedata_ready,			// データFIFOに16個揃ったら'1'になる 
+	input wire [BURSTCOUNT_WIDTH:0] writedata_usedw,	// データFIFOに詰まれた数 (0～2^BURSTCOUNT_WIDTH)
 	input wire [31:0]	writedata,
 	output wire			writedata_rdack
 );
@@ -64,11 +67,13 @@ module peridot_cam_avm (
 
 /* ----- 内部パラメータ ------------------ */
 
+	localparam BURSTUNIT		= 2**BURSTCOUNT_WIDTH;
+
 	localparam STATE_IDLE		= 5'd0;
 	localparam STATE_SETUP		= 5'd1;
-	localparam STATE_BURSTWRITE	= 5'd2;
-	localparam STATE_LOOP		= 5'd30;
-	localparam STATE_DONE		= 5'd31;
+	localparam STATE_START		= 5'd2;
+	localparam STATE_BURSTWRITE	= 5'd3;
+	localparam STATE_LOOP		= 5'd4;
 
 
 /* ※以降のパラメータ宣言は禁止※ */
@@ -82,14 +87,12 @@ module peridot_cam_avm (
 
 	reg  [4:0]		avmstate_reg;
 	reg				done_reg;
-	reg  [15:0]		chunkcount_reg;
-
-	reg  [4:0]		datacount_reg;
+	reg  [TRANSCYCLE_WIDTH-1:0] chunkcount_reg;
+	reg  [BURSTCOUNT_WIDTH:0] datacount_reg;
 	reg  [31:0]		address_reg;
 	reg				write_reg;
 
 	wire [31:0]		avm_writedata_sig;
-	wire			avm_wriredataack_sig;
 
 
 /* ※以降のwire、reg宣言は禁止※ */
@@ -100,37 +103,28 @@ module peridot_cam_avm (
 
 /* ===== モジュール構造記述 ============== */
 
-	assign done = done_reg;
-
-	assign avm_writedata_sig = writedata;
-	assign writedata_rdack = avm_wriredataack_sig;
-
-
 	///// AvalonMMトランザクション処理 /////
 
-	assign avm_wriredataack_sig = (write_reg && !avm_m1_waitrequest)? 1'b1 : 1'b0;	// データ要求 
+	assign done = done_reg;
 
-	assign avm_m1_address = {address_reg[31:6], 6'b0};
+	assign avm_m1_address = {address_reg[31:2], 2'b0};
 	assign avm_m1_write = write_reg;
-	assign avm_m1_writedata = avm_writedata_sig;
-	assign avm_m1_byteenable = 4'b1111;				// 4バイトライト固定 
-	assign avm_m1_burstcount = 5'd16;				// 16ポイントバースト固定 
+	assign avm_m1_writedata = writedata;
+	assign avm_m1_byteenable = 4'b1111;				// 32bitライト固定 
+	assign avm_m1_burstcount = datacount_reg;		// バーストカウント 
 
+	assign writedata_rdack = (!avm_m1_waitrequest)? write_reg : 1'b0;	// データ要求 
 
 	always @(posedge avm_clk_sig or posedge reset_sig) begin
 		if (reset_sig) begin
 			avmstate_reg <= STATE_IDLE;
 			done_reg <= 1'b1;
 			write_reg <= 1'b0;
-
-			chunkcount_reg <= 16'd0;
-			datacount_reg <= 5'd0;
 		end
 		else begin
-
 			case (avmstate_reg)
 				STATE_IDLE : begin					// IDLE 
-					if ( start ) begin
+					if (start) begin
 						avmstate_reg <= STATE_SETUP;
 						done_reg <= 1'b0;
 						chunkcount_reg <= transcycle_num;
@@ -139,42 +133,44 @@ module peridot_cam_avm (
 				end
 
 				STATE_SETUP : begin					// バーストセットアップ 
-					if ( writedata_ready ) begin
+					avmstate_reg <= STATE_START;
+					if (chunkcount_reg > BURSTUNIT[TRANSCYCLE_WIDTH-1:0]) begin
+						datacount_reg <= BURSTUNIT[BURSTCOUNT_WIDTH:0];
+					end
+					else begin
+						datacount_reg <= chunkcount_reg[BURSTCOUNT_WIDTH:0];
+					end
+				end
+
+				STATE_START : begin					// FIFOデータ到着待ち 
+					if (writedata_usedw >= datacount_reg) begin
 						avmstate_reg <= STATE_BURSTWRITE;
 						write_reg <= 1'b1;
-						datacount_reg <= 5'd15;
 					end
 				end
 
 				STATE_BURSTWRITE : begin			// データバーストライト 
-					if ( !avm_m1_waitrequest ) begin
-						if (datacount_reg == 1'd0) begin
+					if (!avm_m1_waitrequest) begin
+						if (datacount_reg == 1'd1) begin
 							avmstate_reg <= STATE_LOOP;
 							write_reg <= 1'b0;
-							chunkcount_reg <= chunkcount_reg - 1'd1;
 						end
-						else begin
-							datacount_reg <= datacount_reg - 1'd1;
-						end
+
+						datacount_reg <= datacount_reg - 1'd1;
+						chunkcount_reg <= chunkcount_reg - 1'd1;
 					end
 				end
 
-				STATE_LOOP : begin					// ループカウント 
-					if ( chunkcount_reg == 1'd0 ) begin
-						avmstate_reg <= STATE_DONE;
+				STATE_LOOP : begin					// ループチェック 
+					if (chunkcount_reg) begin
+						avmstate_reg <= STATE_SETUP;
+						address_reg <= address_reg + (BURSTUNIT<<2);
 					end
 					else begin
-						avmstate_reg <= STATE_SETUP;
-						address_reg <= address_reg + 32'd64;
+						avmstate_reg <= STATE_IDLE;
+						done_reg <= 1'b1;
 					end
-
 				end
-
-				STATE_DONE : begin					// ステート終了 
-					avmstate_reg <= STATE_IDLE;
-					done_reg <= 1'b1;
-				end
-
 			endcase
 
 		end
