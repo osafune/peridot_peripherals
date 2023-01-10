@@ -2,7 +2,7 @@
 # TITLE : PERIDOT VGA Controller
 #
 #   DEGISN : S.OSAFUNE (J-7SYSTEM WORKS LIMITED)
-#   DATE   : 2023/01/01 -> 2023/01/06
+#   DATE   : 2023/01/01 -> 2023/01/08
 #   MODIFY : 
 #
 # ===================================================================
@@ -66,6 +66,8 @@ set_fileset_property QUARTUS_SYNTH TOP_LEVEL peridot_vga
 # 
 set debugview false
 set pcmaudio false
+#set outputmode {"PARALLEL:Parallel" "DVI:DVI" "LITEHDMI:Lite HDMI" "HDMI:HDMI"}
+set outputmode {"PARALLEL:Parallel" "DVI:DVI"}
 
 add_parameter DEVICE_FAMILY string
 set_parameter_property DEVICE_FAMILY HDL_PARAMETER true
@@ -90,6 +92,10 @@ add_parameter FIFODEPTH_WIDTH integer 9
 set_parameter_property FIFODEPTH_WIDTH HDL_PARAMETER true
 set_parameter_property FIFODEPTH_WIDTH DERIVED true
 set_parameter_property FIFODEPTH_WIDTH VISIBLE $debugview
+add_parameter VIDEO_INTERFACE string "PARALLEL"
+set_parameter_property VIDEO_INTERFACE DERIVED true
+set_parameter_property VIDEO_INTERFACE HDL_PARAMETER true
+set_parameter_property VIDEO_INTERFACE VISIBLE $debugview
 
 add_parameter VGACLOCK_FREQUENCY integer 
 set_parameter_property VGACLOCK_FREQUENCY HDL_PARAMETER true
@@ -157,11 +163,9 @@ set_parameter_property PIXEL_COLORORDER HDL_PARAMETER true
 set_parameter_property PIXEL_COLORORDER DISPLAY_NAME "Pixel color format"
 set_parameter_property PIXEL_COLORORDER ALLOWED_RANGES {"RGB565" "RGB555" "YUV422"}
 
-add_parameter VIDEO_INTERFACE string "PARALLEL"
-set_parameter_property VIDEO_INTERFACE HDL_PARAMETER true
-set_parameter_property VIDEO_INTERFACE DISPLAY_NAME "Video output interface"
-#set_parameter_property VIDEO_INTERFACE ALLOWED_RANGES {"PARALLEL:Parallel" "DVI:DVI" "LITEHDMI:Lite HDMI" "HDMI:HDMI"}
-set_parameter_property VIDEO_INTERFACE ALLOWED_RANGES {"PARALLEL:Parallel" "DVI:DVI"}
+add_parameter INTERFACE_MODE string "PARALLEL"
+set_parameter_property INTERFACE_MODE DISPLAY_NAME "Video output interface"
+set_parameter_property INTERFACE_MODE ALLOWED_RANGES $outputmode
 
 add_parameter DOTCLOCK_FREQUENCY float 25.2
 set_parameter_property DOTCLOCK_FREQUENCY DISPLAY_NAME "Video clock frequency"
@@ -487,6 +491,14 @@ proc elaboration_callback {} {
 	#-----------------------------------
 	# Video interface settings
 	#-----------------------------------
+
+	if {[file exists "./hdl/hdmi_tx.vhd"]} {
+		set_parameter_property INTERFACE_MODE ENABLED true
+		set_parameter_value VIDEO_INTERFACE [get_parameter_value INTERFACE_MODE]
+	} else {
+		set_parameter_property INTERFACE_MODE ENABLED false
+		set_parameter_value VIDEO_INTERFACE "PARALLEL"
+	}
 
 	if {[get_parameter_value VIDEO_INTERFACE] == "PARALLEL"} {
 		set_interface_property vga ENABLED true

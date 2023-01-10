@@ -273,10 +273,11 @@ architecture RTL of peridot_vga is
 		COLORSPACE		: string := "RGB";
 		YCC_DATARANGE	: string := "LIMITED";
 		CONTENTTYPE		: string := "GRAPHICS";
+		REPETITION		: integer := 0;
+		VIDEO_CODE		: integer := 0;
 		USE_AUDIO_PACKET: string := "OFF";
 		AUDIO_FREQUENCY	: real := 44.1;
 		PCMFIFO_DEPTH	: integer := 8;
-		VIC_CODE		: std_logic_vector(6 downto 0) := "0000000";
 		CATEGORY_CODE	: std_logic_vector(7 downto 0) := "00000000"
 	);
 	port(
