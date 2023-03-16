@@ -5,6 +5,8 @@
 //     DATE   : 2022/09/28 -> 2022/09/28
 //            : 2022/09/28 (FIXED)
 //
+//     UPDATE : 2023/03/16 LED初期化シーケンス追加
+//
 // ===================================================================
 //
 // The MIT License (MIT)
@@ -33,14 +35,15 @@
 `default_nettype none
 
 module peridot_ethio_wsled #(
+	parameter MAX_LED_NUMBER		= 340,	// 最大LED数 
 	parameter BIT_PERIOD_COUNT		= 17,	// 1bitのカウント（クロック数） 
 	parameter SYMBOL1_COUNT			= 9,	// シンボル1のTH1カウント（クロック数） 
 	parameter SYMBOL0_COUNT			= 4,	// シンボル0のTH1カウント（クロック数） 
 	parameter RESET_BITCOUNT		= 7		// リセット期間のカウント（ビット数） 
 ) (
-	output wire [6:0]	test_symcounter,
-	output wire [8:0]	test_rstcounter,
-
+//	output wire [6:0]	test_symcounter,
+//	output wire [9:0]	test_initcounter,
+//	output wire [8:0]	test_rstcounter,
 
 	input wire			reset,
 	input wire			clk,
@@ -71,11 +74,16 @@ module peridot_ethio_wsled #(
 	localparam S1_COUNT_VALUE = SYMBOL1_COUNT[SYMBOLCOUNTER_WIDTH-1:0];
 	localparam S0_COUNT_VALUE = SYMBOL0_COUNT[SYMBOLCOUNTER_WIDTH-1:0];
 
+	localparam INIT_DATACOUNT = MAX_LED_NUMBER * 3;
+	localparam INITCOUNTER_WIDTH = fnlog2(INIT_DATACOUNT);
+	localparam INIT_COUNT_VALUE = INIT_DATACOUNT[INITCOUNTER_WIDTH-1:0] - 1'd1;
+
 	localparam RESETCOUNTER_WIDTH = fnlog2(RESET_BITCOUNT);
 	localparam RST_COUNT_VALUE = RESET_BITCOUNT[RESETCOUNTER_WIDTH-1:0] - 2'd2;
 
-	localparam	STATE_IDLE		= 2'd0,
-				STATE_START		= 2'd1,
+	localparam	STATE_INIT		= 2'd0,
+				STATE_IDLE		= 2'd1,
+				STATE_START		= 2'd2,
 				STATE_RESET		= 2'd3;
 
 
@@ -88,8 +96,9 @@ module peridot_ethio_wsled #(
 	reg  [SYMBOLCOUNTER_WIDTH-1:0] symcounter_reg;
 	reg				symbol_reg;
 	reg				wsled_reg;
-	reg  [2:0]		bitcount_reg;
 	reg  [7:0]		data_reg;
+	reg  [2:0]		bitcount_reg;
+	reg  [INITCOUNTER_WIDTH-1:0] initcounter_reg;
 	reg  [RESETCOUNTER_WIDTH-1:0] rstcounter_reg;
 
 	reg  [1:0]		state_reg;
@@ -100,8 +109,9 @@ module peridot_ethio_wsled #(
 
 /* ===== テスト記述 ============== */
 
-	assign test_symcounter = symcounter_reg;
-	assign test_rstcounter = rstcounter_reg;
+//	assign test_symcounter = symcounter_reg;
+//	assign test_initcounter = initcounter_reg;
+//	assign test_rstcounter = rstcounter_reg;
 
 
 /* ===== モジュール構造記述 ============== */
@@ -116,8 +126,10 @@ module peridot_ethio_wsled #(
 			symbol_reg <= 1'b0;
 			wsled_reg <= 1'b0;
 
-			state_reg <= STATE_IDLE;
+			state_reg <= STATE_INIT;
+			data_reg <= 8'h00;
 			bitcount_reg <= 1'd0;
+			initcounter_reg = 1'd0;
 			rstcounter_reg <= 1'd0;
 		end
 		else begin
@@ -139,12 +151,24 @@ module peridot_ethio_wsled #(
 				end
 			end
 
-			wsled_reg <= (state_reg == STATE_START)? symbol_reg : 1'b0;
+			wsled_reg <= (state_reg == STATE_START || state_reg == STATE_INIT)? symbol_reg : 1'b0;
 
 
 			// バイトストリームデータ受信 
 			if (bit_timing_sig) begin
 				case (state_reg)
+				STATE_INIT : begin
+					bitcount_reg <= bitcount_reg + 1'd1;
+
+					if (bitcount_reg == 3'd7) begin
+						initcounter_reg <= initcounter_reg + 1'd1;
+
+						if (initcounter_reg == INIT_COUNT_VALUE) begin
+							state_reg <= STATE_RESET;
+						end
+					end
+				end
+
 				STATE_IDLE : begin
 					rstcounter_reg <= 1'd0;
 
@@ -162,7 +186,6 @@ module peridot_ethio_wsled #(
 
 				STATE_START : begin
 					bitcount_reg <= bitcount_reg + 1'd1;
-					rstcounter_reg <= 1'd0;
 
 					if (bitcount_reg == 3'd7) begin
 						data_reg <= in_data;

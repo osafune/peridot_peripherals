@@ -5,6 +5,8 @@
 //     DATE   : 2022/07/01 -> 2022/08/05
 //            : 2022/09/05 (FIXED)
 //
+//     UPDATE : 2023/03/16 非同期リセットのデアサート同期修正
+//
 // ===================================================================
 //
 // The MIT License (MIT)
@@ -50,12 +52,19 @@ module peridot_ethio_cdb_areset (
 );
 
 	reg  [1:0]		in_areset_reg;
-
+/*
 	always @(posedge clk) begin
 		in_areset_reg <= {in_areset_reg[0], areset};
 	end
 
 	assign reset_out = areset | in_areset_reg[0] | in_areset_reg[1];
+*/
+	always @(posedge clk or posedge areset) begin
+		if (areset) in_areset_reg <= 2'b00;
+		else in_areset_reg <= {in_areset_reg[0], 1'b1};
+	end
+
+	assign reset_out = ~in_areset_reg[1];
 
 endmodule
 

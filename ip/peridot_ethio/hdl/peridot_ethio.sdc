@@ -32,7 +32,7 @@
 # Set false path
 # ---------------------------------------------
 
-set_false_path -to [get_registers {*|peridot_ethio_cdb_areset:*|in_areset_reg[0]}]
+#set_false_path -to [get_registers {*|peridot_ethio_cdb_areset:*|in_areset_reg[0]}]
 set_false_path -to [get_registers {*|peridot_ethio_cdb_signal:*|in_sig_reg[0]}]
 
 set_false_path \

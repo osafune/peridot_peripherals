@@ -3,6 +3,7 @@
 #
 #   DEGISN : S.OSAFUNE (J-7SYSTEM WORKS LIMITED)
 #   DATE   : 2022/09/28 -> 2022/09/29
+#   UPDATE : 2023/03/16
 #
 # ===================================================================
 #
@@ -99,6 +100,11 @@ set_parameter_property RESET_BITCOUNT HDL_PARAMETER true
 set_parameter_property RESET_BITCOUNT DERIVED true
 set_parameter_property RESET_BITCOUNT VISIBLE $debugview
 
+
+add_parameter MAX_LED_NUMBER integer 340
+set_parameter_property MAX_LED_NUMBER HDL_PARAMETER true
+set_parameter_property MAX_LED_NUMBER DISPLAY_NAME "Maximum number of driven LEDs (3-1024)"
+set_parameter_property MAX_LED_NUMBER ALLOWED_RANGES 3:1024
 
 add_parameter LED_SETTINGS_BITPERIOD integer 1250
 set_parameter_property LED_SETTINGS_BITPERIOD UNITS nanoseconds
