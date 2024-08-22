@@ -5,10 +5,12 @@
 --     DATE   : 2020/09/02 -> 2020/09/23
 --            : 2020/09/23 (FIXED)
 --
+--     UPDATE : 2023/11/30 -> 2023/12/12
+--
 -- ===================================================================
 --
 -- The MIT License (MIT)
--- Copyright (c) 2020 J-7SYSTEM WORKS LIMITED.
+-- Copyright (c) 2020,2023 J-7SYSTEM WORKS LIMITED.
 --
 -- Permission is hereby granted, free of charge, to any person obtaining a copy of
 -- this software and associated documentation files (the "Software"), to deal in
@@ -29,16 +31,17 @@
 -- SOFTWARE.
 --
 
--- ・実装残り 
--- ■ カーネルポートのリードフュージョン書き直し 
-
+-- ・実装toto 
+-- [X] 全結合モジュールのリードポート追加 
+-- [X] ポートの優先順変更 (wbwrite→param→accum/fc→kernelの順)
+--
 -- ・検証残り 
--- ■ AvalonMMバーストマスタの動作 
--- ■ 各ポートの調停動作 
--- ■ ReadおよびWriteのバースト動作 → writebackモジュール側の1ワードバースト時の動作を確認する 
--- ■ カーネルポートの調停動作 
--- ■ カーネルポートのリードフュージョン動作 
-
+-- [X] AvalonMMバーストマスタの動作 
+-- [X] 各ポートの調停動作 
+-- [X] ReadおよびWriteのバースト動作 → writebackモジュール側の1ワードバースト時の動作を確認する 
+-- [X] カーネルポートの調停動作 
+-- [X] カーネルポートのリードフュージョン動作 
+--
 -- ・リソース概算 
 --   300LE (32bit幅, 64バースト, リードフュージョンなし)
 --   480LE (32bit幅, 256バースト, 4カーネル, リードフュージョンあり)
@@ -51,6 +54,9 @@ use ieee.std_logic_1164.all;
 use ieee.std_logic_unsigned.all;
 use ieee.std_logic_arith.all;
 use ieee.std_logic_misc.all;
+
+library lpm;
+use lpm.lpm_components.all;
 
 library altera_mf;
 use altera_mf.altera_mf_components.all;
@@ -72,19 +78,11 @@ entity peridot_cnn_arbiter is
 		avm_burstcount		: out std_logic_vector(MAXBURST_POW2_NUMBER downto 0);
 		avm_waitrequest		: in  std_logic;
 		avm_read			: out std_logic;
-		avm_readdata		: in  std_logic_vector(2**DATABUS_POW2_NUMBER-1 downto 0);
 		avm_readdatavalid	: in  std_logic;
+		avm_readdata		: in  std_logic_vector(2**DATABUS_POW2_NUMBER-1 downto 0);
 		avm_write			: out std_logic;
 		avm_writedata		: out std_logic_vector(2**DATABUS_POW2_NUMBER-1 downto 0);
 		avm_byteenable		: out std_logic_vector(2**(DATABUS_POW2_NUMBER-3)-1 downto 0);
-
-
-		paramread_request	: in  std_logic;
-		paramread_complete	: in  std_logic;
-		paramread_address	: in  std_logic_vector(31 downto 0);
-		paramread_burstcount: in  std_logic_vector(MAXBURST_POW2_NUMBER downto 0);
-		paramread_data		: out std_logic_vector(2**DATABUS_POW2_NUMBER-1 downto 0);
-		paramread_datavalid	: out std_logic;
 
 		wbwrite_request		: in  std_logic;
 		wbwrite_burstend	: in  std_logic;
@@ -94,18 +92,31 @@ entity peridot_cnn_arbiter is
 		wbwrite_byteenable	: in  std_logic_vector(2**(DATABUS_POW2_NUMBER-3)-1 downto 0);
 		wbwrite_dataack		: out std_logic;
 
+		paramread_request	: in  std_logic;
+		paramread_complete	: in  std_logic;
+		paramread_address	: in  std_logic_vector(31 downto 0);
+		paramread_burstcount: in  std_logic_vector(MAXBURST_POW2_NUMBER downto 0);
+		paramread_datavalid	: out std_logic;
+		paramread_data		: out std_logic_vector(2**DATABUS_POW2_NUMBER-1 downto 0);
+
 		accumread_request	: in  std_logic;
 		accumread_complete	: in  std_logic;
 		accumread_address	: in  std_logic_vector(31 downto 0);
 		accumread_burstcount: in  std_logic_vector(MAXBURST_POW2_NUMBER downto 0);
-		accumread_data		: out std_logic_vector(2**DATABUS_POW2_NUMBER-1 downto 0);
 		accumread_datavalid	: out std_logic;
+		accumread_data		: out std_logic_vector(2**DATABUS_POW2_NUMBER-1 downto 0);
 
+		fcread_request		: in  std_logic;
+		fcread_complete		: in  std_logic;
+		fcread_address		: in  std_logic_vector(31 downto 0);
+		fcread_burstcount	: in  std_logic_vector(MAXBURST_POW2_NUMBER downto 0);
+		fcread_datavalid	: out std_logic;
+		fcread_data			: out std_logic_vector(2**DATABUS_POW2_NUMBER-1 downto 0);
 
-		read_data			: out std_logic_vector(2**DATABUS_POW2_NUMBER-1 downto 0);
 		read_request		: in  std_logic_vector(7 downto 0);
 		read_complete		: in  std_logic_vector(7 downto 0);
 		read_datavalid		: out std_logic_vector(7 downto 0);
+		read_data			: out std_logic_vector(2**DATABUS_POW2_NUMBER-1 downto 0);
 
 		read_0_address		: in  std_logic_vector(31 downto 0);
 		read_0_burstcount	: in  std_logic_vector(MAXBURST_POW2_NUMBER downto 0);
@@ -127,17 +138,17 @@ entity peridot_cnn_arbiter is
 end peridot_cnn_arbiter;
 
 architecture RTL of peridot_cnn_arbiter is
+	-- Misc function
 	function is_true(S:std_logic) return boolean is begin return(S='1'); end;
 	function is_false(S:std_logic) return boolean is begin return(S='0'); end;
 	function to_vector(N,W:integer) return std_logic_vector is begin return conv_std_logic_vector(N,W); end;
-	function repbit(S:std_logic; W:integer) return std_logic_vector is variable a:std_logic_vector(W-1 downto 0); begin a:=(others=>S); return a; end;
-	function shiftin(V:std_logic_vector; S:std_logic) return std_logic_vector is begin return V(V'left-1 downto 0)&S; end;
+	function shiftin(V:std_logic_vector; S:std_logic) return std_logic_vector is variable a:std_logic_vector(V'length downto 0); begin a:=V&S; return a(V'range); end;
 	function shiftout(V:std_logic_vector) return std_logic is begin return V(V'left); end;
-
+	function repbit(S:std_logic; W:integer) return std_logic_vector is variable a:std_logic_vector(W-1 downto 0); begin a:=(others=>S); return a; end;
 	function slice(V:std_logic_vector; W,N:integer) return std_logic_vector is variable a:std_logic_vector(V'length+W+N-2 downto 0);
-	begin a:=repbit('0',W+N-1)&V; return a(W+N-1 downto N); end;
+		begin a:=repbit('0',W+N-1)&V; return a(W+N-1 downto N); end;
 	function slice_sxt(V:std_logic_vector; W,N:integer) return std_logic_vector is variable a:std_logic_vector(V'length+W+N-2 downto 0);
-	begin a:=repbit(V(V'left),W+N-1)&V; return a(W+N-1 downto N); end;
+		begin a:=repbit(V(V'left),W+N-1)&V; return a(W+N-1 downto N); end;
 
 	-- モジュール固定値 
 	constant MAX_ARBITRATION	: integer := 8;							-- 調停数上限(テスト以外は8で固定)
@@ -145,7 +156,7 @@ architecture RTL of peridot_cnn_arbiter is
 
 
 	-- AvalonMMバーストマスタブロック 
-	type DEF_STATE_AVMM is (AVMM_IDLE, AVMM_READREQ, AVMM_READDATA, AVMM_WRITEDATA);
+	type DEF_STATE_AVMM is (AVMM_IDLE, AVMM_WRITEDATA, AVMM_READREQ, AVMM_READDATA);
 	signal state_avmm : DEF_STATE_AVMM;
 	signal read_reg				: std_logic;
 	signal write_reg			: std_logic;
@@ -153,10 +164,14 @@ architecture RTL of peridot_cnn_arbiter is
 	signal burstcount_reg		: std_logic_vector(avm_burstcount'range);
 	signal paramvalid_reg		: std_logic;
 	signal accumvalid_reg		: std_logic;
+	signal fcvalid_reg			: std_logic;
 	signal kernelvalid_reg		: std_logic_vector(read_datavalid'range);
 	signal waitrequest_sig		: std_logic;
 	signal readdatavalid_sig	: std_logic;
 	signal readdata_sig			: std_logic_vector(avm_readdata'range);
+	signal param_complete_sig	: std_logic;
+	signal accum_complete_sig	: std_logic;
+	signal fc_complete_sig		: std_logic;
 
 	-- カーネルリード要求統合ブロック 
 	signal kernel_req_reg		: std_logic;
@@ -172,7 +187,6 @@ architecture RTL of peridot_cnn_arbiter is
 	signal fusion_valid_reg		: std_logic_vector(fusion_valid_sig'range);
 	signal read_request_reg		: std_logic_vector(read_request'range);
 	signal datavalid_ena_reg	: std_logic_vector(read_datavalid'range);
-
 
 begin
 
@@ -200,8 +214,8 @@ begin
 	waitrequest_sig <= avm_waitrequest;
 
 	avm_read <= read_reg;
-	readdata_sig <= avm_readdata;
 	readdatavalid_sig <= avm_readdatavalid;
+	readdata_sig <= avm_readdata;
 
 	avm_write <= write_reg;
 	avm_writedata <= wbwrite_data;
@@ -210,13 +224,19 @@ begin
 
 	-- AvalonMMへの調停 
 
+	param_complete_sig <= paramread_complete;-- when is_true(paramvalid_reg) else '0';
+	paramread_datavalid <= readdatavalid_sig when is_true(paramvalid_reg) else '0';
 	paramread_data <= readdata_sig;
-	paramread_datavalid <= paramvalid_reg when is_true(readdatavalid_sig) else '0';
+
+	accum_complete_sig <= accumread_complete;-- when is_true(accumvalid_reg) else '0';
+	accumread_datavalid <= readdatavalid_sig when is_true(accumvalid_reg) else '0';
 	accumread_data <= readdata_sig;
-	accumread_datavalid <= accumvalid_reg when is_true(readdatavalid_sig) else '0';
+
+	fc_complete_sig <= fcread_complete;-- when is_true(fcvalid_reg) else '0';
+	fcread_datavalid <= readdatavalid_sig when is_true(fcvalid_reg) else '0';
+	fcread_data <= readdata_sig;
 
 	wbwrite_dataack <= write_reg when is_false(waitrequest_sig) else '0';
-
 
 	process (clk, reset) begin
 		if is_true(reset) then
@@ -225,6 +245,7 @@ begin
 			write_reg <= '0';
 			paramvalid_reg <= '0';
 			accumvalid_reg <= '0';
+			fcvalid_reg <= '0';
 			kernelvalid_reg <= (others=>'0');
 
 		elsif rising_edge(clk) then
@@ -239,11 +260,12 @@ begin
 					burstcount_reg <= paramread_burstcount;
 					paramvalid_reg <= '1';
 
-				elsif is_true(wbwrite_request) then
-					state_avmm <= AVMM_WRITEDATA;
-					write_reg <= '1';
-					address_reg <= wbwrite_address(address_reg'range);
-					burstcount_reg <= wbwrite_burstcount;
+				elsif is_true(kernel_req_reg) then
+					state_avmm <= AVMM_READREQ;
+					read_reg <= '1';
+					address_reg <= kernel_address_reg;
+					burstcount_reg <= kernel_burst_reg;
+					kernelvalid_reg <= datavalid_ena_reg;
 
 				elsif is_true(accumread_request) then
 					state_avmm <= AVMM_READREQ;
@@ -252,15 +274,28 @@ begin
 					burstcount_reg <= accumread_burstcount;
 					accumvalid_reg <= '1';
 
-				elsif is_true(kernel_req_reg) then
+				elsif is_true(fcread_request) then
 					state_avmm <= AVMM_READREQ;
 					read_reg <= '1';
-					address_reg <= kernel_address_reg;
-					burstcount_reg <= kernel_burst_reg;
-					kernelvalid_reg <= datavalid_ena_reg;
+					address_reg <= fcread_address(address_reg'range);
+					burstcount_reg <= fcread_burstcount;
+					fcvalid_reg <= '1';
+
+				elsif is_true(wbwrite_request) then
+					state_avmm <= AVMM_WRITEDATA;
+					write_reg <= '1';
+					address_reg <= wbwrite_address(address_reg'range);
+					burstcount_reg <= wbwrite_burstcount;
 
 				end if;
 
+
+			-- バーストライトアクセス 
+			when AVMM_WRITEDATA =>
+				if is_true(wbwrite_burstend) then
+					state_avmm <= AVMM_IDLE;
+					write_reg <= '0';
+				end if;
 
 			-- バーストリードアクセス 
 			when AVMM_READREQ =>
@@ -270,21 +305,12 @@ begin
 				end if;
 
 			when AVMM_READDATA =>
-				if is_true(paramread_complete and paramvalid_reg) or
-						is_true(accumread_complete and accumvalid_reg) or
-						is_true(kernel_complete_sig) then
+				if is_true(param_complete_sig) or is_true(accum_complete_sig) or is_true(fc_complete_sig) or is_true(kernel_complete_sig) then
 					state_avmm <= AVMM_IDLE;
 					paramvalid_reg <= '0';
 					accumvalid_reg <= '0';
+					fcvalid_reg <= '0';
 					kernelvalid_reg <= (others=>'0');
-				end if;
-
-
-			-- バーストライトアクセス 
-			when AVMM_WRITEDATA =>
-				if is_true(wbwrite_burstend) then
-					state_avmm <= AVMM_IDLE;
-					write_reg <= '0';
 				end if;
 
 			when others =>
@@ -297,7 +323,7 @@ begin
 	----------------------------------------------------------------------
 	-- カーネルリード要求を統合 
 	----------------------------------------------------------------------
-	-- read fusion時はリクエスト→avmm受理に3クロック分必要
+	-- * read fusion時はリクエスト→avmm受理に3クロック分必要 
 
 	-- アドレスおよびバースト長の一致判定 
 
@@ -331,8 +357,8 @@ begin
 
 	-- カーネルリード要求の調停 
 
-	read_data <= readdata_sig;
 	read_datavalid <= kernelvalid_reg when is_true(readdatavalid_sig) else (others=>'0');
+	read_data <= readdata_sig;
 	kernel_complete_sig <= or_reduce(read_complete and kernelvalid_reg);
 
 

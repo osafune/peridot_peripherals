@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ip>
- <presets version="19.1">
+ <presets version="20.1">
   <preset
      name="single Alliance AS4C4M16SA-7(CL=2)"
-     kind="altera_avalon_new_sdram_controller"
-     version="All"
+     kind="altera_sdram_tri_controller"
+     version="all"
      description="Alliance Memory 64Mbit(4Mx16) 143MHz">
    <parameter name="numberOfChipSelects" value="1" />
    <parameter name="numberOfBanks" value="4" />
@@ -24,8 +24,8 @@
   </preset>
   <preset
      name="single Alliance AS4C4M16SA-7(CL=3)"
-     kind="altera_avalon_new_sdram_controller"
-     version="All"
+     kind="altera_sdram_tri_controller"
+     version="all"
      description="Alliance Memory 64Mbit(4Mx16) 143MHz">
    <parameter name="numberOfChipSelects" value="1" />
    <parameter name="numberOfBanks" value="4" />

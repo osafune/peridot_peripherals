@@ -1,47 +1,46 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ip>
- <presets version="19.1">
+ <presets version="20.1">
   <preset
      name="single Alliance AS4C16M16SA-7(CL=2)"
-     kind="altera_avalon_new_sdram_controller"
-     version="All"
+     kind="altera_sdram_tri_controller"
+     version="all"
      description="Alliance Memory 256Mbit(16Mx16) 143MHz">
-   <parameter name="numberOfChipSelects" value="1" />
+   <parameter name="NUM_CHIPSELECTS" value="1" />
    <parameter name="numberOfBanks" value="4" />
-   <parameter name="rowWidth" value="13" />
-   <parameter name="columnWidth" value="9" />
-   <parameter name="dataWidth" value="16" />
-   <parameter name="casLatency" value="2" />
+   <parameter name="SDRAM_ROW_WIDTH" value="13" />
+   <parameter name="SDRAM_COL_WIDTH" value="9" />
+   <parameter name="SDRAM_DATA_WIDTH" value="16" />
+   <parameter name="CAS_LATENCY" value="2" />
    <parameter name="powerUpDelay" value="200.0" />
-   <parameter name="initRefreshCommands" value="2" />
+   <parameter name="INIT_REFRESH" value="2" />
    <parameter name="refreshPeriod" value="7.8125" />
-   <parameter name="TRFC" value="63.0" />
-   <parameter name="TRCD" value="21.0" />
-   <parameter name="TRP" value="21.0" />
+   <parameter name="TRFC" value="66.0" />
+   <parameter name="TRCD" value="15.0" />
+   <parameter name="TRP" value="15.0" />
    <parameter name="TWR" value="14.0" />
-   <parameter name="TAC" value="6.0" />
-   <parameter name="generateSimulationModel" value="false" />
+   <parameter name="TAC" value="5.4" />
   </preset>
   <preset
      name="single Alliance AS4C16M16SA-7(CL=3)"
-     kind="altera_avalon_new_sdram_controller"
-     version="All"
+     kind="altera_sdram_tri_controller"
+     version="all"
      description="Alliance Memory 256Mbit(16Mx16) 143MHz">
-   <parameter name="numberOfChipSelects" value="1" />
+   <parameter name="NUM_CHIPSELECTS" value="1" />
    <parameter name="numberOfBanks" value="4" />
-   <parameter name="rowWidth" value="13" />
-   <parameter name="columnWidth" value="9" />
-   <parameter name="dataWidth" value="16" />
-   <parameter name="casLatency" value="3" />
+   <parameter name="SDRAM_ROW_WIDTH" value="13" />
+   <parameter name="SDRAM_COL_WIDTH" value="9" />
+   <parameter name="SDRAM_DATA_WIDTH" value="16" />
+   <parameter name="CAS_LATENCY" value="3" />
    <parameter name="powerUpDelay" value="200.0" />
-   <parameter name="initRefreshCommands" value="2" />
+   <parameter name="INIT_REFRESH" value="2" />
    <parameter name="refreshPeriod" value="7.8125" />
    <parameter name="TRFC" value="63.0" />
    <parameter name="TRCD" value="21.0" />
    <parameter name="TRP" value="21.0" />
    <parameter name="TWR" value="14.0" />
    <parameter name="TAC" value="5.4" />
-   <parameter name="generateSimulationModel" value="false" />
+
   </preset>
  </presets>
 </ip>

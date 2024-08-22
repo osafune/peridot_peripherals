@@ -7,8 +7,8 @@ signal: [
 	{name:'error'		,wave:"0................."},
 	{name:'status'		,wave:"=..x.........=....", data:"old new"},
 	{name:'<PARAM>'		,wave:"=..=..............", data:"changeable hold"},
-	{name:'param_data'	,wave:"x.====x|==x=.x....", data:"reg0 reg1 reg2 reg3 reg4 reg5 dummy"},
-	{name:'param_valid'	,wave:"0.1...0.1.01.x...."},
-	{name:'param_done'	,wave:"0............1...."},
+	{name:'param_data'	,wave:"x.====x|===x=x...", data:"reg0 reg1 reg2 reg3 reg4 reg5 reg6 n/a"},
+	{name:'param_valid'	,wave:"0.1...0.1..01x..."},
+	{name:'param_done'	,wave:"0............1..."},
 ]}
 

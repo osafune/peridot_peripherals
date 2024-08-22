@@ -97,7 +97,7 @@ PERIDOT Melody Chime
 SDRAM
 -----
 PERIDOTボードで使用しているSDRAMのパラメータセットです。  
-⚠ SoPC Builder SDRAMコントローラーはQuartus Prime 21.1移行では付属されません。使用する場合は20.1以前のバージョンを使って下さい。
+Quartus Prime 20.1.1LE付属のSDRAMコントローラに対応しています。
 
 
 PERIDOT Host Bridge

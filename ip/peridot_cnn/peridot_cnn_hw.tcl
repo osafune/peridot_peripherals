@@ -3,11 +3,12 @@
 #
 #   DEGISN : S.OSAFUNE (J-7SYSTEM WORKS LIMITED)
 #   DATE   : 2020/07/31 -> 2020/09/23
+#   UPDATE : 2024/03/15
 #
 # ===================================================================
 #
 # The MIT License (MIT)
-# Copyright (c) 2020 J-7SYSTEM WORKS LIMITED.
+# Copyright (c) 2020-2024 J-7SYSTEM WORKS LIMITED.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy of
 # this software and associated documentation files (the "Software"), to deal in
@@ -42,7 +43,7 @@ set_module_property DISPLAY_NAME "PERIDOT Compact CNN Accelerator (beta test ver
 set_module_property DESCRIPTION "PERIDOT Compact CNN Accelerator"
 set_module_property GROUP "PERIDOT Peripherals"
 set_module_property AUTHOR "J-7SYSTEM WORKS LIMITED"
-set_module_property VERSION 19.1
+set_module_property VERSION 20.1
 set_module_property INTERNAL false
 set_module_property OPAQUE_ADDRESS_MAP true
 set_module_property INSTANTIATE_IN_SYSTEM_MODULE true
@@ -50,7 +51,7 @@ set_module_property HIDE_FROM_SOPC true
 set_module_property HIDE_FROM_QUARTUS true
 set_module_property EDITABLE false
 set_module_property ELABORATION_CALLBACK elaboration_callback
-set_module_property SUPPORTED_DEVICE_FAMILIES {"MAX 10" "Cyclone 10 LP" "Cyclone IV E" "Cyclone IV GX" "Cyclone V" "Arria II GX" "Arria II GZ" "Arria V" "Arria V GZ" "Stratix IV" "Stratix V"}
+set_module_property SUPPORTED_DEVICE_FAMILIES {"MAX 10" "Cyclone 10 LP" "Cyclone IV E" "Cyclone IV GX" "Cyclone V" "Cyclone 10 GX"}
 
 # 
 # file sets
@@ -59,21 +60,29 @@ add_fileset QUARTUS_SYNTH QUARTUS_SYNTH "" ""
 set_fileset_property QUARTUS_SYNTH TOP_LEVEL peridot_cnn
 set_fileset_property QUARTUS_SYNTH ENABLE_RELATIVE_INCLUDE_PATHS false
 set_fileset_property QUARTUS_SYNTH ENABLE_FILE_OVERWRITE_MODE false
-add_fileset_file peridot_cnn_core_package.vhd VHDL PATH hdl/peridot_cnn_core_package.vhd
-add_fileset_file peridot_cnn_core.vhd		VHDL PATH hdl/peridot_cnn_core.vhd
-add_fileset_file peridot_cnn_mainfsm.vhd	VHDL PATH hdl/peridot_cnn_mainfsm.vhd
-add_fileset_file peridot_cnn_kernel.vhd		VHDL PATH hdl/peridot_cnn_kernel.vhd
-add_fileset_file peridot_cnn_accum.vhd		VHDL PATH hdl/peridot_cnn_accum.vhd
-add_fileset_file peridot_cnn_writeback.vhd	VHDL PATH hdl/peridot_cnn_writeback.vhd
-add_fileset_file peridot_cnn_arbiter.vhd	VHDL PATH hdl/peridot_cnn_arbiter.vhd
-add_fileset_file peridot_cnn_ctrlregs.vhd	VHDL PATH hdl/peridot_cnn_ctrlregs.vhd
-add_fileset_file peridot_cnn.vhd			VHDL PATH hdl/peridot_cnn.vhd TOP_LEVEL_FILE
+
+add_fileset_file peridot_cnn_mainfsm.vhd			VHDL PATH hdl/peridot_cnn_mainfsm.vhd
+add_fileset_file peridot_cnn_kernel_conv.vhd		VHDL PATH hdl/peridot_cnn_kernel_conv.vhd
+add_fileset_file peridot_cnn_kernel.vhd				VHDL PATH hdl/peridot_cnn_kernel.vhd
+add_fileset_file peridot_cnn_accum_noise.vhd		VHDL PATH hdl/peridot_cnn_accum_noise.vhd
+add_fileset_file peridot_cnn_accum.vhd				VHDL PATH hdl/peridot_cnn_accum.vhd
+add_fileset_file peridot_cnn_fullyconn_product.vhd	VHDL PATH hdl/peridot_cnn_fullyconn_product.vhd
+add_fileset_file peridot_cnn_fullyconn.vhd			VHDL PATH hdl/peridot_cnn_fullyconn.vhd
+add_fileset_file peridot_cnn_writeback_actfunc.vhd	VHDL PATH hdl/peridot_cnn_writeback_actfunc.vhd
+add_fileset_file peridot_cnn_writeback_pooling.vhd	VHDL PATH hdl/peridot_cnn_writeback_pooling.vhd
+add_fileset_file peridot_cnn_writeback.vhd			VHDL PATH hdl/peridot_cnn_writeback.vhd
+add_fileset_file peridot_cnn_arbiter.vhd			VHDL PATH hdl/peridot_cnn_arbiter.vhd
+add_fileset_file peridot_cnn_core_package.vhd		VHDL PATH hdl/peridot_cnn_core_package.vhd
+add_fileset_file peridot_cnn_core.vhd				VHDL PATH hdl/peridot_cnn_core.vhd
+add_fileset_file peridot_cnn_ctrlregs.vhd			VHDL PATH hdl/peridot_cnn_ctrlregs.vhd
+add_fileset_file peridot_cnn.vhd					VHDL PATH hdl/peridot_cnn.vhd TOP_LEVEL_FILE
+add_fileset_file peridot_cnn_writeback_actfunc_rom.mif MIF PATH hdl/peridot_cnn_writeback_actfunc_rom.mif
 
 
 # 
 # parameters
 # 
-set debugview true
+set debugview false
 
 add_parameter DEVICE_FAMILY string
 set_parameter_property DEVICE_FAMILY SYSTEM_INFO {DEVICE_FAMILY}
@@ -105,47 +114,85 @@ set_parameter_property USE_FIFO_FLOW_CHECKING HDL_PARAMETER true
 set_parameter_property USE_FIFO_FLOW_CHECKING DERIVED true
 set_parameter_property USE_FIFO_FLOW_CHECKING VISIBLE $debugview
 
+add_parameter USE_FIFO_SPEED_OPTION string "ON"
+set_parameter_property USE_FIFO_SPEED_OPTION HDL_PARAMETER true
+set_parameter_property USE_FIFO_SPEED_OPTION DERIVED true
+set_parameter_property USE_FIFO_SPEED_OPTION VISIBLE $debugview
+
+add_parameter USE_LUT_INITIALVALUE string "ON"
+set_parameter_property USE_LUT_INITIALVALUE HDL_PARAMETER true
+set_parameter_property USE_LUT_INITIALVALUE DERIVED true
+set_parameter_property USE_LUT_INITIALVALUE VISIBLE $debugview
+
+add_parameter USE_REDUCED_REGMAP string "OFF"
+set_parameter_property USE_REDUCED_REGMAP HDL_PARAMETER true
+set_parameter_property USE_REDUCED_REGMAP DERIVED true
+set_parameter_property USE_REDUCED_REGMAP VISIBLE $debugview
+
 
 # 
 # display items
 # 
-
-add_parameter SETNUMBER_POW2_NUMBER integer 16
-set_parameter_property SETNUMBER_POW2_NUMBER HDL_PARAMETER true
-set_parameter_property SETNUMBER_POW2_NUMBER DISPLAY_NAME "Maximum number of filter sets"
-set_parameter_property SETNUMBER_POW2_NUMBER ALLOWED_RANGES {"10:1023sets" "11:2047sets" "12:4095sets" "13:8191sets" "14:16383sets" "15:32767sets" "16:65535sets"}
-
-add_parameter MAXCONVSIZE_POW2_NUMBER integer 9
-set_parameter_property MAXCONVSIZE_POW2_NUMBER HDL_PARAMETER true
-set_parameter_property MAXCONVSIZE_POW2_NUMBER DISPLAY_NAME "Maximum image size of convolution"
-set_parameter_property MAXCONVSIZE_POW2_NUMBER ALLOWED_RANGES {"8:256x256" "9:512x512" "10:1024x1024" "11:2048x2048"}
-
-add_parameter DATABUS_POW2_NUMBER integer 5
-set_parameter_property DATABUS_POW2_NUMBER HDL_PARAMETER true
-set_parameter_property DATABUS_POW2_NUMBER DISPLAY_NAME "Avalon-MM master data bus width"
-set_parameter_property DATABUS_POW2_NUMBER ALLOWED_RANGES {"5:32bit" "6:64bit" "7:128bit" "8:256bit"}
 
 add_parameter MAXKERNEL_NUMBER integer 4
 set_parameter_property MAXKERNEL_NUMBER HDL_PARAMETER true
 set_parameter_property MAXKERNEL_NUMBER DISPLAY_NAME "Number of kernels to instance"
 set_parameter_property MAXKERNEL_NUMBER ALLOWED_RANGES {1 2 3 4 5 6 7 8}
 
+add_parameter RANDGEN_INSTANCE_TYPE integer 0
+set_parameter_property RANDGEN_INSTANCE_TYPE HDL_PARAMETER true
+set_parameter_property RANDGEN_INSTANCE_TYPE DISPLAY_NAME "Noise generator instance type"
+set_parameter_property RANDGEN_INSTANCE_TYPE ALLOWED_RANGES {"0:None" "1:Uniform random"}
+
+add_parameter ACTFUNC_INSTANCE_TYPE integer 1
+set_parameter_property ACTFUNC_INSTANCE_TYPE HDL_PARAMETER true
+set_parameter_property ACTFUNC_INSTANCE_TYPE DISPLAY_NAME "Activation function instance type"
+set_parameter_property ACTFUNC_INSTANCE_TYPE ALLOWED_RANGES {"0:ReLU/Hard-tanh/Step/Leaky-ReLU" "1:ReLU/Hard-tanh/Step/Leaky-ReLU/Sigmoid(LUT0)" "2:ReLU/Hard-tanh/Step/Leaky-ReLU/Sigmoid(LUT0)/Tanh" "3:ReLU/Hard-tanh/Step/Leaky-ReLU/Sigmoid/Tanh/LUT1/LUT2"}
+
+add_parameter CNN_SETTINGS_LUTINIT boolean true
+set_parameter_property CNN_SETTINGS_LUTINIT DISPLAY_NAME "Use Activation function LUT initialization"
+set_parameter_property CNN_SETTINGS_LUTINIT DISPLAY_HINT boolean
+
+add_parameter FCFUNC_INSTANCE_TYPE integer 1
+set_parameter_property FCFUNC_INSTANCE_TYPE HDL_PARAMETER true
+set_parameter_property FCFUNC_INSTANCE_TYPE DISPLAY_NAME "Fully-connected function instance type"
+set_parameter_property FCFUNC_INSTANCE_TYPE ALLOWED_RANGES {"0:None" "1:MatMul(int8/uint8)"}
+
+add_parameter MAXCONVSIZE_POW2_NUMBER integer 10
+set_parameter_property MAXCONVSIZE_POW2_NUMBER HDL_PARAMETER true
+set_parameter_property MAXCONVSIZE_POW2_NUMBER DISPLAY_NAME "Maximum image size of convolution"
+set_parameter_property MAXCONVSIZE_POW2_NUMBER ALLOWED_RANGES {"8:256x256" "9:512x512" "10:1024x1024" "11:2048x2048" "12:4096x4096"}
+
+add_parameter INTRBUFFER_POW2_NUMBER integer 10
+set_parameter_property INTRBUFFER_POW2_NUMBER HDL_PARAMETER true
+set_parameter_property INTRBUFFER_POW2_NUMBER DISPLAY_NAME "Internal buffer size"
+set_parameter_property INTRBUFFER_POW2_NUMBER ALLOWED_RANGES {"0:None" "10:1024words" "12:4096words" "14:16384words"}
+
 add_parameter CNN_SETTINGS_WORKINGFIFODEPTH integer 0
-set_parameter_property CNN_SETTINGS_WORKINGFIFODEPTH DISPLAY_NAME "Working FIFO depth"
-set_parameter_property CNN_SETTINGS_WORKINGFIFODEPTH ALLOWED_RANGES {"0:AUTO" "7:128words" "8:256words" "9:512words" "10:1024words" "11:2048words" "12:4096words"}
+set_parameter_property CNN_SETTINGS_WORKINGFIFODEPTH DISPLAY_NAME "Read/Write FIFO depth"
+set_parameter_property CNN_SETTINGS_WORKINGFIFODEPTH ALLOWED_RANGES {"0:Auto" "7:128words" "8:256words" "9:512words" "10:1024words" "11:2048words" "12:4096words"}
+
+add_parameter CNN_SETTINGS_FIFO_OPTION integer 2
+set_parameter_property CNN_SETTINGS_FIFO_OPTION DISPLAY_NAME "FIFO instance option"
+set_parameter_property CNN_SETTINGS_FIFO_OPTION ALLOWED_RANGES {"0:Minimum" "1:Area" "2:Speed"}
+set_parameter_property CNN_SETTINGS_FIFO_OPTION DISPLAY_HINT radio
+
+add_parameter DATABUS_POW2_NUMBER integer 5
+set_parameter_property DATABUS_POW2_NUMBER HDL_PARAMETER true
+set_parameter_property DATABUS_POW2_NUMBER DISPLAY_NAME "Avalon-MM data bus width"
+set_parameter_property DATABUS_POW2_NUMBER ALLOWED_RANGES {"5:32bit" "6:64bit" "7:128bit" "8:256bit"}
 
 add_parameter CNN_SETTINGS_READFUSION boolean true
 set_parameter_property CNN_SETTINGS_READFUSION DISPLAY_NAME "Use a fusion of kernel data read commands"
 set_parameter_property CNN_SETTINGS_READFUSION DISPLAY_HINT boolean
 
-add_parameter CNN_SETTINGS_FLOWCHECKING boolean true
-set_parameter_property CNN_SETTINGS_FLOWCHECKING DISPLAY_NAME "Use the FIFO flow check function"
-set_parameter_property CNN_SETTINGS_FLOWCHECKING DISPLAY_HINT boolean
-
+add_parameter CNN_SETTINGS_REDUCEDCSR boolean false
+set_parameter_property CNN_SETTINGS_REDUCEDCSR DISPLAY_NAME "Use a reduced control/status register"
+set_parameter_property CNN_SETTINGS_REDUCEDCSR DISPLAY_HINT boolean
 
 
 #-----------------------------------
-# Avalon-MM master interface
+# Avalon-MM host interface
 #-----------------------------------
 # 
 # connection point m1_clock
@@ -194,7 +241,7 @@ add_interface_port m1 avm_m1_write write Output 1
 
 
 #-----------------------------------
-# Avalon-MM slave interface
+# Avalon-MM agent interface
 #-----------------------------------
 # 
 # connection point csr_clock
@@ -234,7 +281,7 @@ set_interface_property csr setupTime 0
 set_interface_property csr timingUnits Cycles
 set_interface_property csr writeWaitTime 0
 
-add_interface_port csr avs_csr_address address Input 2
+add_interface_port csr avs_csr_address address Input 3
 add_interface_port csr avs_csr_read read Input 1
 add_interface_port csr avs_csr_readdata readdata Output 32
 add_interface_port csr avs_csr_write write Input 1
@@ -253,6 +300,17 @@ set_interface_property csr_interrupt associatedClock csr_clock
 set_interface_property csr_interrupt associatedReset csr_reset
 
 add_interface_port csr_interrupt ins_csr_irq irq Output 1
+
+
+#-----------------------------------
+# Conduit interface
+#-----------------------------------
+# 
+# connection point status
+# 
+add_interface status conduit end
+set_interface_property status associatedClock m1_clock
+add_interface_port status coe_status status Output 3
 
 
 
@@ -284,27 +342,46 @@ proc elaboration_callback {} {
 	set_parameter_value USE_KERNELREAD_FUSION $readfusion
 
 
-	set cnnfifodepth [get_parameter_value CNN_SETTINGS_WORKINGFIFODEPTH]
-	set fifodepth [get_parameter_value MAXCONVSIZE_POW2_NUMBER]
-	set fifochecking_enable false
 	set flowchecking "ON"
+	set fifospeed "ON"
 
-	if {$cnnfifodepth >= 7} {
-		set fifodepth $cnnfifodepth
-		set fifochecking_enable true
+	if {[get_parameter_value CNN_SETTINGS_FIFO_OPTION] == 0} {
+		set flowchecking "OFF"
+		set fifospeed "OFF"
+	} elseif {[get_parameter_value CNN_SETTINGS_FIFO_OPTION] == 1} {
+		set fifospeed "OFF"
+	}
 
-		if {![get_parameter_value CNN_SETTINGS_FLOWCHECKING]} {
-			set flowchecking "OFF"
+	set_parameter_value USE_FIFO_FLOW_CHECKING $flowchecking
+	set_parameter_value USE_FIFO_SPEED_OPTION $fifospeed
+
+
+	set lutinit_enable false
+	set lutinit "ON"
+
+	if {[get_parameter_value DEVICE_FAMILY] == "MAX 10" && [get_parameter_value ACTFUNC_INSTANCE_TYPE] > 0} {
+		set lutinit_enable true
+
+		if {![get_parameter_value CNN_SETTINGS_LUTINIT]} {
+			set lutinit "OFF"
 		}
 	}
 
-	set_parameter_value FIFODEPTH_POW2_NUMBER $fifodepth
-	set_parameter_property CNN_SETTINGS_FLOWCHECKING ENABLED $fifochecking_enable
-	set_parameter_value USE_FIFO_FLOW_CHECKING $flowchecking
+	set_parameter_property CNN_SETTINGS_LUTINIT ENABLED $lutinit_enable
+	set_parameter_value USE_LUT_INITIALVALUE $lutinit
+
+
+	set reducedcsr "OFF"
+
+	if {[get_parameter_value CNN_SETTINGS_REDUCEDCSR]} {
+		set reducedcsr "ON"
+	}
+
+	set_parameter_value USE_REDUCED_REGMAP $reducedcsr
 
 
 	#-----------------------------------
-	# Avalon-MM master port settings
+	# Avalon-MM host port settings
 	#-----------------------------------
 
 	set burstcount_width	[expr int([get_parameter_value MAXCONVSIZE_POW2_NUMBER] - ([get_parameter_value DATABUS_POW2_NUMBER] - 3) + 1)]
@@ -318,12 +395,35 @@ proc elaboration_callback {} {
 
 
 	#-----------------------------------
+	# FIFO depth settings
+	#-----------------------------------
+
+	set mmacrodepth [expr ([get_parameter_value DATABUS_POW2_NUMBER] + 3)]
+	set fifodepth [get_parameter_value CNN_SETTINGS_WORKINGFIFODEPTH]
+
+	if {$fifodepth == 0} {
+		if {$mmacrodepth > 10} {
+			set fifodepth 10
+		} else {
+			set fifodepth $mmacrodepth
+		}
+	}
+
+	set_parameter_value FIFODEPTH_POW2_NUMBER $fifodepth
+
+
+	#-----------------------------------
 	# Software assignments
 	#-----------------------------------
 
-	set_module_assignment embeddedsw.CMacro.KERNELNUM		[format %u [get_parameter_value MAXKERNEL_NUMBER]]
-	set_module_assignment embeddedsw.CMacro.MAX_FILTERSET	[format %u [expr int(pow(2, [get_parameter_value SETNUMBER_POW2_NUMBER]) - 1)]]
-	set_module_assignment embeddedsw.CMacro.MAX_CONVSIZE_X	[format %u [expr int(pow(2, [get_parameter_value MAXCONVSIZE_POW2_NUMBER]))]]
-	set_module_assignment embeddedsw.CMacro.MAX_CONVSIZE_Y	[format %u [expr int(pow(2, [get_parameter_value MAXCONVSIZE_POW2_NUMBER]))]]
-	set_module_assignment embeddedsw.CMacro.MAX_LINEBYTES	[format %u [expr int(pow(2, [get_parameter_value MAXLINEBYTES_POW2_NUMBER]))]]
+	set_module_assignment embeddedsw.CMacro.MAX_CONVSIZE_X			[format %u [expr int(pow(2, [get_parameter_value MAXCONVSIZE_POW2_NUMBER]))]]
+	set_module_assignment embeddedsw.CMacro.MAX_CONVSIZE_Y			[format %u [expr int(pow(2, [get_parameter_value MAXCONVSIZE_POW2_NUMBER]))]]
+	set_module_assignment embeddedsw.CMacro.MAX_LINEBYTES			[format %u [expr int(pow(2, [get_parameter_value MAXLINEBYTES_POW2_NUMBER]))]]
+	set_module_assignment embeddedsw.CMacro.NOISEFUNCTION_TYPE		[format %u [get_parameter_value RANDGEN_INSTANCE_TYPE]]
+	set_module_assignment embeddedsw.CMacro.FULLYCONNECTED_TYPE		[format %u [get_parameter_value FCFUNC_INSTANCE_TYPE]]
+	set_module_assignment embeddedsw.CMacro.ACTIVATIONFUNCTION_TYPE	[format %u [get_parameter_value ACTFUNC_INSTANCE_TYPE]]
+	set_module_assignment embeddedsw.CMacro.ACTIVATION_LUTINIT		[format %u [expr ([get_parameter_value CNN_SETTINGS_LUTINIT]? 1 : 0)]]
+	set_module_assignment embeddedsw.CMacro.KERNEL_INSTANCENUM		[format %u [get_parameter_value MAXKERNEL_NUMBER]]
+	set_module_assignment embeddedsw.CMacro.KERNEL_READFUSION		[format %u [expr ([get_parameter_value CNN_SETTINGS_READFUSION]? 1 : 0)]]
+	set_module_assignment embeddedsw.CMacro.REDUCED_CSR				[format %u [expr ([get_parameter_value CNN_SETTINGS_REDUCEDCSR]? 1 : 0)]]
 }
