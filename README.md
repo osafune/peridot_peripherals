@@ -7,9 +7,9 @@ PERIDOTの標準ペリフェラル集です。
 対象となるツール
 ----------------
 
-- Platform Designer 19.1以降、およびNiosII SBT 19.1以降
+- Platform Designer 20.1以降、およびNiosII SBT 20.1以降
 - MAX10、CycloneIV、CycloneV、Cyclone10LPを搭載し、10/100BASEのEtherPHYが接続されたボード（PERIDOT ETHIOを使う場合）
-- スレーブペリフェラルのみ使う場合は、NiosII等の32bitのバスアクセスが可能なAvalon-MMホストがあるシステム
+- スレーブペリフェラルのみ使う場合は、NiosII/NiosV等の32bitのバスアクセスが可能なAvalon-MMホストがあるシステム
 
 使い方
 ------
@@ -28,11 +28,6 @@ PERIDOT ETHIO (beta test)
 -------------
 Ethernet経由でホストからPlatform Designerモジュール内部へアクセスするブリッジを提供します。  
 このモジュールは単独でARP/ICMP/UDPサーバーの動作を行うUDPオフロードエンジンを内蔵しています。外部にはRMII接続のEtherPHYが必要です。  
-
-
-PERIDOT CNN (beta test)
------------
-コンパクトなCNNアクセラレーターペリフェラルです。  
 
 
 PERIDOT CAM
@@ -102,7 +97,7 @@ Quartus Prime 20.1.1LE付属のSDRAMコントローラに対応しています�
 
 PERIDOT Host Bridge
 -------------------
-⚠ このモジュールは今後はメンテナンスされません。  
+:warning: このモジュールは今後はメンテナンスされません。  
 
 ホストからPlatform Designerモジュール内部へアクセスするブリッジを提供します。  
 [Canarium](https://github.com/kimushu/canarium)パッケージを利用することで、クライアント側のJavaScriptからPlatform Designerモジュール内部のAvalon-MMスレーブペリフェラルへアクセスすることができます。  
@@ -113,7 +108,7 @@ MAX10ではデュアルコンフィグレーションスキームを利用した
 
 PERIDOT PFC
 -----------
-⚠ このモジュールは今後はメンテナンスされません。  
+:warning: このモジュールは今後はメンテナンスされません。  
 
 PERIDOTのピンマトリックスセレクタおよび制御用のインターフェースを提供します。  
 
@@ -125,4 +120,4 @@ PERIDOTのピンマトリックスセレクタおよび制御用のインター�
 [The MIT License (MIT)](https://opensource.org/licenses/MIT)  
 詳細は[license.txt](license.txt)を参照ください。  
 
-(C) 2014-2023 J-7SYSTEM WORKS LIMITED.
+(C) 2014-2026 J-7SYSTEM WORKS LIMITED.
