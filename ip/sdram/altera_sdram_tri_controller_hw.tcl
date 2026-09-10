@@ -179,7 +179,7 @@ set_parameter_property TRISTATE_EN TYPE                  BOOLEAN
 set_parameter_property TRISTATE_EN DESCRIPTION "Enable the tri state"
 set_parameter_property TRISTATE_EN UNITS                 None
 set_parameter_property TRISTATE_EN HDL_PARAMETER         true
-set_parameter_property TRISTATE_EN VISIBLE               false
+#set_parameter_property TRISTATE_EN VISIBLE               false
 
 add_parameter powerUpDelay FLOAT
 set_parameter_property powerUpDelay DEFAULT_VALUE        100.0

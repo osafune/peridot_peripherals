@@ -66,8 +66,8 @@ set_fileset_property QUARTUS_SYNTH TOP_LEVEL peridot_vga
 # 
 set debugview false
 set pcmaudio false
-#set outputmode {"PARALLEL:Parallel" "DVI:DVI" "LITEHDMI:Lite HDMI" "HDMI:HDMI"}
-set outputmode {"PARALLEL:Parallel" "DVI:DVI"}
+set outputmode {"PARALLEL:Parallel" "DVI:DVI" "LITEHDMI:Lite HDMI" "HDMI:HDMI"}
+#set outputmode {"PARALLEL:Parallel" "DVI:DVI"}
 
 add_parameter DEVICE_FAMILY string
 set_parameter_property DEVICE_FAMILY HDL_PARAMETER true

@@ -4,6 +4,7 @@
 //
 //     DESIGN : s.osafune@j7system.jp (J-7SYSTEM WORKS LIMITED)
 //     DATE   : 2019/09/01
+//              2023/04/01 FF_FS_READONLY オプション修正 
 //
 // ************************************************************************
 //
@@ -164,10 +165,12 @@ int dev_mmcfs_write(
 		int len)
 {
 	FIL *fp = (FIL *)fd->priv;
-	FRESULT fatfs_res;
+	FRESULT fatfs_res = FR_DISK_ERR;
 	UINT writesize;
 
+#if (FF_FS_READONLY == 0)
 	fatfs_res = f_write(fp, ptr, len, &writesize);
+#endif
 	if( fatfs_res != FR_OK ) return -EIO;
 
 	return (int)writesize;
